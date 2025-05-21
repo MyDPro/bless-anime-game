@@ -14,7 +14,8 @@ bless-anime-game/
 │   └── index.html
 │   └── style.css
 │   └── models/
-│      ├── character/
+│      ├── Textures
+│      ├── character
 │      ├── city-kit/
 │      └── kit/
 ├── tsconfig.base.json   # Base TS config
