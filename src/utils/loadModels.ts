@@ -2,7 +2,6 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { NotificationManager } from '../core/NotificationManager';
 
 // Karakter verisi tipi
@@ -21,17 +20,6 @@ export class ModelsLoader {
     constructor() {
         this.gltfLoader = new GLTFLoader();
 
-        // Draco Decoder kontrolü
-        try {
-            const dracoLoader = new DRACOLoader();
-            dracoLoader.setDecoderPath('/draco/');
-            this.gltfLoader.setDRACOLoader(dracoLoader);
-            console.log('DRACOLoader başlatıldı');
-        } catch (error) {
-            console.warn('DRACOLoader başlatılamadı, Draco sıkıştırması devre dışı:', error);
-            NotificationManager.getInstance().show('Draco sıkıştırması devre dışı, modeller doğrudan yükleniyor.', 'warning');
-        }
-
         // Texture yükleme için fallback
         this.gltfLoader.load = ((originalLoad) => {
             return (url, onLoad, onProgress, onError) => {
@@ -41,7 +29,7 @@ export class ModelsLoader {
                             const texturePath = child.material.map.sourceFile || child.material.map.name;
                             if (texturePath.includes('colormap.png')) {
                                 console.warn(`Texture bulunamadı: ${texturePath}, varsayılan texture uygulanıyor`);
-                                child.material.map = new THREE.TextureLoader().load('model/Textures/.trashed-1750004157-colormap.png');
+                                child.material.map = new THREE.TextureLoader().load('/models/Textures/.trashed-1750004157-colormap.png');
                                 child.material.needsUpdate = true;
                             }
                         }
@@ -122,7 +110,6 @@ export class ModelsLoader {
         const result = await this.loadModel('/models/kit/blaster_sci-fi.glb', 'sci-fi_blaster');
         if (!result) {
             console.warn('Blaster modeli yüklenemedi, varsayılan obje kullanılacak');
-            // Fallback: Boş bir obje oluştur
             const fallback = new THREE.Group();
             this.loadedModels.set('sci-fi_blaster', { scene: fallback });
         }
@@ -142,7 +129,6 @@ export class ModelsLoader {
                 const id = cityKitPaths[index].id;
                 console.error(`Şehir kiti modeli yüklenemedi: ${id}`, result.reason);
                 NotificationManager.getInstance().show(`Şehir kiti modeli yüklenemedi: ${id}`, 'error');
-                // Fallback: Boş bir obje
                 const fallback = new THREE.Group();
                 this.loadedModels.set(id, { scene: fallback });
             }
