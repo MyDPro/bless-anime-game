@@ -68,7 +68,7 @@
   {
     "id": "character_j",
     "name": "Mini Karakter J",
-    "modelPath": "/models/character/character--male-f.glb",
+    "modelPath": "/models/character/character-male-f.glb",
     "stats": { "speed": 65, "power": 85 }
   }
 ]
