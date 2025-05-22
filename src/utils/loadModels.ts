@@ -22,7 +22,7 @@ export class ModelsLoader {
         this.gltfLoader = new GLTFLoader();
 
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('.trashed-1750004157-colormap.png'); // Draco çözümleyicisinin yolu
+        dracoLoader.setDecoderPath('models/Textures/colormap.png'); // Draco çözümleyicisinin yolu
         this.gltfLoader.setDRACOLoader(dracoLoader);
     }
 
@@ -82,7 +82,7 @@ export class ModelsLoader {
     async loadBlasterModels(): Promise<void> {
         console.log('Blaster modelleri yükleniyor...');
         // Örnek bir blaster modeli yüklemesi
-        await this.loadModel('/models/kit/blaster_sci-fi.glb', 'sci-fi_blaster');
+        await this.loadModel('/models/kit/bullet-foam-tip.glb', 'sci-fi_blaster');
         console.log('Tüm blaster modelleri yüklendi.');
     }
 
@@ -91,8 +91,7 @@ export class ModelsLoader {
         // Buraya şehir kiti modellerinin yollarını characters.json gibi bir data dosyasından alabilirsin.
         // Şimdilik sabit bıraktım.
         const cityKitPaths = [
-            { id: 'buildingA', path: '/models/city-kit/building_A.glb' },
-            { id: 'buildingB', path: '/models/city-kit/building_B.glb' },
+            { id: 'buildingA', path: 'public/models/city-kit/fence-3x3.glb' },
             // ... diğer şehir kiti modelleri
             // Örnek:
             // { id: 'roadStraight', path: '/models/city-kit/road_straight.glb' },
