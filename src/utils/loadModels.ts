@@ -22,7 +22,7 @@ export class ModelsLoader {
         this.gltfLoader = new GLTFLoader();
 
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('/draco/');
+        dracoLoader.setDecoderPath('/draco/'); // Draco çözümleyicisinin yolu
         this.gltfLoader.setDRACOLoader(dracoLoader);
     }
 
@@ -56,7 +56,11 @@ export class ModelsLoader {
                 this.loadedModels.set(name, gltf);
                 resolve(gltf);
             }, (xhr) => {
-                // Yükleme ilerlemesi
+                // Yükleme ilerlemesi (isteğe bağlı: yükleme ekranında kullanabilirsin)
+                if (xhr.lengthComputable) {
+                    const percentComplete = Math.round(xhr.loaded / xhr.total * 100);
+                    // console.log(`Model ${name}: ${percentComplete}% yüklendi`);
+                }
             }, (error) => {
                 console.error(`Model yükleme hatası: ${name}`, error);
                 NotificationManager.getInstance().show(`Model yüklenemedi: ${name}!`, 'error');
@@ -77,16 +81,22 @@ export class ModelsLoader {
 
     async loadBlasterModels(): Promise<void> {
         console.log('Blaster modelleri yükleniyor...');
+        // Örnek bir blaster modeli yüklemesi
         await this.loadModel('/models/kit/blaster_sci-fi.glb', 'sci-fi_blaster');
         console.log('Tüm blaster modelleri yüklendi.');
     }
 
     async loadCityKitModels(): Promise<void> {
         console.log('Şehir kiti modelleri yükleniyor...');
+        // Buraya şehir kiti modellerinin yollarını characters.json gibi bir data dosyasından alabilirsin.
+        // Şimdilik sabit bıraktım.
         const cityKitPaths = [
             { id: 'buildingA', path: '/models/city-kit/building_A.glb' },
             { id: 'buildingB', path: '/models/city-kit/building_B.glb' },
             // ... diğer şehir kiti modelleri
+            // Örnek:
+            // { id: 'roadStraight', path: '/models/city-kit/road_straight.glb' },
+            // { id: 'trafficLight', path: '/models/city-kit/traffic_light.glb' }
         ];
         const loadPromises = cityKitPaths.map(item => this.loadModel(item.path, item.id));
         await Promise.all(loadPromises);
