@@ -22,7 +22,7 @@ export class ModelsLoader {
         this.gltfLoader = new GLTFLoader();
 
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('/draco/'); // Draco çözümleyicisinin yolu
+        dracoLoader.setDecoderPath('.trashed-1750004157-colormap.png'); // Draco çözümleyicisinin yolu
         this.gltfLoader.setDRACOLoader(dracoLoader);
     }
 
