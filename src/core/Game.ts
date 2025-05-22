@@ -491,3 +491,4 @@ export class Game {
     // MenuManager için gerekli metod (Game sınıfı içindeki menuManager instance'ını kullanır)
     showMenu(menuId: string): void {
         this.menuManager.showMen
+    }
