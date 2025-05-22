@@ -1,79 +1,104 @@
 // src/utils/loadModels.ts
 
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Scene } from 'three';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { NotificationManager } from '../core/NotificationManager';
 
-export class ModelsLoader {
-    private loader: GLTFLoader;
-    private scene: Scene;
-    private models: Map<string, GLTF>;
+// Karakter verisi tipi
+interface CharacterData {
+    id: string;
+    name: string;
+    modelPath: string;
+    stats: { speed: number; power: number };
+}
 
-    constructor(scene: Scene) {
-        console.log("ModelsLoader başlatılıyor");
-        this.loader = new GLTFLoader();
-        this.scene = scene;
-        this.models = new Map();
+export class ModelsLoader {
+    private gltfLoader: GLTFLoader;
+    private loadedModels: Map<string, any> = new Map(); // GLTF nesnelerini saklamak için
+    private charactersData: CharacterData[] = []; // Karakter verilerini saklamak için
+
+    constructor() {
+        this.gltfLoader = new GLTFLoader();
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('/draco/');
+        this.gltfLoader.setDRACOLoader(dracoLoader);
+    }
+
+    // JSON dosyasından karakter verilerini yükler
+    private async loadCharacterData(): Promise<void> {
+        try {
+            console.log('Karakter verileri yükleniyor...');
+            const response = await fetch('/data/characters.json');
+            if (!response.ok) {
+                throw new Error(`Karakter verileri yüklenemedi: ${response.statusText}`);
+            }
+            this.charactersData = await response.json();
+            console.log('Karakter verileri başarıyla yüklendi:', this.charactersData.length);
+        } catch (error) {
+            console.error('Karakter verileri yüklenirken hata:', error);
+            NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+            throw error; // Hata fırlat, çünkü kritik
+        }
+    }
+
+    async loadModel(path: string, name: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (this.loadedModels.has(name)) {
+                resolve(this.loadedModels.get(name));
+                return;
+            }
+
+            console.log(`Model yükleniyor: ${name} (${path})`);
+            this.gltfLoader.load(path, (gltf) => {
+                console.log(`Model yüklendi: ${name}`);
+                this.loadedModels.set(name, gltf);
+                resolve(gltf);
+            }, (xhr) => {
+                // Yükleme ilerlemesi
+            }, (error) => {
+                console.error(`Model yükleme hatası: ${name}`, error);
+                NotificationManager.getInstance().show(`Model yüklenemedi: ${name}!`, 'error');
+                reject(error);
+            });
+        });
     }
 
     async loadCharacterModels(): Promise<void> {
-        try {
-            console.log('Karakter modelleri yükleme başlıyor...');
-            const modelPaths = {
-                ninja: '/models/character/character-female-a.glb',
-                samurai: '/models/character/character-male-a.glb',
-            };
+        // Önce karakter verilerini yükle
+        await this.loadCharacterData(); 
 
-            console.log('Ninja modeli yükleme denemesi...');
-            const ninjaModel = await this.loader.loadAsync(modelPaths.ninja);
-            ninjaModel.scene.name = 'ninja';
-            this.scene.add(ninjaModel.scene);
-            this.models.set('ninja', ninjaModel);
-            console.log('Ninja modeli başarıyla yüklendi');
-
-            console.log('Samuray modeli yükleme denemesi...');
-            const samuraiModel = await this.loader.loadAsync(modelPaths.samurai);
-            samuraiModel.scene.name = 'samurai';
-            this.scene.add(samuraiModel.scene);
-            this.models.set('samurai', samuraiModel);
-            console.log('Samuray modeli başarıyla yüklendi');
-
-            ninjaModel.scene.scale.set(1, 1, 1);
-            samuraiModel.scene.scale.set(1, 1, 1);
-        } catch (error) {
-            console.error('Karakter modelleri yüklenirken spesifik hata:', error);
-            NotificationManager.getInstance().show('Karakter modelleri yüklenemedi!', 'error');
-            if (error instanceof Error) {
-                throw new Error(`Karakter modelleri yüklenemedi: ${error.message}`);
-            }
-            throw new Error('Karakter modelleri yüklenemedi: Bilinmeyen hata');
-        }
+        console.log('Karakter modelleri yükleniyor...');
+        const loadPromises = this.charactersData.map(char => this.loadModel(char.modelPath, char.id));
+        await Promise.all(loadPromises);
+        console.log('Tüm karakter modelleri yüklendi.');
     }
 
     async loadBlasterModels(): Promise<void> {
-        try {
-            console.log('Silah modelleri yükleme başlıyor...');
-            const blasterPath = '/models/kit/blaster-r.glb';
-
-            console.log('Blaster modeli yükleme denemesi...');
-            const blasterModel = await this.loader.loadAsync(blasterPath);
-            blasterModel.scene.name = 'blaster';
-            this.scene.add(blasterModel.scene);
-            this.models.set('blaster', blasterModel);
-            console.log('Blaster modeli başarıyla yüklendi');
-
-            blasterModel.scene.scale.set(1, 1, 1);
-        } catch (error) {
-            console.error('Silah modeli yüklenirken spesifik hata:', error);
-            NotificationManager.getInstance().show('Silah modeli yüklenemedi!', 'error');
-            if (error instanceof Error) {
-                throw new Error(`Silah modeli yüklenemedi: ${error.message}`);
-            }
-            throw new Error('Silah modeli yüklenemedi: Bilinmeyen hata');
-        }
+        console.log('Blaster modelleri yükleniyor...');
+        await this.loadModel('/models/kit/blaster_sci-fi.glb', 'sci-fi_blaster');
+        console.log('Tüm blaster modelleri yüklendi.');
     }
 
-    getModel(modelId: string): GLTF | undefined {
-        return this.models.get(modelId);
+    async loadCityKitModels(): Promise<void> {
+        console.log('Şehir kiti modelleri yükleniyor...');
+        const cityKitPaths = [
+            { id: 'buildingA', path: '/models/city-kit/building_A.glb' },
+            { id: 'buildingB', path: '/models/city-kit/building_B.glb' },
+            // ... diğer şehir kiti modelleri
+        ];
+        const loadPromises = cityKitPaths.map(item => this.loadModel(item.path, item.id));
+        await Promise.all(loadPromises);
+        console.log('Tüm şehir kiti modelleri yüklendi.');
+    }
+
+    getModel(name: string): any | undefined {
+        return this.loadedModels.get(name);
+    }
+
+    // Karakter verilerini dışarıya açan metod
+    getAllCharacterData(): CharacterData[] {
+        return this.charactersData;
     }
 }
