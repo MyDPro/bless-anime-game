@@ -1,0 +1,75 @@
+// public/data/characters.json
+[
+  {
+    "id": "female_a",
+    "name": "Ninja Kızı",
+    "modelPath": "/models/character/character-female-a.glb",
+    "stats": { "speed": 90, "power": 70 }
+  },
+  {
+    "id": "male_a",
+    "name": "Samuray Adam",
+    "modelPath": "/models/character/character-male-a.glb",
+    "stats": { "speed": 70, "power": 90 }
+  },
+  {
+    "id": "character_a",
+    "name": "Mini Karakter A",
+    "modelPath": "/models/character/character-female-b.glb",
+    "stats": { "speed": 85, "power": 75 }
+  },
+  {
+    "id": "character_b",
+    "name": "Mini Karakter B",
+    "modelPath": "/models/character/character-female-c.glb",
+    "stats": { "speed": 75, "power": 85 }
+  },
+  {
+    "id": "character_c",
+    "name": "Mini Karakter C",
+    "modelPath": "/models/character/character-female-d.glb",
+    "stats": { "speed": 95, "power": 65 }
+  },
+  {
+    "id": "character_d",
+    "name": "Mini Karakter D",
+    "modelPath": "/models/character/character-female-e.glb",
+    "stats": { "speed": 65, "power": 95 }
+  },
+  {
+    "id": "character_e",
+    "name": "Mini Karakter E",
+    "modelPath": "/models/character/character-female-f.glb",
+    "stats": { "speed": 80, "power": 70 }
+  },
+  {
+    "id": "character_f",
+    "name": "Mini Karakter F",
+    "modelPath": "/models/character/character-male-b.glb",
+    "stats": { "speed": 70, "power": 80 }
+  },
+  {
+    "id": "character_g",
+    "name": "Mini Karakter G",
+    "modelPath": "/models/character/character-male-c.glb",
+    "stats": { "speed": 90, "power": 60 }
+  },
+  {
+    "id": "character_h",
+    "name": "Mini Karakter H",
+    "modelPath": "/models/character/character-male-d.glb",
+    "stats": { "speed": 60, "power": 90 }
+  },
+  {
+    "id": "character_i",
+    "name": "Mini Karakter I",
+    "modelPath": "/models/character/character-male-e.glb",
+    "stats": { "speed": 85, "power": 65 }
+  },
+  {
+    "id": "character_j",
+    "name": "Mini Karakter J",
+    "modelPath": "/models/character/character--male-f.glb",
+    "stats": { "speed": 65, "power": 85 }
+  }
+]
