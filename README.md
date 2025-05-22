@@ -1,3 +1,5 @@
+https://pastebin.one/error-8479
+
 Bless-anime-game/
 ├── bls.toml              # Bless project config
 ├── index.ts               # Entry point
