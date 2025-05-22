@@ -29,7 +29,7 @@ export class ModelsLoader {
                             const texturePath = child.material.map.sourceFile || child.material.map.name;
                             if (texturePath.includes('colormap.png')) {
                                 console.warn(`Texture bulunamadı: ${texturePath}, varsayılan texture uygulanıyor`);
-                                child.material.map = new THREE.TextureLoader().load('/models/Textures/.trashed-1750004157-colormap.png');
+                                child.material.map = new THREE.TextureLoader().load('/models/Textures/colormap.png');
                                 child.material.needsUpdate = true;
                             }
                         }
@@ -37,7 +37,7 @@ export class ModelsLoader {
                     onLoad(gltf);
                 }, onProgress, (error) => {
                     console.error(`Model yükleme hatası: ${url}`, error);
-                    onError(error);
+                    Error(error);
                 });
             };
         })(this.gltfLoader.load);
@@ -107,7 +107,7 @@ export class ModelsLoader {
 
     async loadBlasterModels(): Promise<void> {
         console.log('Blaster modelleri yükleniyor...');
-        const result = await this.loadModel('/models/kit/blaster_sci-fi.glb', 'sci-fi_blaster');
+        const result = await this.loadModel('/models/kit/blaster-a.glb', 'sci-fi_blaster');
         if (!result) {
             console.warn('Blaster modeli yüklenemedi, varsayılan obje kullanılacak');
             const fallback = new THREE.Group();
@@ -119,8 +119,7 @@ export class ModelsLoader {
     async loadCityKitModels(): Promise<void> {
         console.log('Şehir kiti modelleri yükleniyor...');
         const cityKitPaths = [
-            { id: 'buildingA', path: '/models/city-kit/building_A.glb' },
-            { id: 'buildingB', path: '/models/city-kit/building_B.glb' },
+            { id: 'buildingA', path: '/models/city-kit/fence-1x4.glb' },
         ];
         const loadPromises = cityKitPaths.map((item) => this.loadModel(item.path, item.id));
         const results = await Promise.allSettled(loadPromises);
