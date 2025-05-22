@@ -5,7 +5,7 @@ Bless-anime-game/
 │   ├── core/            # Core game systems
 │   │   ├── Game.ts      # Main game logic
 │   │   └── MenuManager.ts
-│   │   └── main.ts         <-- Burası yanlış. main.ts src/core'da olmamalı.
+│   │   └── main.ts         
 │   │   └── NotificationManager.ts
 │   ├── utils/           # Utility functions
 │   │   ├── EventEmitter.ts
