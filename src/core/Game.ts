@@ -492,3 +492,4 @@ export class Game {
     showMenu(menuId: string): void {
         this.menuManager.showMenu(menuId);
     }
+}
