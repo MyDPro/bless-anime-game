@@ -1,4 +1,15 @@
-/* public/style.css */
+/* public/style.css
+ * Last updated: 2025-05-23 21:34:30 UTC
+ * Author: MyDemir
+ */
+
+/* CSS Variables */
+:root {
+    --primary-blue: #4a90e2;
+    --primary-dark: #357abd;
+    --background-dark: #1a1a1a;
+    --background-darker: #0a0a0a;
+}
 
 /* Reset ve Temel Stiller */
 * {
@@ -33,7 +44,7 @@ body, html {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    background: linear-gradient(135deg, var(--background-dark) 0%, var(--background-darker) 100%);
     z-index: 1000;
     display: flex;
     justify-content: center;
@@ -51,7 +62,7 @@ body, html {
     margin: 0 auto 20px;
     border: 4px solid rgba(255, 255, 255, 0.1);
     border-radius: 50%;
-    border-top-color: #4a90e2;
+    border-top-color: var(--primary-blue);
     animation: spin 1s linear infinite;
 }
 
@@ -109,7 +120,7 @@ body, html {
     letter-spacing: 3px;
     font-weight: 700;
     text-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
-    background: linear-gradient(135deg, #4a90e2, #357abd);
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-dark));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -128,7 +139,7 @@ body, html {
     justify-content: space-between;
     padding: 15px 30px;
     width: 280px;
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
     border: none;
     border-radius: 10px;
     color: white;
@@ -144,7 +155,7 @@ body, html {
 .menu-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
-    background: linear-gradient(135deg, #357abd 0%, #2868a1 100%);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #2868a1 100%);
 }
 
 .menu-button:active {
@@ -168,7 +179,7 @@ body, html {
 
 /* Character Selection */
 .character-grid {
-    display: block; /* Carousel için grid yerine block */
+    display: block;
 }
 
 .character-carousel-container {
@@ -233,7 +244,7 @@ body, html {
 }
 
 .nav-dot.active {
-    background: #4a90e2;
+    background: var(--primary-blue);
     transform: scale(1.2);
 }
 
@@ -261,7 +272,7 @@ body, html {
 }
 
 .character-card.selected {
-    border-color: #4a90e2;
+    border-color: var(--primary-blue);
     box-shadow: 0 0 20px rgba(74, 144, 226, 0.4);
 }
 
@@ -316,7 +327,7 @@ body, html {
 
 .stat-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4a90e2, #357abd);
+    background: linear-gradient(90deg, var(--primary-blue), var(--primary-dark));
     border-radius: 4px;
     transition: width 0.3s ease;
 }
@@ -357,14 +368,14 @@ input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 20px;
     height: 20px;
-    background: #4a90e2;
+    background: var(--primary-blue);
     border-radius: 50%;
     cursor: pointer;
     transition: background 0.3s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-    background: #357abd;
+    background: var(--primary-dark);
 }
 
 .slider-value {
@@ -450,45 +461,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     pointer-events: none !important;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .menu-content {
-        padding: 20px;
-    }
-
-    .game-logo h1 {
-        font-size: 2em;
-    }
-
-    .menu-button {
-        width: 240px;
-        padding: 12px 24px;
-        font-size: 14px;
-    }
-
-    .character-card {
-        flex: 0 0 260px;
-    }
-
-    .carousel-button {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-    }
-
-    .ui-panel {
-        padding: 15px;
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 480px) {
-    .character-card {
-        flex: 0 0 220px;
-    }
-}
-
-/* Kullanıcı bilgileri için stiller */
+/* Kullanıcı bilgileri */
 .user-info {
     margin-top: 15px;
     padding-top: 15px;
@@ -511,7 +484,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .notification {
     background: rgba(30, 30, 30, 0.95);
-    border-left: 4px solid #4a90e2;
+    border-left: 4px solid var(--primary-blue);
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     padding: 16px 20px;
@@ -524,10 +497,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-
-.notification.show {
-    transform: translateX(0);
 }
 
 .notification.success {
@@ -584,21 +553,13 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* Bildirim Animasyonları */
 @keyframes slideIn {
-    from {
-        transform: translateX(120%);
-    }
-    to {
-        transform: translateX(0);
-    }
+    from { transform: translateX(120%); }
+    to { transform: translateX(0); }
 }
 
 @keyframes slideOut {
-    from {
-        transform: translateX(0);
-    }
-    to {
-        transform: translateX(120%);
-    }
+    from { transform: translateX(0); }
+    to { transform: translateX(120%); }
 }
 
 .notification.slide-in {
@@ -607,4 +568,50 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .notification.slide-out {
     animation: slideOut 0.3s forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .menu-content {
+        padding: 20px;
     }
+
+    .game-logo h1 {
+        font-size: 2em;
+    }
+
+    .menu-button {
+        width: 240px;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    .character-card {
+        flex: 0 0 260px;
+    }
+
+    .carousel-button {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .ui-panel {
+        padding: 15px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .character-card {
+        flex: 0 0 220px;
+    }
+}
+
+/* Erişilebilirlik için minimal eklemeler */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
