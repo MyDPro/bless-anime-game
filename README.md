@@ -14,7 +14,7 @@ bless-anime-game/
 │   └── index.html
 │   └── style.css
 │   └── data/
-│      ├── character.json   <-- Burası önemli: characters.json olmalıydı.
+│      ├── characters.json
 │   └── models/
 │      ├── Textures
 │      ├── character
