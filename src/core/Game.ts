@@ -1,4 +1,3 @@
-// src/core/Game.ts
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { MenuManager } from './MenuManager';
@@ -183,12 +182,14 @@ export class Game {
       this.updateUI();
     });
 
-    this.menuManager.onCharacterConfirmed((characterId: string) => {
+    this.menuManager.getEventEmitter().on('characterConfirmed', (characterId: string) => {
+      console.log(`Game: Karakter seçildi: ${characterId}`);
       this.gameState.selectedCharacter = characterId;
       this.startGame();
     });
 
-    this.menuManager.onGameStart(() => {
+    this.menuManager.getEventEmitter().on('gameStart', () => {
+      console.log('Game: Oyun başlatma olayı alındı');
       if (!this.gameState.selectedCharacter) {
         NotificationManager.getInstance().show('Lütfen önce bir karakter seçin!', 'error');
         this.menuManager.showMenu('character');
