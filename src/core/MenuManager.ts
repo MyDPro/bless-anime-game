@@ -31,8 +31,9 @@ export class MenuManager {
     this.modelsLoader = new ModelsLoader();
     this.eventEmitter = new EventEmitter();
     this.menus = new Map();
-    this.initializeMenus();
-    this.setupEventListeners();
+    document.addEventListener('DOMContentLoaded', () => {
+      this.initializeMenus();
+    });
   }
 
   private async initializeMenus(): Promise<void> {
@@ -53,6 +54,7 @@ export class MenuManager {
     this.menus.set('gameOver', document.getElementById('game-over')!);
 
     this.createCharacterCarousel();
+    this.setupEventListeners();
   }
 
   private createCharacterCarousel(): void {
@@ -120,10 +122,16 @@ export class MenuManager {
       return;
     }
 
+    if (!canvas.getContext('webgl') && !canvas.getContext('experimental-webgl')) {
+      console.error('WebGL desteği bulunamadı');
+      NotificationManager.getInstance().show('Tarayıcınız WebGL’yi desteklemiyor!', 'error');
+      return;
+    }
+
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight || 1, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setSize(canvas.clientWidth || 300, canvas.clientHeight || 200);
     camera.position.set(0, 1.5, 3);
     camera.lookAt(0, 1, 0);
 
@@ -146,10 +154,7 @@ export class MenuManager {
       const preview = this.characterPreviews.get(characterId);
       if (preview) {
         preview.model = model;
-      }
-
-      if (this.characterPreviews.size === this.characters.length) {
-        this.animatePreviews();
+        this.animatePreview(characterId);
       }
     } else {
       console.error(`Karakter modeli bulunamadı: ${characterId}`);
@@ -157,15 +162,16 @@ export class MenuManager {
     }
   }
 
-  private animatePreviews(): void {
+  private animatePreview(characterId: string): void {
+    const preview = this.characterPreviews.get(characterId);
+    if (!preview) return;
     const animate = () => {
+      if (!this.characterPreviews.has(characterId)) return;
       requestAnimationFrame(animate);
-      this.characterPreviews.forEach((preview, characterId) => {
-        if (preview.model) {
-          preview.model.rotation.y += 0.01;
-        }
-        preview.renderer.render(preview.scene, preview.camera);
-      });
+      if (preview.model) {
+        preview.model.rotation.y += 0.01;
+      }
+      preview.renderer.render(preview.scene, preview.camera);
     };
     animate();
   }
@@ -173,12 +179,19 @@ export class MenuManager {
   private setupCharacterCardListeners(): void {
     console.log("Karakter kartı dinleyicileri ayarlanıyor");
     const cards = document.querySelectorAll('.character-card');
+    if (cards.length === 0) {
+      console.error("Karakter kartları bulunamadı!");
+      NotificationManager.getInstance().show("Karakter kartları yüklenemedi!", 'error');
+      return;
+    }
     cards.forEach(card => {
       card.addEventListener('click', () => {
         const characterId = card.getAttribute('data-character');
         if (characterId) {
           console.log(`Karakter seçildi: ${characterId}`);
           this.selectCharacter(characterId);
+        } else {
+          console.error("data-character atributu eksik!");
         }
       });
     });
@@ -190,21 +203,23 @@ export class MenuManager {
     const nextBtn = document.querySelector('.carousel-button.next');
     const navDots = document.querySelectorAll('.nav-dot');
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        console.log("Önceki karaktere geçiş");
-        this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length;
-        this.updateCarousel();
-      });
+    if (!prevBtn || !nextBtn) {
+      console.error("Carousel butonları bulunamadı!");
+      NotificationManager.getInstance().show("Carousel butonları yüklenemedi!", 'error');
+      return;
     }
 
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        console.log("Sonraki karaktere geçiş");
-        this.currentCarouselIndex = (this.currentCarouselIndex + 1) % this.characters.length;
-        this.updateCarousel();
-      });
-    }
+    prevBtn.addEventListener('click', () => {
+      console.log("Önceki karaktere geçiş");
+      this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length;
+      this.updateCarousel();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      console.log("Sonraki karaktere geçiş");
+      this.currentCarouselIndex = (this.currentCarouselIndex + 1) % this.characters.length;
+      this.updateCarousel();
+    });
 
     navDots.forEach(dot => {
       dot.addEventListener('click', () => {
@@ -221,7 +236,7 @@ export class MenuManager {
     const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
     if (wrapper) {
       const card = document.querySelector('.character-card') as HTMLElement;
-      const cardWidth = card ? card.offsetWidth + parseFloat(getComputedStyle(card).marginRight) : 320;
+      const cardWidth = card ? card.offsetWidth + (2 * parseFloat(getComputedStyle(card).marginRight)) : 320;
       wrapper.style.transform = `translateX(-${this.currentCarouselIndex * cardWidth}px)`;
     }
 
@@ -238,6 +253,24 @@ export class MenuManager {
 
   private setupEventListeners(): void {
     console.log("Menü olay dinleyicileri ayarlanıyor");
+    const confirmBtn = document.getElementById('confirmCharacter');
+    if (!confirmBtn) {
+      console.error("confirmCharacter butonu bulunamadı!");
+      NotificationManager.getInstance().show("Karakter onay butonu bulunamadı!", 'error');
+      return;
+    }
+    confirmBtn.addEventListener('click', () => {
+      if (this.selectedCharacter) {
+        console.log(`Karakter onaylandı: ${this.selectedCharacter}`);
+        NotificationManager.getInstance().show(`Karakter onaylandı: ${this.selectedCharacter}`, 'success');
+        this.eventEmitter.emit('characterConfirmed', this.selectedCharacter);
+        this.showMenu('main');
+      } else {
+        console.error("Karakter seçilmedi");
+        NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
+      }
+    });
+
     document.getElementById('characterSelectBtn')?.addEventListener('click', () => {
       console.log("Karakter seçimi menüsü açılıyor");
       this.showMenu('character');
@@ -269,18 +302,6 @@ export class MenuManager {
       this.eventEmitter.emit('gameStart');
       this.showMenu('none');
       NotificationManager.getInstance().show('Oyun başlatılıyor...', 'success');
-    });
-
-    document.getElementById('confirmCharacter')?.addEventListener('click', () => {
-      if (this.selectedCharacter) {
-        console.log(`Karakter onaylandı: ${this.selectedCharacter}`);
-        NotificationManager.getInstance().show(`Karakter onaylandı: ${this.selectedCharacter}`, 'success');
-        this.eventEmitter.emit('characterConfirmed', this.selectedCharacter);
-        this.showMenu('main');
-      } else {
-        console.error("Karakter seçilmedi");
-        NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
-      }
     });
   }
 
@@ -330,32 +351,23 @@ export class MenuManager {
         this.updateCarousel();
       }
     } else {
-      console.error(`Karakter kartı bulunamadı: ${characterId}`);
-      NotificationManager.getInstance().show(`Karakter kartı bulunamadı: ${characterId}`, 'error');
-    }
-  }
+      console.error(`Karakter kartı bulunam Characters are not navigating between cards, character selection is not working, and 3D models are not rendering properly. Below, I analyze the issues based on the provided `index.html` and `style.css` files, and provide detailed fixes for each problem.
 
-  public getSelectedCharacter(): string | null {
-    return this.selectedCharacter;
-  }
+---
 
-  public onCharacterConfirmed(callback: (characterId: string) => void): void {
-    this.eventEmitter.on('characterConfirmed', callback);
-  }
+### Issues
+1. **Character Selection Button Not Working**: Clicking the `confirmCharacter` button does not confirm the character selection or start the game (`startGame` is not triggered).
+2. **3D Characters Not Rendering**: The 3D character previews (rendered with Three.js) are not visible; only 12 cards with HTML content (names and stats) are displayed.
+3. **Carousel Navigation Not Working**: The character cards do not navigate left or right (`prev`, `next` buttons and nav-dots are unresponsive).
 
-  public onGameStart(callback: () => void): void {
-    this.eventEmitter.on('gameStart', callback);
-  }
+---
 
-  public cleanup(): void {
-    console.log("MenuManager temizleniyor");
-    this.characterPreviews.forEach((preview) => {
-      preview.renderer.dispose();
-      preview.scene.clear();
-    });
-    this.characterPreviews.clear();
-    document.querySelectorAll('.character-card, .carousel-button, .nav-dot').forEach((el) => {
-      el.replaceWith(el.cloneNode(true));
-    });
-  }
-                            }
+### Analysis and Fixes
+
+#### 1. Character Selection Button Not Working
+**Problem**: The `confirmCharacter` button in `index.html` is defined correctly:
+```html
+<button id="confirmCharacter" class="menu-button">
+  <span class="button-text">Karakteri Seç</span>
+  <span class="button-icon">✓</span>
+</button>
