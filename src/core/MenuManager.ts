@@ -1,4 +1,3 @@
-// src/core/MenuManager.ts
 import * as THREE from 'three';
 import { ModelsLoader } from '../utils/loadModels';
 import { NotificationManager } from './NotificationManager';
@@ -351,11 +350,11 @@ export class MenuManager {
         this.updateCarousel();
       }
     } else {
-      console.error(`Karakter kartı bulunam Characters are not navigating between cards, character selection is not working, and 3D models are not rendering properly. Below, I analyze the issues based on the provided `index.html` and `style.css` files, and provide detailed fixes for each problem.
+      console.error(`Karakter kartı bulunamadı: ${characterId}`);
+    }
+  }
 
-**Problem**: The `confirmCharacter` button in `index.html` is defined correctly:
-```html
-<button id="confirmCharacter" class="menu-button">
-  <span class="button-text">Karakteri Seç</span>
-  <span class="button-icon">✓</span>
-</button>
+  public getSelectedCharacter(): string | null {
+    return this.selectedCharacter;
+  }
+        }
