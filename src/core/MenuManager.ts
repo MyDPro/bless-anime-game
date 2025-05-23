@@ -1,43 +1,43 @@
 // src/core/MenuManager.ts
 
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { NotificationManager } from './NotificationManager';
-import { ModelsLoader } from '../utils/loadModels';
-
-// Karakter verisi tipi (ModelsLoader ile aynı olmalı)
-interface CharacterData {
-    id: string;
-    name: string;
-    modelPath: string;
-    stats: { speed: number; power: number };
-}
 
 export class MenuManager {
     private menus: Map<string, HTMLElement>;
     private activeMenu: string | null = null;
     private selectedCharacter: string | null = null;
-    private characterPreviews: Map<string, {
+    private characterPreviews: Map<string, { 
         scene: THREE.Scene,
         camera: THREE.PerspectiveCamera,
         renderer: THREE.WebGLRenderer,
-        model?: THREE.Object3D,
-        animationFrameId?: number
+        model?: THREE.Object3D 
     }> = new Map();
     private currentCarouselIndex: number = 0;
-    private characters: CharacterData[];
-    private modelsLoader: ModelsLoader;
+    private characters: { id: string; name: string; modelPath: string; stats: { speed: number; power: number } }[] = [
+        {
+            id: 'ninja',
+            name: 'Ninja',
+            modelPath: '/models/character/character-female-a.glb',
+            stats: { speed: 90, power: 70 }
+        },
+        {
+            id: 'samurai',
+            name: 'Samuray',
+            modelPath: '/models/character/character-male-a.glb',
+            stats: { speed: 70, power: 90 }
+        }
+    ];
 
-    constructor(modelsLoader: ModelsLoader) {
+    constructor() {
         console.log("MenuManager başlatılıyor");
-        this.modelsLoader = modelsLoader;
-        this.characters = this.modelsLoader.getAllCharacterData();
-        console.log('Karakter verileri:', this.characters);
         this.menus = new Map();
         this.initializeMenus();
         this.setupEventListeners();
     }
 
-    private async initializeMenus(): Promise<void> {
+    private initializeMenus(): void {
         console.log("Menüler başlatılıyor");
         this.menus.set('main', document.getElementById('main-menu')!);
         this.menus.set('character', document.getElementById('character-select')!);
@@ -46,21 +46,16 @@ export class MenuManager {
         this.menus.set('pause', document.getElementById('pause-menu')!);
         this.menus.set('gameOver', document.getElementById('game-over')!);
 
-        try {
-            await this.createCharacterCarousel();
-            console.log("Karakter carousel'i ve önizlemeler hazır.");
-        } catch (error) {
-            console.error("Karakter carousel veya önizlemeleri oluşturulurken hata:", error);
-            NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi!', 'error');
-        }
+        this.createCharacterCarousel();
     }
 
-    private async createCharacterCarousel(): Promise<void> {
+    private createCharacterCarousel(): void {
         console.log("Karakter carousel'i oluşturuluyor");
         const characterGrid = document.querySelector('.character-grid');
         if (!characterGrid) {
             console.error("Karakter gridi bulunamadı (.character-grid)");
-            throw new Error("Karakter gridi bulunamadı.");
+            NotificationManager.getInstance().show('Karakter carousel yüklenemedi!', 'error');
+            return;
         }
 
         characterGrid.innerHTML = `
@@ -101,91 +96,59 @@ export class MenuManager {
             </div>
         `;
 
-        await new Promise(resolve => setTimeout(resolve, 0));
-
-        const previewPromises = this.characters.map(char => this.setupCharacterPreview(char.id));
-        await Promise.all(previewPromises);
+        this.characters.forEach(char => {
+            this.setupCharacterPreview(char.id, char.modelPath);
+        });
 
         this.setupCharacterCardListeners();
         this.setupCarouselListeners();
         this.updateCarousel();
     }
 
-    private async setupCharacterPreview(characterId: string): Promise<void> {
+    private setupCharacterPreview(characterId: string, modelPath: string): void {
         console.log(`Karakter önizlemesi ayarlanıyor: ${characterId}`);
         const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
         if (!canvas) {
             console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
-            NotificationManager.getInstance().show(`Karakter önizleme canvas'ı bulunamadı: ${characterId}`, 'error');
+            NotificationManager.getInstance().show(`Karakter önizlemesi yüklenemedi: ${characterId}`, 'error');
             return;
         }
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-
-        const resizeCanvas = () => {
-            const parent = canvas.parentElement;
-            if (!parent) return;
-            const width = parent.clientWidth;
-            const height = parent.clientHeight;
-            if (width === 0 || height === 0) {
-                console.warn(`Canvas boyutları sıfır, yeniden deneniyor: ${characterId}`);
-                requestAnimationFrame(resizeCanvas);
-                return;
-            }
-            renderer.setSize(width, height);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-        };
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         camera.position.set(0, 1.5, 3);
         camera.lookAt(0, 1, 0);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(2, 3, 2);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
-        dirLight.shadow.camera.near = 0.5;
-        dirLight.shadow.camera.far = 10;
-        dirLight.shadow.camera.left = -3;
-        dirLight.shadow.camera.right = 3;
-        dirLight.shadow.camera.top = 3;
-        dirLight.shadow.camera.bottom = -3;
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(2, 2, 2);
         scene.add(dirLight);
 
         this.characterPreviews.set(characterId, { scene, camera, renderer });
 
-        const gltf = this.modelsLoader.getModel(characterId);
-        if (!gltf || !gltf.scene) {
-            console.error(`Karakter modeli alınamadı: ${characterId}`);
-            NotificationManager.getInstance().show(`Karakter modeli yüklenemedi: ${characterId}`, 'error');
-            const fallbackGeometry = new THREE.BoxGeometry(1, 1, 1);
-            const fallbackMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-            const fallbackModel = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-            fallbackModel.position.y = 0.5;
-            scene.add(fallbackModel);
-            const preview = this.characterPreviews.get(characterId);
-            if (preview) preview.model = fallbackModel;
-        } else {
-            console.log(`Karakter modeli alındı: ${characterId}`);
-            const model = gltf.scene.clone();
-            const box = new THREE.Box3().setFromObject(model);
-            const size = box.getSize(new THREE.Vector3());
-            model.position.y = -box.min.y * model.scale.y;
-            model.scale.set(1.5, 1.5, 1.5);
+        const loader = new GLTFLoader();
+        loader.load(modelPath, (gltf) => {
+            console.log(`Karakter modeli yüklendi: ${characterId}`);
+            const model = gltf.scene;
+            model.scale.set(1, 1, 1);
+            model.position.set(0, 0, 0);
             scene.add(model);
+            
             const preview = this.characterPreviews.get(characterId);
-            if (preview) preview.model = model;
-        }
+            if (preview) {
+                preview.model = model;
+            }
 
-        this.animatePreview(characterId);
+            this.animatePreview(characterId);
+        }, undefined, (error) => {
+            console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
+            NotificationManager.getInstance().show(`Karakter modeli yüklenemedi: ${characterId}`, 'error');
+        });
     }
 
     private animatePreview(characterId: string): void {
@@ -193,14 +156,9 @@ export class MenuManager {
         if (!preview) return;
 
         const animate = () => {
-            if (!this.characterPreviews.has(characterId)) {
-                if (preview.animationFrameId) {
-                    cancelAnimationFrame(preview.animationFrameId);
-                }
-                return;
-            }
+            if (!this.characterPreviews.has(characterId)) return;
 
-            preview.animationFrameId = requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
             if (preview.model) {
                 preview.model.rotation.y += 0.01;
             }
@@ -217,6 +175,7 @@ export class MenuManager {
             card.addEventListener('click', () => {
                 const characterId = card.getAttribute('data-character');
                 if (characterId) {
+                    console.log(`Karakter seçildi: ${characterId}`);
                     this.selectCharacter(characterId);
                 }
             });
@@ -231,6 +190,7 @@ export class MenuManager {
 
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
+                console.log("Önceki karaktere geçiş");
                 this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length;
                 this.updateCarousel();
             });
@@ -238,6 +198,7 @@ export class MenuManager {
 
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
+                console.log("Sonraki karaktere geçiş");
                 this.currentCarouselIndex = (this.currentCarouselIndex + 1) % this.characters.length;
                 this.updateCarousel();
             });
@@ -246,6 +207,7 @@ export class MenuManager {
         navDots.forEach(dot => {
             dot.addEventListener('click', () => {
                 const index = parseInt(dot.getAttribute('data-index') || '0');
+                console.log(`Nav dot tıklandı: ${index}`);
                 this.currentCarouselIndex = index;
                 this.updateCarousel();
             });
@@ -255,13 +217,8 @@ export class MenuManager {
     private updateCarousel(): void {
         console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
         const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
-        const firstCard = document.querySelector('.character-card') as HTMLElement;
-        const cardWidth = firstCard ? firstCard.offsetWidth : 300;
-        const parentStyle = window.getComputedStyle(wrapper.parentElement || wrapper);
-        const gap = parseFloat(parentStyle.gap) || 20;
-
         if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * (cardWidth + gap)}px)`;
+            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * (100 / this.characters.length)}%)`;
         }
 
         const cards = document.querySelectorAll('.character-card');
@@ -281,45 +238,43 @@ export class MenuManager {
                 dot.classList.remove('active');
             }
         });
-
-        if (this.selectedCharacter) {
-            document.querySelectorAll('.character-card').forEach(card => {
-                if (card.getAttribute('data-character') === this.selectedCharacter) {
-                    card.classList.add('selected');
-                } else {
-                    card.classList.remove('selected');
-                }
-            });
-        }
     }
 
     private setupEventListeners(): void {
         console.log("Menü olay dinleyicileri ayarlanıyor");
         document.getElementById('characterSelectBtn')?.addEventListener('click', () => {
+            console.log("Karakter seçimi menüsü açılıyor");
             this.showMenu('character');
         });
         document.getElementById('scoreboardBtn')?.addEventListener('click', () => {
+            console.log("Skor tablosu menüsü açılıyor");
             this.showMenu('scoreboard');
         });
         document.getElementById('settingsBtn')?.addEventListener('click', () => {
+            console.log("Ayarlar menüsü açılıyor");
             this.showMenu('settings');
         });
 
         document.getElementById('backFromCharSelect')?.addEventListener('click', () => {
+            console.log("Karakter seçiminden ana menüye dönülüyor");
             this.showMenu('main');
         });
         document.getElementById('backFromScoreboard')?.addEventListener('click', () => {
+            console.log("Skor tablosundan ana menüye dönülüyor");
             this.showMenu('main');
         });
         document.getElementById('backFromSettings')?.addEventListener('click', () => {
+            console.log("Ayarlardan ana menüye dönülüyor");
             this.showMenu('main');
         });
 
         document.getElementById('confirmCharacter')?.addEventListener('click', () => {
             if (this.selectedCharacter) {
+                console.log(`Karakter onaylandı: ${this.selectedCharacter}`);
                 NotificationManager.getInstance().show(`Karakter onaylandı: ${this.selectedCharacter}`, 'success');
                 this.showMenu('main');
             } else {
+                console.error("Karakter seçilmedi");
                 NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
             }
         });
@@ -331,6 +286,7 @@ export class MenuManager {
             const currentMenu = this.menus.get(this.activeMenu);
             if (currentMenu) {
                 currentMenu.classList.add('hidden');
+                console.log(`Önceki menü gizlendi: ${this.activeMenu}`);
             }
         }
 
@@ -339,21 +295,22 @@ export class MenuManager {
             if (newMenu) {
                 newMenu.classList.remove('hidden');
                 this.activeMenu = menuId;
+                console.log(`Yeni menü gösterildi: ${menuId}`);
                 if (menuId === 'character') {
-                    this.updateCarousel();
-                    if (!this.selectedCharacter && this.characters.length > 0) {
-                        this.selectCharacter(this.characters[0].id);
-                    }
+                    this.updateCarousel(); // Karakter seçimi açıldığında carousel'i güncelle
                 }
             } else {
+                console.error(`Menü bulunamadı: ${menuId}`);
                 NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
             }
         } else {
             this.activeMenu = null;
+            console.log("Tüm menüler gizlendi");
         }
     }
 
     private selectCharacter(characterId: string): void {
+        console.log(`Karakter seçimi: ${characterId}`);
         document.querySelectorAll('.character-card').forEach(card => {
             card.classList.remove('selected');
         });
@@ -362,12 +319,15 @@ export class MenuManager {
         if (selectedCard) {
             selectedCard.classList.add('selected');
             this.selectedCharacter = characterId;
+            console.log(`Karakter seçildi: ${characterId}`);
+            // Carousel'i seçilen karaktere göre güncelle
             const index = this.characters.findIndex(char => char.id === characterId);
             if (index !== -1) {
                 this.currentCarouselIndex = index;
                 this.updateCarousel();
             }
         } else {
+            console.error(`Karakter kartı bulunamadı: ${characterId}`);
             NotificationManager.getInstance().show(`Karakter kartı bulunamadı: ${characterId}`, 'error');
         }
     }
@@ -377,32 +337,11 @@ export class MenuManager {
     }
 
     public cleanup(): void {
-        this.characterPreviews.forEach((preview) => {
-            if (preview.animationFrameId) {
-                cancelAnimationFrame(preview.animationFrameId);
-            }
+        console.log("MenuManager temizleniyor");
+        this.characterPreviews.forEach((preview, characterId) => {
             preview.renderer.dispose();
             preview.scene.clear();
-            if (preview.model) {
-                preview.model.traverse((obj: any) => {
-                    if (obj.isMesh) {
-                        if (obj.geometry) obj.geometry.dispose();
-                        if (obj.material) {
-                            if (Array.isArray(obj.material)) {
-                                obj.material.forEach((mat: any) => {
-                                    if (mat.map) mat.map.dispose();
-                                    mat.dispose();
-                                });
-                            } else {
-                                if (obj.material.map) obj.material.map.dispose();
-                                obj.material.dispose();
-                            }
-                        }
-                    }
-                    if (obj.texture) obj.texture.dispose();
-                });
-            }
         });
         this.characterPreviews.clear();
     }
-    }
+                                           }
