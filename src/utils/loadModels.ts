@@ -4,139 +4,153 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { NotificationManager } from '../core/NotificationManager';
 
-// Karakter verisi tipi
-interface CharacterData {
+// Model tipi tanımlamaları
+interface BaseModelData {
     id: string;
     name: string;
     modelPath: string;
+}
+
+interface CharacterData extends BaseModelData {
     stats: { speed: number; power: number };
+}
+
+interface KitData extends BaseModelData {
+    type: 'blaster' | 'city';
+    properties?: {
+        damage?: number;
+        size?: { width: number; height: number };
+    };
 }
 
 export class ModelsLoader {
     private gltfLoader: GLTFLoader;
     private loadedModels: Map<string, any> = new Map();
     private charactersData: CharacterData[] = [];
+    private kitsData: KitData[] = [];
 
     constructor() {
         this.gltfLoader = new GLTFLoader();
+        this.setupTextureHandler();
+    }
 
-        // Texture yükleme için fallback
+    private setupTextureHandler(): void {
         this.gltfLoader.load = ((originalLoad) => {
             return (url, onLoad, onProgress, onError) => {
-                originalLoad.call(this.gltfLoader, url, (gltf) => {
+                const cleanUrl = url.replace(/\.\.\/public/g, '');
+                
+                originalLoad.call(this.gltfLoader, cleanUrl, (gltf) => {
                     gltf.scene.traverse((child) => {
-                        if (child.isMesh && child.material && child.material.map) {
-                            const texturePath = child.material.map.sourceFile || child.material.map.name;
-                            if (texturePath.includes('colormap.png')) {
-                                console.warn(`Texture bulunamadı: ${texturePath}, varsayılan texture uygulanıyor`);
-                                child.material.map = new THREE.TextureLoader().load('/models/Textures/colormap.png');
-                                child.material.needsUpdate = true;
+                        if (child.isMesh && child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(mat => this.handleMaterial(mat));
+                            } else {
+                                this.handleMaterial(child.material);
                             }
                         }
                     });
                     onLoad(gltf);
-                }, onProgress, (error) => {
-                    console.error(`Model yükleme hatası: ${url}`, error);
-                    Error(error);
-                });
+                }, onProgress, onError);
             };
         })(this.gltfLoader.load);
     }
 
-    private async loadCharacterData(): Promise<void> {
-        try {
-            console.log('Karakter verileri yükleniyor...');
-            const response = await fetch('/data/characters.json');
-            if (!response.ok) {
-                throw new Error(`Karakter verileri yüklenemedi: ${response.statusText}`);
+    private handleMaterial(material: THREE.Material): void {
+        if ('map' in material && material.map) {
+            const texturePath = material.map.source?.data?.currentSrc || 
+                               material.map.image?.src || 
+                               material.map.sourceFile || 
+                               material.map.name;
+
+            if (!material.map.image || texturePath?.includes('colormap.png')) {
+                new THREE.TextureLoader().load(
+                    '/models/Textures/colormap.png',
+                    (texture) => {
+                        if ('map' in material) {
+                            material.map = texture;
+                            material.needsUpdate = true;
+                        }
+                    },
+                    undefined,
+                    () => {
+                        material.map = null;
+                        if ('color' in material) {
+                            material.color = new THREE.Color(0x808080);
+                        }
+                        material.needsUpdate = true;
+                    }
+                );
             }
-            this.charactersData = await response.json();
-            console.log('Karakter verileri başarıyla yüklendi:', this.charactersData.length);
+        }
+    }
+
+    private async loadData<T>(path: string): Promise<T[]> {
+        try {
+            const response = await fetch(path);
+            if (!response.ok) throw new Error(`Veri yüklenemedi: ${response.statusText}`);
+            return await response.json();
         } catch (error) {
-            console.error('Karakter verileri yüklenirken hata:', error);
-            NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+            console.error(`Veri yükleme hatası (${path}):`, error);
+            NotificationManager.getInstance().show('Veri yüklenemedi!', 'error');
             throw error;
         }
     }
 
-    async loadModel(path: string, name: string): Promise<any> {
-        return new Promise((resolve) => {
-            if (this.loadedModels.has(name)) {
-                resolve(this.loadedModels.get(name));
-                return;
-            }
-
-            console.log(`Model yükleniyor: ${name} (${path})`);
-            this.gltfLoader.load(
-                path,
-                (gltf) => {
-                    console.log(`Model yüklendi: ${name}`);
-                    this.loadedModels.set(name, gltf);
-                    resolve(gltf);
-                },
-                (xhr) => {
-                    if (xhr.lengthComputable) {
-                        const percentComplete = Math.round((xhr.loaded / xhr.total) * 100);
-                    }
-                },
-                (error) => {
-                    console.error(`Model yükleme hatası: ${name}`, error);
-                    NotificationManager.getInstance().show(`Model yüklenemedi: ${name}!`, 'error');
-                    resolve(null); // Fallback: Hata durumunda null döndür
-                }
-            );
-        });
+    private async loadSingleModel(modelPath: string, modelId: string): Promise<void> {
+        try {
+            const gltf = await new Promise((resolve, reject) => {
+                this.gltfLoader.load(
+                    modelPath,
+                    resolve,
+                    (xhr) => {
+                        if (xhr.lengthComputable) {
+                            const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                            console.log(`${modelId}: %${percent} yüklendi`);
+                        }
+                    },
+                    reject
+                );
+            });
+            this.loadedModels.set(modelId, gltf);
+        } catch (error) {
+            console.error(`Model yükleme hatası (${modelId}):`, error);
+            throw error;
+        }
     }
 
     async loadCharacterModels(): Promise<void> {
-        await this.loadCharacterData();
-        console.log('Karakter modelleri yükleniyor...');
-        const loadPromises = this.charactersData.map((char) =>
-            this.loadModel(char.modelPath, char.id)
-        );
-        const results = await Promise.allSettled(loadPromises);
-        results.forEach((result, index) => {
-            if (result.status === 'rejected') {
-                const charId = this.charactersData[index].id;
-                console.error(`Karakter modeli yüklenemedi: ${charId}`, result.reason);
-                NotificationManager.getInstance().show(`Karakter modeli yüklenemedi: ${charId}`, 'error');
-            }
-        });
-        console.log('Karakter modelleri yükleme tamamlandı.');
-    }
-
-    async loadBlasterModels(): Promise<void> {
-        console.log('Blaster modelleri yükleniyor...');
-        const result = await this.loadModel('/models/kit/blaster-a.glb', 'sci-fi_blaster');
-        if (!result) {
-            console.warn('Blaster modeli yüklenemedi, varsayılan obje kullanılacak');
-            const fallback = new THREE.Group();
-            this.loadedModels.set('sci-fi_blaster', { scene: fallback });
+        try {
+            this.charactersData = await this.loadData<CharacterData>('/data/characters.json');
+            await Promise.all(
+                this.charactersData.map(char => 
+                    this.loadSingleModel(char.modelPath, char.id)
+                )
+            );
+        } catch (error) {
+            NotificationManager.getInstance().show('Karakterler yüklenemedi!', 'error');
+            throw error;
         }
-        console.log('Blaster modelleri yükleme tamamlandı.');
     }
 
-    async loadCityKitModels(): Promise<void> {
-        console.log('Şehir kiti modelleri yükleniyor...');
-        const cityKitPaths = [
-            { id: 'buildingA', path: '/models/city-kit/fence-1x4.glb' },
-        ];
-        const loadPromises = cityKitPaths.map((item) => this.loadModel(item.path, item.id));
-        const results = await Promise.allSettled(loadPromises);
-        results.forEach((result, index) => {
-            if (result.status === 'rejected') {
-                const id = cityKitPaths[index].id;
-                console.error(`Şehir kiti modeli yüklenemedi: ${id}`, result.reason);
-                NotificationManager.getInstance().show(`Şehir kiti modeli yüklenemedi: ${id}`, 'error');
-                const fallback = new THREE.Group();
-                this.loadedModels.set(id, { scene: fallback });
-            }
-        });
-        console.log('Şehir kiti modelleri yükleme tamamlandı.');
+    async loadGameAssets(): Promise<void> {
+        try {
+            await Promise.all([
+                this.loadSingleModel('/models/kit/blaster-a.glb', 'sci-fi_blaster'),
+                this.loadSingleModel('/models/city-kit/fence-1x4.glb', 'buildingA')
+            ]);
+        } catch (error) {
+            NotificationManager.getInstance().show('Bazı oyun modelleri yüklenemedi!', 'warning');
+            // Fallback: Boş gruplar oluştur
+            ['sci-fi_blaster', 'buildingA'].forEach(id => {
+                if (!this.loadedModels.has(id)) {
+                    this.loadedModels.set(id, { scene: new THREE.Group() });
+                }
+            });
+        }
     }
 
-    getModel(name: string): any | undefined {
-        return this.loadedModels.get(name);
+    getModel(id: string): any | undefined {
+        return this.loadedModels.get(id);
     }
 
     getAllCharacterData(): CharacterData[] {
