@@ -357,4 +357,8 @@ export class MenuManager {
   public getSelectedCharacter(): string | null {
     return this.selectedCharacter;
   }
-        }
+
+  public getEventEmitter(): EventEmitter {
+    return this.eventEmitter;
+  }
+            }
