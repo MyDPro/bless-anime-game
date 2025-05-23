@@ -46,18 +46,22 @@
     </div>
 
     <!-- Karakter Seçim Menüsü -->
-<div id="character-select" class="menu hidden">
+    <div id="character-select" class="menu-screen hidden">
+      <div class="menu-content">
         <h2>Karakter Seçimi</h2>
-        <div class="character-grid-container">
-            <div class="character-grid"></div>
-            <div class="character-error hidden"></div> <!-- Hata mesajları için -->
+        <div class="character-grid"></div>
+        <div class="menu-buttons">
+          <button id="backFromCharSelect" class="menu-button back-button">
+            <span class="button-icon">◀</span>
+            <span class="button-text">Geri</span>
+          </button>
+          <button id="confirmCharacter" class="menu-button">
+            <span class="button-text">Karakteri Seç</span>
+            <span class="button-icon">✓</span>
+          </button>
         </div>
-        <div class="character-select-buttons">
-            <button id="confirmCharacter">Onayla</button>
-            <button id="backFromCharSelect">Geri</button>
-        </div>
+      </div>
     </div>
-
 
     <!-- Skor Tablosu -->
     <div id="scoreboard" class="menu-screen hidden">
