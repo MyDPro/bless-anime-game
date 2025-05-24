@@ -100,7 +100,7 @@ export class Game {
         this.scene = this.createScene();
         [this.camera, this.renderer] = this.createRenderer(canvas);
         this.controls = this.createControls();
-        this.modelsLoader = new ModelsLoader(this.scene);
+        this.modelsLoader = new ModelsLoader();
         this.ui = this.initializeUI();
 
         // Setup and initialization
