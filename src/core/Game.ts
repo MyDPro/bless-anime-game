@@ -122,23 +122,31 @@ export class Game {
         return scene;
     }
 
-    private createRenderer(canvas: HTMLCanvasElement): [THREE.PerspectiveCamera, THREE.WebGLRenderer] {
-        const camera = new THREE.PerspectiveCamera(
-            this.CAMERA_CONFIG.FOV,
-            window.innerWidth / window.innerHeight,
-            this.CAMERA_CONFIG.NEAR,
-            this.CAMERA_CONFIG.FAR
-        );
-        camera.position.copy(this.CAMERA_CONFIG.POSITION);
-        camera.lookAt(this.CAMERA_CONFIG.LOOK_AT);
-
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-        return [camera, renderer];
+    // Game.ts içinde renderer oluşturma kısmını şu şekilde güncelleyin:
+private createRenderer(canvas: HTMLCanvasElement): [THREE.PerspectiveCamera, THREE.WebGLRenderer] {
+    // Eğer önceden bir WebGL context varsa temizle
+    const existingContext = canvas.getContext('webgl') || canvas.getContext('webgl2');
+    if (existingContext) {
+        existingContext.getExtension('WEBGL_lose_context')?.loseContext();
     }
+
+    const camera = new THREE.PerspectiveCamera(
+        this.CAMERA_CONFIG.FOV,
+        canvas.clientWidth / canvas.clientHeight,
+        this.CAMERA_CONFIG.NEAR,
+        this.CAMERA_CONFIG.FAR
+    );
+    
+    // Yeni renderer oluştur
+    const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+    });
+    
+    return [camera, renderer];
+}
 
     private createControls(): OrbitControls {
         const controls = new OrbitControls(this.camera, this.renderer.domElement);
