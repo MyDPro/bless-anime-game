@@ -46,30 +46,31 @@ export class ModelsLoader {
                   .replace(/\/+/g, '/');          // Çift slash'ları tekli hale getir
     }
 
-    private handleMaterial(material: THREE.Material): void {
-        if ('map' in material && material.map) {
-            if (!material.map.image) {
-                new THREE.TextureLoader().load(
-                    '/models/Textures/colormap.png',
-                    (texture) => {
-                        if ('map' in material) {
-                            material.map = texture;
-                            material.needsUpdate = true;
-                        }
-                    },
-                    undefined,
-                    () => {
-                        material.map = null;
-                        if ('color' in material) {
-                            material.color = new THREE.Color(0x808080);
-                        }
+private handleMaterial(material: THREE.Material): void {
+    if ('map' in material && material.map) {
+        // material.map'in Texture olduğundan emin olalım
+        const texture = material.map as THREE.Texture;
+        if (!texture.image) {
+            new THREE.TextureLoader().load(
+                '/models/Textures/colormap.png',
+                (texture) => {
+                    if ('map' in material) {
+                        material.map = texture;
                         material.needsUpdate = true;
                     }
-                );
-            }
+                },
+                undefined,
+                () => {
+                    material.map = null;
+                    if ('color' in material) {
+                        material.color = new THREE.Color(0x808080);
+                    }
+                    material.needsUpdate = true;
+                }
+            );
         }
     }
-
+}
     private async loadCharacterData(): Promise<void> {
         try {
             const response = await fetch('/data/characters.json');
