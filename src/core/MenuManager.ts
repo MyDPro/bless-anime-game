@@ -46,7 +46,7 @@ export class MenuManager {
     };
 
     constructor() {
-        console.log(`MenuManager başlatılıyor - ${new Date().toISOString()} - User: MyDemir`);
+        console.log(`MenuManager başlatılıyor - 2025-05-24 15:50:55 - User: MyDemir`);
         this.modelsLoader = new ModelsLoader();
         this.eventEmitter = new EventEmitter();
         this.menus = new Map();
@@ -123,7 +123,7 @@ export class MenuManager {
             <div class="character-carousel-container">
                 <div class="character-carousel">
                     <div class="character-cards-wrapper">
-                        ${this.characters.map(this.generateCharacterCardHTML).join('')}
+                        ${this.characters.map(char => this.generateCharacterCardHTML(char)).join('')}
                     </div>
                 </div>
                 <button class="carousel-button prev" aria-label="Önceki karakter">◄</button>
@@ -242,6 +242,99 @@ export class MenuManager {
         }
     }
 
+    private setupCharacterCardListeners(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const characterCards = document.querySelectorAll('.character-card');
+            
+            characterCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    // Önceki seçili karakterin vurgusunu kaldır
+                    document.querySelectorAll('.character-card').forEach(c => {
+                        c.classList.remove('selected');
+                    });
+
+                    // Yeni karakteri seç ve vurgula
+                    const characterId = card.getAttribute('data-character');
+                    if (characterId) {
+                        this.selectedCharacter = characterId;
+                        card.classList.add('selected');
+                        
+                        const selectedCharacter = this.characters.find(c => c.id === characterId);
+                        if (selectedCharacter) {
+                            NotificationManager.getInstance().show(
+                                `${selectedCharacter.name} seçildi!`,
+                                'success'
+                            );
+                        }
+                    }
+                });
+            });
+
+            resolve();
+        });
+    }
+
+    private setupCarouselListeners(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const prevButton = document.querySelector('.carousel-button.prev');
+            const nextButton = document.querySelector('.carousel-button.next');
+            const navDots = document.querySelectorAll('.nav-dot');
+
+            if (prevButton && nextButton) {
+                prevButton.addEventListener('click', () => this.navigateCarousel('prev'));
+                nextButton.addEventListener('click', () => this.navigateCarousel('next'));
+            }
+
+            navDots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    this.currentCarouselIndex = index;
+                    this.updateCarousel();
+                });
+            });
+
+            resolve();
+        });
+    }
+
+    private navigateCarousel(direction: 'prev' | 'next'): void {
+        const totalCharacters = this.characters.length;
+        
+        if (direction === 'prev') {
+            this.currentCarouselIndex = (this.currentCarouselIndex - 1 + totalCharacters) % totalCharacters;
+        } else {
+            this.currentCarouselIndex = (this.currentCarouselIndex + 1) % totalCharacters;
+        }
+
+        this.updateCarousel();
+    }
+
+    private updateCarousel(): void {
+        const wrapper = document.querySelector('.character-cards-wrapper');
+        const dots = document.querySelectorAll('.nav-dot');
+        
+        if (wrapper instanceof HTMLElement) {
+            const offset = -(this.currentCarouselIndex * 100);
+            wrapper.style.transform = `translateX(${offset}%)`;
+        }
+
+        dots.forEach((dot, index) => {
+            if (index === this.currentCarouselIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+
+        // Aktif karakterin preview'ını güncelle
+        const currentCharacter = this.characters[this.currentCarouselIndex];
+        if (currentCharacter) {
+            const preview = this.characterPreviews.get(currentCharacter.id);
+            if (preview && preview.model) {
+                preview.model.rotation.y = 0; // Modeli sıfırla
+            }
+        }
+    }
+
     private animatePreview(characterId: string): void {
         const preview = this.characterPreviews.get(characterId);
         if (!preview) return;
@@ -345,7 +438,6 @@ export class MenuManager {
         }
     }
 
-    // Public methods
     public getSelectedCharacter(): string | null {
         return this.selectedCharacter;
     }
@@ -354,7 +446,6 @@ export class MenuManager {
         return this.eventEmitter;
     }
 
-   // Cleanup method
     public dispose(): void {
         // Animasyonları temizle
         this.characterPreviews.forEach((preview, id) => {
@@ -367,6 +458,6 @@ export class MenuManager {
 
         // Event listener'ları temizle
         this.eventEmitter.clearEvent('characterConfirmed');
-        //this.eventEmitter.clearEvent('gameStart');
+        this.eventEmitter.clearEvent('gameStart');
     }
 }
