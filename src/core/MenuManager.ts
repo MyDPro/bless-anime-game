@@ -354,7 +354,7 @@ export class MenuManager {
         return this.eventEmitter;
     }
 
-    // Cleanup method
+   // Cleanup method
     public dispose(): void {
         // Animasyonları temizle
         this.characterPreviews.forEach((preview, id) => {
@@ -366,6 +366,7 @@ export class MenuManager {
         this.characterPreviews.clear();
 
         // Event listener'ları temizle
-        this.eventEmitter = new EventEmitter();
+        this.eventEmitter.clearEvent('characterConfirmed');
+        //this.eventEmitter.clearEvent('gameStart');
     }
-              }
+}
