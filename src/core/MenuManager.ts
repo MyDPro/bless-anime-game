@@ -1,5 +1,3 @@
-// src/core/MenuManager.ts
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { NotificationManager } from './NotificationManager';
@@ -58,6 +56,9 @@ export class MenuManager {
             return;
         }
 
+        const currentDateTime = '2025-05-24 20:38:58';
+        const currentUser = 'MyDemir';
+
         characterGrid.innerHTML = `
             <div class="character-carousel-container">
                 <div class="character-carousel">
@@ -82,6 +83,10 @@ export class MenuManager {
                                                 <div class="stat-fill" style="width: ${char.stats.power}%"></div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div class="character-selection-info">
+                                        <small>Son Seçen: ${currentUser}</small>
+                                        <small>Son Seçim: ${currentDateTime}</small>
                                     </div>
                                 </div>
                             </div>
@@ -297,7 +302,7 @@ export class MenuManager {
                 this.activeMenu = menuId;
                 console.log(`Yeni menü gösterildi: ${menuId}`);
                 if (menuId === 'character') {
-                    this.updateCarousel(); // Karakter seçimi açıldığında carousel'i güncelle
+                    this.updateCarousel();
                 }
             } else {
                 console.error(`Menü bulunamadı: ${menuId}`);
@@ -320,7 +325,6 @@ export class MenuManager {
             selectedCard.classList.add('selected');
             this.selectedCharacter = characterId;
             console.log(`Karakter seçildi: ${characterId}`);
-            // Carousel'i seçilen karaktere göre güncelle
             const index = this.characters.findIndex(char => char.id === characterId);
             if (index !== -1) {
                 this.currentCarouselIndex = index;
@@ -344,4 +348,4 @@ export class MenuManager {
         });
         this.characterPreviews.clear();
     }
-                                           }
+}
