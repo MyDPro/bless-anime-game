@@ -25,6 +25,8 @@ interface GameUI {
     loadingScreen: HTMLElement;
 }
 
+type MenuId = 'main' | 'character' | 'scoreboard' | 'settings' | 'pause' | 'gameOver' | 'none';
+
 export class Game {
     private readonly scene: THREE.Scene;
     private readonly camera: THREE.PerspectiveCamera;
@@ -34,7 +36,7 @@ export class Game {
     private readonly eventEmitter: EventEmitter;
     private readonly menuManager: MenuManager;
     private readonly CURRENT_USER = 'MyDemir';
-    private readonly CURRENT_TIME = '2025-05-23 21:15:47';
+    private readonly CURRENT_TIME = '2025-05-24 16:15:28';
 
     private player: THREE.Object3D | null = null;
     private readonly blasters: THREE.Object3D[] = [];
@@ -94,7 +96,6 @@ export class Game {
     constructor(canvas: HTMLCanvasElement) {
         console.log(`Game sınıfı başlatılıyor - ${this.CURRENT_TIME} - User: ${this.CURRENT_USER}`);
         
-        // Core initialization
         this.eventEmitter = new EventEmitter();
         this.menuManager = new MenuManager();
         this.scene = this.createScene();
@@ -103,15 +104,12 @@ export class Game {
         this.modelsLoader = new ModelsLoader();
         this.ui = this.initializeUI();
 
-        // Setup and initialization
         this.setupWorld();
         this.setupEventListeners();
         this.loadHighScore();
         
-        // Initial UI state
         this.ui.uiContainer.classList.add('hidden');
 
-        // Start loading process
         this.initializeGame().catch(error => {
             console.error('Oyun başlatma hatası:', error);
             NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
@@ -175,7 +173,7 @@ export class Game {
             console.log('Model yükleme başlıyor...');
             await Promise.all([
                 this.modelsLoader.loadCharacterModels(),
-                this.modelsLoader.loadBlasterModels()
+                this.modelsLoader.loadGameAssets()
             ]);
 
             this.handleLoadingComplete();
@@ -189,16 +187,15 @@ export class Game {
             this.ui.loadingScreen.classList.add('fade-out');
             setTimeout(() => {
                 this.ui.loadingScreen?.classList.add('hidden');
-                this.menuManager.showMenu('main');
+                this.menuManager.showMenu('main' as MenuId);
             }, this.GAME_CONFIG.LOADING_FADE_DURATION);
         } else {
-            this.menuManager.showMenu('main');
+            this.menuManager.showMenu('main' as MenuId);
         }
         NotificationManager.getInstance().show('Modeller başarıyla yüklendi!', 'success');
     }
 
     private setupWorld(): void {
-        // Lights
         this.addAmbientLight();
         this.addDirectionalLight();
         this.addPlatform();
@@ -250,7 +247,6 @@ export class Game {
         this.scene.add(platform);
     }
 
-    // Event handlers
     private setupEventListeners(): void {
         this.setupWindowListeners();
         this.setupGameplayListeners();
@@ -262,6 +258,36 @@ export class Game {
         window.addEventListener('resize', this.onWindowResize.bind(this));
         document.addEventListener('keydown', this.onKeyDown.bind(this));
         document.addEventListener('mousedown', this.onMouseDown.bind(this));
+    }
+
+    private onWindowResize(): void {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
+
+    private onKeyDown(event: KeyboardEvent): void {
+        if (!this.gameState.isStarted) return;
+
+        switch (event.code) {
+            case 'Escape':
+                this.togglePause();
+                break;
+            case 'Space':
+                if (!this.gameState.isPaused) {
+                    this.shoot();
+                }
+                break;
+        }
+    }
+
+    private onMouseDown(event: MouseEvent): void {
+        if (!this.gameState.isPaused && this.gameState.isStarted) {
+            this.shoot();
+        }
     }
 
     private setupGameplayListeners(): void {
@@ -281,7 +307,6 @@ export class Game {
         document.getElementById('exitToMainBtn')?.addEventListener('click', () => this.exitToMain());
     }
 
-    // Event handler implementations
     private handlePlayerDamage(damage: number): void {
         this.gameState.health -= damage;
         
@@ -312,13 +337,63 @@ export class Game {
     private handleGameStart(): void {
         if (!this.gameState.selectedCharacter) {
             NotificationManager.getInstance().show('Lütfen önce bir karakter seçin!', 'error');
-            this.menuManager.showMenu('character');
+            this.menuManager.showMenu('character' as MenuId);
             return;
         }
         this.startGame();
     }
 
-    // Game state management
+    private resumeGame(): void {
+        if (this.gameState.isPaused) {
+            this.gameState.isPaused = false;
+            this.ui.uiContainer.classList.remove('hidden');
+            this.menuManager.showMenu('none' as MenuId);
+            NotificationManager.getInstance().show('Oyun devam ediyor...', 'success');
+        }
+    }
+
+    private restartGame(): void {
+        this.resetGameState();
+        this.startGame();
+        NotificationManager.getInstance().show('Oyun yeniden başlatıldı!', 'success');
+    }
+
+    private exitToMain(): void {
+        this.resetGameState();
+        this.menuManager.showMenu('main' as MenuId);
+        this.ui.uiContainer.classList.add('hidden');
+        NotificationManager.getInstance().show('Ana menüye dönüldü', 'success');
+    }
+
+    private startGame(): void {
+        this.gameState.isStarted = true;
+        this.gameState.isPaused = false;
+        this.ui.uiContainer.classList.remove('hidden');
+        this.setupPlayer();
+        NotificationManager.getInstance().show('Oyun başladı!', 'success');
+    }
+
+    private endGame(): void {
+        this.gameState.isStarted = false;
+        this.saveHighScore();
+        this.menuManager.showMenu('gameOver' as MenuId);
+        this.ui.uiContainer.classList.add('hidden');
+        NotificationManager.getInstance().show('Oyun bitti!', 'warning');
+    }
+
+    private togglePause(): void {
+        if (!this.gameState.isStarted) return;
+
+        this.gameState.isPaused = !this.gameState.isPaused;
+        if (this.gameState.isPaused) {
+            this.menuManager.showMenu('pause' as MenuId);
+            this.ui.uiContainer.classList.add('hidden');
+        } else {
+            this.menuManager.showMenu('none' as MenuId);
+            this.ui.uiContainer.classList.remove('hidden');
+        }
+    }
+
     private loadHighScore(): void {
         const savedHighScore = localStorage.getItem('highScore');
         if (savedHighScore) {
@@ -334,7 +409,63 @@ export class Game {
         }
     }
 
-    // UI updates
+    private resetGameState(): void {
+        this.gameState = {
+            ...this.gameState,
+            isStarted: false,
+            isPaused: false,
+            score: 0,
+            health: this.GAME_CONFIG.INITIAL_HEALTH,
+            ammo: this.GAME_CONFIG.INITIAL_AMMO,
+            lastPlayTime: this.CURRENT_TIME
+        };
+        this.updateUI();
+    }
+
+private setupPlayer(): void {
+    if (!this.gameState.selectedCharacter) {
+        console.warn('Karakter seçilmemiş!');
+        return;
+    }
+
+    const model = this.modelsLoader.getModel(this.gameState.selectedCharacter);
+    if (!model || !model.scene) {
+        console.error('Karakter modeli yüklenemedi!');
+        return;
+    }
+
+    try {
+        const playerModel = model.scene.clone();
+        playerModel.position.set(0, 0, 0);
+        this.scene.add(playerModel);
+        this.player = playerModel;
+        
+        NotificationManager.getInstance().show(
+            `${this.gameState.selectedCharacter} karakteri yüklendi!`, 
+            'success'
+        );
+    } catch (error) {
+        console.error('Karakter kurulumu başarısız:', error);
+        NotificationManager.getInstance().show(
+            'Karakter yüklenirken hata oluştu!', 
+            'error'
+        );
+    }
+}
+
+    private shoot(): void {
+        if (this.gameState.ammo > 0) {
+            this.gameState.ammo--;
+            this.updateUI();
+            
+            if (this.gameState.ammo <= this.GAME_CONFIG.LOW_AMMO_THRESHOLD) {
+                NotificationManager.getInstance().show('Mermi azalıyor!', 'warning');
+            }
+        } else {
+            NotificationManager.getInstance().show('Mermi bitti!', 'error');
+        }
+    }
+
     private updateUI(): void {
         this.updateGameStats();
         this.updateUserInfo();
@@ -374,14 +505,12 @@ export class Game {
         }
     }
 
-    // Game loop and rendering
     private animate(): void {
         requestAnimationFrame(() => this.animate());
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
 
-    // Public methods
     public getCurrentUser(): string {
         return this.gameState.currentUser;
     }
@@ -390,11 +519,7 @@ export class Game {
         return this.gameState.lastPlayTime;
     }
 
-    public showMenu(menuId: string): void {
+    public showMenu(menuId: MenuId): void {
         this.menuManager.showMenu(menuId);
     }
-
-    // Implementation of remaining methods...
-    // Note: The rest of the methods (shoot, togglePause, etc.) would follow 
-    // similar patterns of organization and error handling
 }
