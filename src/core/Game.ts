@@ -1,5 +1,3 @@
-// src/core/Game.ts
-
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { MenuManager } from './MenuManager';
@@ -7,26 +5,44 @@ import { ModelsLoader } from '../utils/loadModels';
 import { EventEmitter } from '../utils/EventEmitter';
 import { NotificationManager } from './NotificationManager';
 
-export class Game {
-    private scene: THREE.Scene;
-    private camera: THREE.PerspectiveCamera;
-    private renderer: THREE.WebGLRenderer;
-    private controls: OrbitControls;
+interface GameState {
+    isStarted: boolean;
+    isPaused: boolean;
+    score: number;
+    health: number;
+    ammo: number;
+    selectedCharacter: string | null;
+    highScore: number;
+    currentUser: string;
+    lastPlayTime: string;
+}
 
+interface GameResources {
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    renderer: THREE.WebGLRenderer;
+    controls: OrbitControls;
+}
+
+export class Game extends EventEmitter {
+    private resources: GameResources;
     private modelsLoader: ModelsLoader;
-    private eventEmitter: EventEmitter;
     private menuManager: MenuManager;
+    private lastTime: number = 0;
+    private readonly targetFPS = 60;
+    private readonly frameInterval = 1000 / this.targetFPS;
+    private animationFrameId: number | null = null;
 
-    private gameState = {
+    private gameState: GameState = {
         isStarted: false,
         isPaused: false,
         score: 0,
         health: 100,
         ammo: 30,
-        selectedCharacter: null as string | null,
+        selectedCharacter: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-16 00:33:50'
+        lastPlayTime: '2025-05-25 09:54:23'
     };
 
     private ui = {
@@ -40,38 +56,69 @@ export class Game {
     private player: THREE.Object3D | null = null;
     private blasters: THREE.Object3D[] = [];
     private enemies: THREE.Object3D[] = [];
+    private moveState = {
+        forward: false,
+        backward: false,
+        left: false,
+        right: false,
+        jump: false
+    };
+
+    private readonly MOVEMENT_SPEED = 5;
+    private readonly ROTATION_SPEED = 2;
+    private readonly raycaster = new THREE.Raycaster();
+    private readonly moveDirection = new THREE.Vector3();
 
     constructor(canvas: HTMLCanvasElement) {
+        super();
         console.log("Game sınıfı başlatılıyor");
-        this.eventEmitter = new EventEmitter();
+        
+        this.resources = this.initializeResources(canvas);
+        this.modelsLoader = new ModelsLoader(this.resources.scene);
         this.menuManager = new MenuManager();
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xbfd1e5);
-        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(5, 5, 5);
-        this.camera.lookAt(0, 0, 0);
-        this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
-        this.controls.dampingFactor = 0.05;
-        this.controls.target.set(0, 1, 0);
-        this.modelsLoader = new ModelsLoader(this.scene);
+        
         this.setupWorld();
         this.setupEventListeners();
-        this.loadHighScore();
+        this.loadGameState();
         this.setCurrentDateTime();
-        this.loadGameModels().then(() => {
-            console.log("Modeller yüklendi, ana menü gösteriliyor");
-            this.animate();
-            NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
-        }).catch(error => {
-            console.error('Oyun modelleri yüklenemedi:', error);
+        
+        this.initializeGame().catch(error => {
+            console.error('Oyun başlatılamadı:', error);
             NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
         });
+    }
+
+    private initializeResources(canvas: HTMLCanvasElement): GameResources {
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xbfd1e5);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 1, 0);
+
+        return { scene, camera, renderer, controls };
+    }
+
+    private async initializeGame(): Promise<void> {
         this.ui.uiContainer.classList.add('hidden');
+        
+        try {
+            await this.loadGameModels();
+            this.animate();
+            NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
+        } catch (error) {
+            throw error;
+        }
     }
 
     private setCurrentDateTime(): void {
@@ -85,19 +132,27 @@ export class Game {
         this.gameState.lastPlayTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 
-    private loadHighScore(): void {
+    private loadGameState(): void {
+        const savedState = localStorage.getItem('gameState');
+        if (savedState) {
+            const parsedState = JSON.parse(savedState);
+            this.gameState = { ...this.gameState, ...parsedState };
+        }
+        
         const savedHighScore = localStorage.getItem('highScore');
         if (savedHighScore) {
             this.gameState.highScore = parseInt(savedHighScore);
         }
     }
 
-    private saveHighScore(): void {
-        if (this.gameState.score > this.gameState.highScore) {
-            this.gameState.highScore = this.gameState.score;
-            localStorage.setItem('highScore', this.gameState.highScore.toString());
-            NotificationManager.getInstance().show('Yeni yüksek skor kaydedildi! 🏆', 'success');
-        }
+    private saveGameState(): void {
+        const stateToSave = {
+            highScore: this.gameState.highScore,
+            lastPlayTime: this.gameState.lastPlayTime,
+            selectedCharacter: this.gameState.selectedCharacter
+        };
+        localStorage.setItem('gameState', JSON.stringify(stateToSave));
+        localStorage.setItem('highScore', this.gameState.highScore.toString());
     }
 
     private async loadGameModels(): Promise<void> {
@@ -107,32 +162,114 @@ export class Game {
                 this.modelsLoader.loadCharacterModels(),
                 this.modelsLoader.loadBlasterModels()
             ]);
+            
             console.log('Modeller başarıyla yüklendi');
             NotificationManager.getInstance().show('Modeller başarıyla yüklendi!', 'success');
+            
             if (this.ui.loadingScreen) {
                 this.ui.loadingScreen.classList.add('fade-out');
-                setTimeout(() => {
-                    if (this.ui.loadingScreen) {
-                        this.ui.loadingScreen.classList.add('hidden');
-                        console.log("Yükleme ekranı gizlendi");
-                    }
-                    this.menuManager.showMenu('main');
-                    console.log("Ana menü gösterildi");
-                }, 500);
-            } else {
-                console.error("Yükleme ekranı bulunamadı");
+                await new Promise(resolve => setTimeout(resolve, 500));
+                this.ui.loadingScreen.classList.add('hidden');
                 this.menuManager.showMenu('main');
             }
         } catch (error) {
             console.error('Model yükleme hatası:', error);
-            NotificationManager.getInstance().show('Model yükleme hatası! Lütfen sayfayı yenileyin.', 'error');
+            NotificationManager.getInstance().show('Model yükleme hatası!', 'error');
             throw error;
         }
     }
 
+    private animate(currentTime: number = 0): void {
+        this.animationFrameId = requestAnimationFrame((time) => this.animate(time));
+
+        const deltaTime = (currentTime - this.lastTime) / 1000;
+        if (deltaTime < this.frameInterval) return;
+
+        if (!this.gameState.isPaused && this.gameState.isStarted) {
+            this.gameLoop(deltaTime);
+        }
+
+        this.resources.controls.update();
+        this.resources.renderer.render(this.resources.scene, this.resources.camera);
+
+        this.lastTime = currentTime;
+    }
+
+    private updatePlayerMovement(deltaTime: number): void {
+        if (!this.player) return;
+
+        this.moveDirection.set(0, 0, 0);
+
+        if (this.moveState.forward) this.moveDirection.z -= 1;
+        if (this.moveState.backward) this.moveDirection.z += 1;
+        if (this.moveState.left) this.moveDirection.x -= 1;
+        if (this.moveState.right) this.moveDirection.x += 1;
+
+        if (this.moveDirection.length() > 0) {
+            this.moveDirection.normalize().multiplyScalar(this.MOVEMENT_SPEED * deltaTime);
+            this.player.position.add(this.moveDirection);
+            this.checkCollisions();
+        }
+    }
+
+    private checkCollisions(): void {
+        if (!this.player) return;
+
+        this.raycaster.set(
+            this.player.position,
+            new THREE.Vector3(0, -1, 0)
+        );
+
+        const intersects = this.raycaster.intersectObjects(this.resources.scene.children);
+        if (intersects.length > 0) {
+            const distance = intersects[0].distance;
+            if (distance < 0.5) {
+                this.player.position.y = intersects[0].point.y + 0.5;
+            }
+        }
+    }
+
+    public cleanup(): void {
+        // Animation frame temizleme
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+
+        // Event listeners temizleme
+        window.removeEventListener('resize', () => this.onWindowResize());
+        document.removeEventListener('keydown', (e) => this.onKeyDown(e));
+        document.removeEventListener('keyup', (e) => this.onKeyUp(e));
+        document.removeEventListener('mousedown', (e) => this.onMouseDown(e));
+        document.removeEventListener('mouseup', (e) => this.onMouseUp(e));
+        document.removeEventListener('mousemove', (e) => this.onMouseMove(e));
+
+        // Three.js kaynakları temizleme
+        this.resources.scene.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                object.geometry.dispose();
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(material => material.dispose());
+                } else {
+                    object.material.dispose();
+                }
+            }
+        });
+
+        this.resources.renderer.dispose();
+        this.resources.controls.dispose();
+        this.modelsLoader.cleanup();
+        this.menuManager.cleanup();
+
+        // Game state kaydetme
+        this.saveGameState();
+    }
+   // ... (Önceki kod aynen kalacak, devamı:)
+
     private setupWorld(): void {
+        // Temel ışıklandırma
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        this.scene.add(ambientLight);
+        this.resources.scene.add(ambientLight);
+
         const dirLight = new THREE.DirectionalLight(0xffffff, 1);
         dirLight.position.set(5, 10, 5);
         dirLight.castShadow = true;
@@ -144,7 +281,9 @@ export class Game {
         dirLight.shadow.camera.right = 10;
         dirLight.shadow.camera.top = 10;
         dirLight.shadow.camera.bottom = -10;
-        this.scene.add(dirLight);
+        this.resources.scene.add(dirLight);
+
+        // Platform oluşturma
         const platform = new THREE.Mesh(
             new THREE.BoxGeometry(10, 0.5, 10),
             new THREE.MeshStandardMaterial({
@@ -155,7 +294,7 @@ export class Game {
         );
         platform.receiveShadow = true;
         platform.position.y = -0.25;
-        this.scene.add(platform);
+        this.resources.scene.add(platform);
     }
 
     private setupEventListeners(): void {
@@ -165,7 +304,8 @@ export class Game {
         document.addEventListener('mousedown', (e) => this.onMouseDown(e));
         document.addEventListener('mouseup', (e) => this.onMouseUp(e));
         document.addEventListener('mousemove', (e) => this.onMouseMove(e));
-        this.eventEmitter.on('playerDamage', (damage: number) => {
+
+        this.on('playerDamage', (damage: number) => {
             this.gameState.health -= damage;
             if (this.gameState.health <= 30) {
                 NotificationManager.getInstance().show('Kritik hasar! Can düşük!', 'warning');
@@ -176,64 +316,64 @@ export class Game {
                 this.endGame();
             }
         });
-        this.eventEmitter.on('scoreUpdate', (points: number) => {
+
+        this.on('scoreUpdate', (points: number) => {
             this.gameState.score += points;
             if (points > 0) {
                 NotificationManager.getInstance().show(`+${points} puan!`, 'success');
             }
             this.updateUI();
         });
+
         document.getElementById('startBtn')?.addEventListener('click', () => {
             console.log("Oyun başlat düğmesine tıklandı");
             this.startGame();
         });
+
         document.getElementById('resumeBtn')?.addEventListener('click', () => {
             console.log("Oyun devam ettiriliyor");
             this.resumeGame();
         });
+
         document.getElementById('restartBtn')?.addEventListener('click', () => {
             console.log("Oyun yeniden başlatılıyor");
             this.restartGame();
         });
+
         document.getElementById('exitToMainBtn')?.addEventListener('click', () => {
             console.log("Ana menüye dönülüyor");
             this.exitToMain();
         });
-        document.getElementById('confirmCharacter')?.addEventListener('click', () => {
-            const selectedChar = this.menuManager.getSelectedCharacter();
-            if (selectedChar) {
-                NotificationManager.getInstance().show(`${selectedChar} karakteri seçildi!`, 'success');
-            }
-        });
     }
 
     private onWindowResize(): void {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.resources.camera.aspect = window.innerWidth / window.innerHeight;
+        this.resources.camera.updateProjectionMatrix();
+        this.resources.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     private onKeyDown(event: KeyboardEvent): void {
         if (!this.gameState.isStarted || this.gameState.isPaused) return;
+
         switch (event.code) {
             case 'KeyW':
             case 'ArrowUp':
-                // İleri hareket
+                this.moveState.forward = true;
                 break;
             case 'KeyS':
             case 'ArrowDown':
-                // Geri hareket
+                this.moveState.backward = true;
                 break;
             case 'KeyA':
             case 'ArrowLeft':
-                // Sola hareket
+                this.moveState.left = true;
                 break;
             case 'KeyD':
             case 'ArrowRight':
-                // Sağa hareket
+                this.moveState.right = true;
                 break;
             case 'Space':
-                // Zıplama
+                this.moveState.jump = true;
                 break;
             case 'Escape':
                 this.togglePause();
@@ -242,7 +382,27 @@ export class Game {
     }
 
     private onKeyUp(event: KeyboardEvent): void {
-        // Tuş bırakma işlemleri
+        switch (event.code) {
+            case 'KeyW':
+            case 'ArrowUp':
+                this.moveState.forward = false;
+                break;
+            case 'KeyS':
+            case 'ArrowDown':
+                this.moveState.backward = false;
+                break;
+            case 'KeyA':
+            case 'ArrowLeft':
+                this.moveState.left = false;
+                break;
+            case 'KeyD':
+            case 'ArrowRight':
+                this.moveState.right = false;
+                break;
+            case 'Space':
+                this.moveState.jump = false;
+                break;
+        }
     }
 
     private onMouseDown(event: MouseEvent): void {
@@ -253,12 +413,58 @@ export class Game {
     }
 
     private onMouseUp(event: MouseEvent): void {
-        // Mouse bırakma işlemleri
+        // Mouse bırakma işlemleri gerekirse eklenebilir
     }
 
     private onMouseMove(event: MouseEvent): void {
         if (!this.gameState.isStarted || this.gameState.isPaused) return;
-        // Karakter döndürme
+        if (this.player) {
+            const movementX = event.movementX || 0;
+            this.player.rotation.y -= movementX * 0.002 * this.ROTATION_SPEED;
+        }
+    }
+
+    private updateUI(): void {
+        this.ui.score.textContent = `Skor: ${this.gameState.score}`;
+        this.ui.health.textContent = `Can: ${this.gameState.health}`;
+        this.ui.ammo.textContent = `Mermi: ${this.gameState.ammo}`;
+
+        const userInfoDiv = document.createElement('div');
+        userInfoDiv.classList.add('user-info');
+        userInfoDiv.innerHTML = `
+            <div class="user-info-item">
+                <span class="user-info-label">Oyuncu:</span>
+                <span class="user-info-value">${this.gameState.currentUser}</span>
+            </div>
+            <div class="user-info-item">
+                <span class="user-info-label">Karakter:</span>
+                <span class="user-info-value">${this.gameState.selectedCharacter || 'Seçilmedi'}</span>
+            </div>
+            <div class="user-info-item">
+                <span class="user-info-label">Son Oynama:</span>
+                <span class="user-info-value">${this.gameState.lastPlayTime}</span>
+            </div>
+        `;
+
+        const existingUserInfo = this.ui.uiContainer.querySelector('.user-info');
+        if (!existingUserInfo) {
+            this.ui.uiContainer.querySelector('.ui-panel')?.appendChild(userInfoDiv);
+        } else {
+            existingUserInfo.innerHTML = userInfoDiv.innerHTML;
+        }
+    }
+
+    private gameLoop(deltaTime: number): void {
+        this.updatePlayerMovement(deltaTime);
+        this.updateEnemies(deltaTime);
+        this.checkCollisions();
+    }
+
+    private updateEnemies(deltaTime: number): void {
+        // Düşman AI ve hareket mantığı buraya eklenecek
+        this.enemies.forEach(enemy => {
+            // Düşman hareketi ve davranışı
+        });
     }
 
     public startGame(): void {
@@ -279,17 +485,19 @@ export class Game {
         NotificationManager.getInstance().show(`${this.gameState.currentUser} olarak oyuna başlandı!`, 'success');
 
         if (this.player) {
-            this.scene.remove(this.player);
+            this.resources.scene.remove(this.player);
         }
+
         const newPlayer = characterModel.scene.clone();
         if (!newPlayer) {
             NotificationManager.getInstance().show('Karakter modeli klonlanamadı!', 'error');
             return;
         }
+
         this.player = newPlayer;
         this.player.name = selectedCharacter;
         this.player.position.set(0, 0, 0);
-        this.scene.add(this.player);
+        this.resources.scene.add(this.player);
 
         this.gameState.isStarted = true;
         this.gameState.isPaused = false;
@@ -304,57 +512,35 @@ export class Game {
         this.updateUI();
     }
 
-    private resumeGame(): void {
-        this.gameState.isPaused = false;
-        NotificationManager.getInstance().show('Oyun devam ediyor', 'success');
-        this.menuManager.showMenu('none');
-    }
-
-    private restartGame(): void {
-        this.saveHighScore();
-        NotificationManager.getInstance().show('Oyun yeniden başlatılıyor...', 'success');
-        this.startGame();
-    }
-
-    private exitToMain(): void {
-        this.gameState.isStarted = false;
-        this.gameState.isPaused = false;
-        this.saveHighScore();
-        NotificationManager.getInstance().show('Ana menüye dönülüyor...', 'warning');
-        this.ui.uiContainer.classList.add('hidden');
-        this.menuManager.showMenu('main');
-    }
-
-    private endGame(): void {
-        this.gameState.isStarted = false;
-        if (this.gameState.score > this.gameState.highScore) {
-            NotificationManager.getInstance().show('Yeni yüksek skor! 🏆', 'success');
-        }
-        this.saveHighScore();
-        NotificationManager.getInstance().show(`Oyun bitti! Skorunuz: ${this.gameState.score}`, 'error');
-        const finalScoreElement = document.getElementById('final-score');
-        const highScoreElement = document.getElementById('high-score');
-        if (finalScoreElement) {
-            finalScoreElement.textContent = `Skor: ${this.gameState.score}`;
-        }
-        if (highScoreElement) {
-            highScoreElement.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
-        }
-        this.menuManager.showMenu('gameOver');
-    }
-
     private shoot(): void {
         if (this.gameState.ammo <= 0) {
             NotificationManager.getInstance().show('Mermi bitti!', 'error');
-            this.eventEmitter.emit('outOfAmmo');
+            this.emit('outOfAmmo');
             return;
         }
+
         this.gameState.ammo--;
         if (this.gameState.ammo <= 5) {
             NotificationManager.getInstance().show('Mermi azalıyor!', 'warning');
         }
-        this.eventEmitter.emit('weaponFired', this.gameState.ammo);
+
+        this.emit('weaponFired', this.gameState.ammo);
         this.updateUI();
+
+        // Mermi efekti ve çarpışma kontrolü
+        if (this.player) {
+            const direction = new THREE.Vector3(0, 0, -1);
+            direction.applyQuaternion(this.player.quaternion);
+            
+            this.raycaster.set(this.player.position, direction);
+            const intersects = this.raycaster.intersectObjects(this.enemies);
+            
+            if (intersects.length > 0) {
+                const hitEnemy = intersects[0].object;
+                // Düşmana hasar verme mantığı
+                this.emit('scoreUpdate', 10);
+            }
+        }
     }
 
     private togglePause(): void {
@@ -368,73 +554,57 @@ export class Game {
         }
     }
 
-    private updateUI(): void {
-        this.ui.score.textContent = `Skor: ${this.gameState.score}`;
-        this.ui.health.textContent = `Can: ${this.gameState.health}`;
-        this.ui.ammo.textContent = `Mermi: ${this.gameState.ammo}`;
-        const userInfoDiv = document.createElement('div');
-        userInfoDiv.classList.add('user-info');
-        userInfoDiv.innerHTML = `
-            <div class="user-info-item">
-                <span class="user-info-label">Oyuncu:</span>
-                <span class="user-info-value">${this.gameState.currentUser}</span>
-            </div>
-            <div class="user-info-item">
-                <span class="user-info-label">Karakter:</span>
-                <span class="user-info-value">${this.gameState.selectedCharacter || 'Seçilmedi'}</span>
-            </div>
-            <div class="user-info-item">
-                <span class="user-info-label">Son Oynama:</span>
-                <span class="user-info-value">${this.gameState.lastPlayTime}</span>
-            </div>
-        `;
-        const existingUserInfo = this.ui.uiContainer.querySelector('.user-info');
-        if (!existingUserInfo) {
-            this.ui.uiContainer.querySelector('.ui-panel')?.appendChild(userInfoDiv);
-        } else {
-            existingUserInfo.innerHTML = userInfoDiv.innerHTML;
+    private resumeGame(): void {
+        this.gameState.isPaused = false;
+        NotificationManager.getInstance().show('Oyun devam ediyor', 'success');
+        this.menuManager.showMenu('none');
+    }
+
+    private restartGame(): void {
+        this.saveGameState();
+        NotificationManager.getInstance().show('Oyun yeniden başlatılıyor...', 'success');
+        this.startGame();
+    }
+
+    private exitToMain(): void {
+        this.gameState.isStarted = false;
+        this.gameState.isPaused = false;
+        this.saveGameState();
+        NotificationManager.getInstance().show('Ana menüye dönülüyor...', 'warning');
+        this.ui.uiContainer.classList.add('hidden');
+        this.menuManager.showMenu('main');
+    }
+
+    private endGame(): void {
+        this.gameState.isStarted = false;
+        if (this.gameState.score > this.gameState.highScore) {
+            NotificationManager.getInstance().show('Yeni yüksek skor! 🏆', 'success');
         }
-    }
+        this.saveGameState();
+        NotificationManager.getInstance().show(`Oyun bitti! Skorunuz: ${this.gameState.score}`, 'error');
 
-    private animate(): void {
-        requestAnimationFrame(() => this.animate());
-        if (!this.gameState.isPaused && this.gameState.isStarted) {
-            const deltaTime = 1/60;
-            this.gameLoop(deltaTime);
+        const finalScoreElement = document.getElementById('final-score');
+        const highScoreElement = document.getElementById('high-score');
+        if (finalScoreElement) {
+            finalScoreElement.textContent = `Skor: ${this.gameState.score}`;
         }
-        this.controls.update();
-        this.renderer.render(this.scene, this.camera);
+        if (highScoreElement) {
+            highScoreElement.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
+        }
+        this.menuManager.showMenu('gameOver');
     }
 
-    private gameLoop(deltaTime: number): void {
-        this.updatePlayerMovement(deltaTime);
-        this.updateEnemies(deltaTime);
-        this.checkCollisions();
-    }
-
-    private updatePlayerMovement(deltaTime: number): void {
-        // Karakter hareket mantığı
-    }
-
-    private updateEnemies(deltaTime: number): void {
-        // Düşman hareket mantığı
-    }
-
-    private checkCollisions(): void {
-        // Çarpışma kontrol mantığı
-    }
-
-    // main.ts için gerekli metodlar
-    getCurrentUser() {
+    // Public getter metodları
+    getCurrentUser(): string {
         return this.gameState.currentUser;
     }
 
-    getLastPlayTime() {
+    getLastPlayTime(): string {
         return this.gameState.lastPlayTime;
     }
 
-    // MenuManager için gerekli metod
     showMenu(menuId: string): void {
         this.menuManager.showMenu(menuId);
     }
-                                      }
+} 
+  }
