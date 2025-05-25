@@ -136,34 +136,16 @@ export class MenuManager extends EventEmitter {
     }
 
     private createCharacterCarousel(): void {
-        console.log("Karakter carousel'i oluşturuluyor");
-        const characterGrid = document.querySelector('.character-grid');
-        if (!characterGrid) {
-            console.error("Karakter gridi bulunamadı (.character-grid)");
-            NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi! HTML yapısını kontrol edin.', 'error');
-            this.showMenu('main');
-            return;
-        }
+    const characterGrid = document.querySelector('.character-grid');
+    if (!characterGrid) return;
 
-        if (!this.characters.length) {
-            console.warn("Karakter verileri boş, carousel oluşturulamıyor");
-            this.characters = this.modelsLoader.getAllCharacterData();
-            if (!this.characters.length) {
-                console.error("Karakter verileri hala yok!");
-                NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
-                return;
-            }
-        }
-
-        characterGrid.innerHTML = this.generateCarouselHTML();
-        this.characters.forEach(char => {
-            this.setupCharacterPreview(char.id, char.modelPath);
-        });
-
-        this.setupCharacterCardListeners();
-        this.setupCarouselListeners();
-        this.updateCarousel();
+    characterGrid.innerHTML = this.generateCarouselHTML();
+    for (let i = 0; i < 3 && i < this.characters.length; i++) {
+        const char = this.characters[i];
+        this.setupCharacterPreview(char.id, char.modelPath);
     }
+    this.updateCarousel();
+}
 
     private generateCarouselHTML(): string {
         return `
