@@ -142,7 +142,7 @@ private async loadGameModels(): Promise<void> {
             this.ui.loadingScreen.classList.add('fade-out');
             await new Promise(resolve => setTimeout(resolve, 500));
             this.ui.loadingScreen.classList.add('hidden');
-            this.menuManager.showMenu('character'); // Karakter seçim ekranını göster
+            this.menuManager.showMenu('main'); // main seçim ekranıyla başla
         }
     } catch (error) {
         console.error('Model yükleme hatası:', error);
