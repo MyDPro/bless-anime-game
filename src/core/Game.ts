@@ -27,7 +27,7 @@ interface GameResources {
 export class Game extends EventEmitter {
     private resources: GameResources;
     private modelsLoader: ModelsLoader;
-    private menuManager: MenuManager;
+    private menuManager: MenuManager | null = null; // null olarak başlat
     private lastTime: number = 0;
     private readonly targetFPS = 60;
     private readonly frameInterval = 1000 / this.targetFPS;
@@ -80,7 +80,6 @@ export class Game extends EventEmitter {
         this.modelsLoader = new ModelsLoader(this.resources.scene);
         
         this.platform = this.setupWorld();
-        this.setupEventListeners();
         this.loadGameState();
         this.setCurrentDateTime();
         
@@ -116,6 +115,7 @@ export class Game extends EventEmitter {
         
         try {
             await this.loadGameModels();
+            this.setupEventListeners(); // Olay dinleyicilerini burada çağır
             this.animate();
             NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
         } catch (error) {
@@ -258,7 +258,7 @@ export class Game extends EventEmitter {
         this.resources.renderer.dispose();
         this.resources.controls.dispose();
         this.modelsLoader.cleanup();
-        this.menuManager.cleanup();
+        if (this.menuManager) this.menuManager.cleanup();
 
         this.saveGameState();
     }
@@ -322,37 +322,39 @@ export class Game extends EventEmitter {
             this.updateUI();
         });
 
-        this.menuManager.on('startGame', () => {
-            console.log("Oyun başlatılıyor");
-            const selectedCharacter = this.menuManager.getSelectedCharacter();
-            if (!selectedCharacter) {
-                NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
-                this.menuManager.showMenu('character');
-                return;
-            }
-            this.startGame();
-        });
+        if (this.menuManager) {
+            this.menuManager.on('startGame', () => {
+                console.log("Oyun başlatılıyor");
+                const selectedCharacter = this.menuManager!.getSelectedCharacter();
+                if (!selectedCharacter) {
+                    NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
+                    this.menuManager!.showMenu('character');
+                    return;
+                }
+                this.startGame();
+            });
 
-        this.menuManager.on('characterConfirmed', (characterId: string) => {
-            console.log(`Karakter onaylandı: ${characterId}`);
-            this.gameState.selectedCharacter = characterId;
-            this.saveGameState();
-        });
+            this.menuManager.on('characterConfirmed', (characterId: string) => {
+                console.log(`Karakter onaylandı: ${characterId}`);
+                this.gameState.selectedCharacter = characterId;
+                this.saveGameState();
+            });
 
-        this.menuManager.on('resumeGame', () => {
-            console.log("Oyun devam ettiriliyor");
-            this.resumeGame();
-        });
+            this.menuManager.on('resumeGame', () => {
+                console.log("Oyun devam ettiriliyor");
+                this.resumeGame();
+            });
 
-        this.menuManager.on('restartGame', () => {
-            console.log("Oyun yeniden başlatılıyor");
-            this.restartGame();
-        });
+            this.menuManager.on('restartGame', () => {
+                console.log("Oyun yeniden başlatılıyor");
+                this.restartGame();
+            });
 
-        this.menuManager.on('exitToMain', () => {
-            console.log("Ana menüye dönülüyor");
-            this.exitToMain();
-        });
+            this.menuManager.on('exitToMain', () => {
+                console.log("Ana menüye dönülüyor");
+                this.exitToMain();
+            });
+        }
     }
 
     private onWindowResize(): void {
@@ -476,17 +478,17 @@ export class Game extends EventEmitter {
     }
 
     public startGame(): void {
-        const selectedCharacter = this.menuManager.getSelectedCharacter();
+        const selectedCharacter = this.menuManager?.getSelectedCharacter();
         if (!selectedCharacter) {
             NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
-            this.menuManager.showMenu('character');
+            this.menuManager?.showMenu('character');
             return;
         }
 
         const characterModel = this.modelsLoader.getModel(selectedCharacter);
         if (!characterModel || !characterModel.scene) {
             NotificationManager.getInstance().show(`Karakter modeli yüklenemedi: ${selectedCharacter}`, 'error');
-            this.menuManager.showMenu('character');
+            this.menuManager?.showMenu('character');
             return;
         }
 
@@ -516,7 +518,7 @@ export class Game extends EventEmitter {
         this.setCurrentDateTime();
 
         this.ui.uiContainer.classList.remove('hidden');
-        this.menuManager.showMenu('none');
+        this.menuManager?.showMenu('none');
         this.updateUI();
     }
 
@@ -553,17 +555,17 @@ export class Game extends EventEmitter {
         this.gameState.isPaused = !this.gameState.isPaused;
         if (this.gameState.isPaused) {
             NotificationManager.getInstance().show('Oyun duraklatıldı', 'warning');
-            this.menuManager.showMenu('pause');
+            this.menuManager?.showMenu('pause');
         } else {
             NotificationManager.getInstance().show('Oyun devam ediyor', 'success');
-            this.menuManager.showMenu('none');
+            this.menuManager?.showMenu('none');
         }
     }
 
     private resumeGame(): void {
         this.gameState.isPaused = false;
         NotificationManager.getInstance().show('Oyun devam ediyor', 'success');
-        this.menuManager.showMenu('none');
+        this.menuManager?.showMenu('none');
     }
 
     private restartGame(): void {
@@ -578,12 +580,12 @@ export class Game extends EventEmitter {
             this.saveGameState();
         }
         this.updateUI();
-        this.menuManager.showMenu('gameOver');
+        this.menuManager?.showMenu('gameOver');
     }
 
     private exitToMain(): void {
         this.gameState.isStarted = false;
         this.ui.uiContainer.classList.add('hidden');
-        this.menuManager.showMenu('main');
+        this.menuManager?.showMenu('main');
     }
 }
