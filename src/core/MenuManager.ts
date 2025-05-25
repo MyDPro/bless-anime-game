@@ -300,6 +300,18 @@ private animatePreview(characterId: string): void {
     animate();
 }
 
+    private disposeCharacterPreview(characterId: string): void {
+    const preview = this.characterPreviews.get(characterId);
+    if (preview) {
+        if (preview.animationFrameId) {
+            cancelAnimationFrame(preview.animationFrameId);
+        }
+        preview.renderer.dispose();
+        preview.scene.clear();
+        this.characterPreviews.delete(characterId);
+    }
+}
+    
     private updateCharacterSelection(characterId: string): void {
         this.characterSelectState = {
             selectedId: characterId,
