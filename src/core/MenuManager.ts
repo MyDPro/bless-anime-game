@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { NotificationManager } from './NotificationManager';
 import { EventEmitter } from '../utils/EventEmitter';
+import { ModelsLoader, CharacterData } from '../utils/loadModels';
 
 interface CharacterPreview {
     scene: THREE.Scene;
@@ -25,6 +26,9 @@ export class MenuManager extends EventEmitter {
     private currentCarouselIndex: number = 0;
     private isLoading: boolean = false;
     private loadingPromises: Promise<any>[] = [];
+    private renderer: THREE.WebGLRenderer;
+    private modelsLoader: ModelsLoader;
+    private characters: CharacterData[] = [];
 
     private characterSelectState: CharacterSelectState = {
         selectedId: null,
@@ -34,30 +38,16 @@ export class MenuManager extends EventEmitter {
     };
 
     private readonly CURRENT_USER = 'MyDemir';
-    private readonly CURRENT_TIME = '2025-05-25 09:48:31';
+    private readonly CURRENT_TIME = '2025-05-25 17:07:00';
 
-    private characters: { id: string; name: string; modelPath: string; stats: { speed: number; power: number } }[] = [
-        {
-            id: 'ninja',
-            name: 'Ninja',
-            modelPath: '/models/character/character-female-a.glb',
-            stats: { speed: 90, power: 70 }
-        },
-        {
-            id: 'samurai',
-            name: 'Samuray',
-            modelPath: '/models/character/character-male-a.glb',
-            stats: { speed: 70, power: 90 }
-        }
-    ];
-
-    constructor() {
+    constructor(modelsLoader: ModelsLoader) {
         super();
+        this.modelsLoader = modelsLoader;
+        this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         console.log("MenuManager başlatılıyor");
         this.menus = new Map();
         this.loadSavedState();
         this.initializeMenus();
-        this.setupEventListeners();
     }
 
     private loadSavedState(): void {
@@ -78,20 +68,60 @@ export class MenuManager extends EventEmitter {
         document.body.classList.remove('loading');
     }
 
-    private initializeMenus(): void {
+    private async initializeMenus(): Promise<void> {
         console.log("Menüler başlatılıyor");
-        const menuIds = ['main', 'character', 'scoreboard', 'settings', 'pause', 'gameOver'];
-        
-        menuIds.forEach(id => {
-            const element = document.getElementById(id + '-menu');
+        this.characters = this.modelsLoader.getAllCharacterData();
+        if (!this.characters.length) {
+            await this.modelsLoader.loadCharacterModels();
+            this.characters = this.modelsLoader.getAllCharacterData();
+        }
+
+        const menuIds = [
+            { key: 'main', id: 'main-menu' },
+            { key: 'character', id: 'character-select' },
+            { key: 'scoreboard', id: 'scoreboard' },
+            { key: 'settings', id: 'settings' },
+            { key: 'pause', id: 'pause-menu' },
+            { key: 'gameOver', id: 'game-over' }
+        ];
+
+        menuIds.forEach(({ key, id }) => {
+            const element = document.getElementById(id);
             if (element) {
-                this.menus.set(id, element);
+                this.menus.set(key, element);
             } else {
-                console.error(`${id} menüsü bulunamadı`);
+                console.error(`${key} menüsü bulunamadı (ID: ${id})`);
             }
         });
 
+        this.setupMenuListeners();
         this.createCharacterCarousel();
+    }
+
+    private setupMenuListeners(): void {
+        console.log("Menü dinleyicileri ayarlanıyor");
+        const buttons = [
+            { id: 'startBtn', action: () => this.emit('startGame') },
+            { id: 'characterSelectBtn', action: () => this.showMenu('character') },
+            { id: 'scoreboardBtn', action: () => this.showMenu('scoreboard') },
+            { id: 'settingsBtn', action: () => this.showMenu('settings') },
+            { id: 'backFromCharSelect', action: () => this.showMenu('main') },
+            { id: 'backFromScoreboard', action: () => this.showMenu('main') },
+            { id: 'backFromSettings', action: () => this.showMenu('main') },
+            { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
+            { id: 'resumeBtn', action: () => this.emit('resumeGame') },
+            { id: 'restartBtn', action: () => this.emit('restartGame') },
+            { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
+        ];
+
+        buttons.forEach(({ id, action }) => {
+            const button = document.getElementById(id);
+            if (button) {
+                button.addEventListener('click', action);
+            } else {
+                console.warn(`Düğme bulunamadı: ${id}`);
+            }
+        });
     }
 
     private createCharacterCarousel(): void {
@@ -132,7 +162,7 @@ export class MenuManager extends EventEmitter {
         `;
     }
 
-    private generateCharacterCardHTML(char: any): string {
+    private generateCharacterCardHTML(char: CharacterData): string {
         return `
             <div class="character-card" data-character="${char.id}">
                 <div class="character-preview">
@@ -172,20 +202,19 @@ export class MenuManager extends EventEmitter {
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-        
-        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
         camera.position.set(0, 1.5, 3);
         camera.lookAt(0, 1, 0);
+
+        this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        canvas.appendChild(this.renderer.domElement);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         const dirLight = new THREE.DirectionalLight(0xffffff, 1);
         dirLight.position.set(2, 2, 2);
-        
         scene.add(ambientLight);
         scene.add(dirLight);
 
-        this.characterPreviews.set(characterId, { scene, camera, renderer });
+        this.characterPreviews.set(characterId, { scene, camera, renderer: this.renderer });
 
         const loader = new GLTFLoader();
         this.loadingPromises.push(
@@ -212,7 +241,7 @@ export class MenuManager extends EventEmitter {
 
     private animatePreview(characterId: string): void {
         const preview = this.characterPreviews.get(characterId);
-        if (!preview) return;
+        if (!preview || !document.getElementById(`${characterId}-preview`)?.offsetParent) return;
 
         const animate = () => {
             if (!this.characterPreviews.has(characterId)) return;
@@ -221,13 +250,13 @@ export class MenuManager extends EventEmitter {
             if (preview.model) {
                 preview.model.rotation.y += 0.01;
             }
-            preview.renderer.render(preview.scene, preview.camera);
+            this.renderer.render(preview.scene, preview.camera);
         };
 
         animate();
     }
 
-    private updateCaracterSelection(characterId: string): void {
+    private updateCharacterSelection(characterId: string): void {
         this.characterSelectState = {
             selectedId: characterId,
             previousId: this.characterSelectState.selectedId,
@@ -238,16 +267,27 @@ export class MenuManager extends EventEmitter {
         localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
     }
 
+    private confirmCharacterSelection(): void {
+        if (!this.characterSelectState.selectedId) {
+            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
+            return;
+        }
+
+        this.characterSelectState.isConfirmed = true;
+        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+        NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
+        this.emit('characterConfirmed', this.characterSelectState.selectedId);
+        this.showMenu('main');
+    }
+
     public cleanup(): void {
         console.log("MenuManager temizleniyor");
         
-        // Character previews temizleme
         this.characterPreviews.forEach((preview, characterId) => {
             if (preview.animationFrameId) {
                 cancelAnimationFrame(preview.animationFrameId);
             }
             
-            preview.renderer.dispose();
             preview.scene.traverse((object: any) => {
                 if (object.geometry) object.geometry.dispose();
                 if (object.material) {
@@ -257,24 +297,22 @@ export class MenuManager extends EventEmitter {
                         object.material.dispose();
                     }
                 }
+                if (object.texture) object.texture.dispose();
             });
             preview.scene.clear();
         });
         this.characterPreviews.clear();
+        this.renderer.dispose();
+        this.renderer.forceContextLoss();
 
-        // Event listeners temizleme
         document.querySelectorAll('.character-card').forEach(card => {
             card.replaceWith(card.cloneNode(true));
         });
 
-        // Loading state temizleme
         this.isLoading = false;
         document.body.classList.remove('loading');
-        
-        // Promises temizleme
         this.loadingPromises = [];
     }
-   // ... (Önceki kod aynen kalacak, devamı:)
 
     private setupCharacterCardListeners(): void {
         console.log("Karakter kartı dinleyicileri ayarlanıyor");
@@ -326,7 +364,7 @@ export class MenuManager extends EventEmitter {
         console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
         const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
         if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * (100 / this.characters.length)}%)`;
+            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`; // 300px kart + 20px boşluk
         }
 
         const cards = document.querySelectorAll('.character-card');
@@ -370,6 +408,7 @@ export class MenuManager extends EventEmitter {
             } else {
                 console.error(`Menü bulunamadı: ${menuId}`);
                 NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
+                this.showMenu('main');
             }
         } else {
             this.activeMenu = null;
@@ -386,7 +425,7 @@ export class MenuManager extends EventEmitter {
         const selectedCard = document.querySelector(`[data-character="${characterId}"]`);
         if (selectedCard) {
             selectedCard.classList.add('selected');
-            this.updateCaracterSelection(characterId);
+            this.updateCharacterSelection(characterId);
             
             console.log(`Karakter seçildi: ${characterId}`);
             const index = this.characters.findIndex(char => char.id === characterId);
@@ -401,8 +440,6 @@ export class MenuManager extends EventEmitter {
     }
 
     public getSelectedCharacter(): string | null {
-        return this.characterSelectState.selectedId;
+        return this.characterSelectState.isConfirmed ? this.characterSelectState.selectedId : null;
     }
-
-         
 }
