@@ -411,30 +411,28 @@ private animatePreview(characterId: string): void {
     }
 
     private updateCarousel(): void {
-        console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
-        const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
-        if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
-        }
-
-        const cards = document.querySelectorAll('.character-card');
-        cards.forEach((card, index) => {
-            if (index === this.currentCarouselIndex) {
-                card.classList.add('active');
-            } else {
-                card.classList.remove('active');
-            }
-        });
-
-        const navDots = document.querySelectorAll('.nav-dot');
-        navDots.forEach((dot, index) => {
-            if (index === this.currentCarouselIndex) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
-        });
+    console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
+    const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
+    if (wrapper) {
+        wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
     }
+
+    const visibleIndices = [
+        (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length,
+        this.currentCarouselIndex,
+        (this.currentCarouselIndex + 1) % this.characters.length
+    ];
+
+    this.characters.forEach((char, index) => {
+        if (visibleIndices.includes(index)) {
+            if (!this.characterPreviews.has(char.id)) {
+                this.setupCharacterPreview(char.id, char.modelPath);
+            }
+        } else {
+            this.disposeCharacterPreview(char.id);
+        }
+    });
+}
 
     public showMenu(menuId: string): void {
     console.log(`Menü gösteriliyor: ${menuId}`);
