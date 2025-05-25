@@ -26,6 +26,8 @@ export class ModelsLoader extends EventEmitter {
     private models: Map<string, GLTF>;
     private characterData: CharacterData[] = [];
     private loadingPromises: Map<string, Promise<GLTF>> = new Map();
+    private readonly MAX_RETRIES = 3;
+    private readonly RETRY_DELAY = 1000;
 
     constructor(scene: Scene) {
         super();
@@ -33,6 +35,19 @@ export class ModelsLoader extends EventEmitter {
         this.loader = new GLTFLoader();
         this.scene = scene;
         this.models = new Map();
+    }
+
+    private async loadModelWithRetry(modelPath: string, retryCount = 0): Promise<GLTF> {
+        try {
+            return await this.loader.loadAsync(modelPath);
+        } catch (error) {
+            if (retryCount < this.MAX_RETRIES) {
+                console.warn(`Model yükleme denemesi ${retryCount + 1}/${this.MAX_RETRIES}:`, modelPath);
+                await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * (retryCount + 1)));
+                return this.loadModelWithRetry(modelPath, retryCount + 1);
+            }
+            throw error;
+        }
     }
 
     async loadCharacterModels(): Promise<void> {
@@ -54,7 +69,7 @@ export class ModelsLoader extends EventEmitter {
                     return this.loadingPromises.get(char.id);
                 }
 
-                const loadPromise = this.loader.loadAsync(char.modelPath)
+                const loadPromise = this.loadModelWithRetry(char.modelPath)
                     .then(model => {
                         model.scene.name = char.id;
                         this.models.set(char.id, model);
@@ -100,7 +115,7 @@ export class ModelsLoader extends EventEmitter {
             const blasterPath = '/models/kit/blaster-r.glb';
 
             console.log('Blaster modeli yükleme denemesi...');
-            const blasterModel = await this.loader.loadAsync(blasterPath);
+            const blasterModel = await this.loadModelWithRetry(blasterPath);
             blasterModel.scene.name = 'blaster';
             this.scene.add(blasterModel.scene);
             this.models.set('blaster', blasterModel);
@@ -136,4 +151,22 @@ export class ModelsLoader extends EventEmitter {
     getLoadedModelsCount(): number {
         return this.models.size;
     }
-}
+
+    cleanup(): void {
+        this.loadingPromises.clear();
+        this.models.forEach((model) => {
+            model.scene.traverse((object: any) => {
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach((material: any) => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
+        });
+        this.models.clear();
+        this.characterData = [];
+    }
+    }
