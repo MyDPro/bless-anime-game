@@ -67,42 +67,43 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupMenuListeners(): void {
-        console.log("Menü dinleyicileri ayarlanıyor");
-        const buttons = [
-            { id: 'startBtn', action: () => this.emit('startGame') },
-            { id: 'characterSelectBtn', action: () => {
-                console.log('Karakter seçim ekranına geçiş');
-                this.showMenu('character');
-            }},
-            { id: 'scoreboardBtn', action: () => this.showMenu('scoreboard') },
-            { id: 'settingsBtn', action: () => this.showMenu('settings') },
-            { id: 'backFromCharSelect', action: () => {
-                console.log('Karakter seçiminden ana menüye dönüş');
-                this.showMenu('main');
-            }},
-            { id: 'backFromScoreboard', action: () => this.showMenu('main') },
-            { id: 'backFromSettings', action: () => this.showMenu('main') },
-            { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
-            { id: 'resumeBtn', action: () => this.emit('resumeGame') },
-            { id: 'restartBtn', action: () => this.emit('restartGame') },
-            { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
-        ];
+    console.log("Menü dinleyicileri ayarlanıyor");
+    const buttons = [
+        { id: 'startBtn', action: () => this.emit('startGame') },
+        { id: 'characterSelectBtn', action: () => {
+            console.log('Karakter seçim ekranına geçiş');
+            this.showMenu('character');
+        }},
+        { id: 'scoreboardBtn', action: () => this.showMenu('scoreboard') },
+        { id: 'settingsBtn', action: () => this.showMenu('settings') },
+        { id: 'backFromCharSelect', action: () => {
+            console.log('Karakter seçiminden ana menüye dönüş');
+            this.showMenu('main');
+        }},
+        { id: 'backFromScoreboard', action: () => this.showMenu('main') },
+        { id: 'backFromSettings', action: () => this.showMenu('main') },
+        { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
+        { id: 'resumeBtn', action: () => this.emit('resumeGame') },
+        { id: 'restartBtn', action: () => this.emit('restartGame') },
+        { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
+    ];
 
-        buttons.forEach(({ id, action }) => {
-            const button = document.getElementById(id);
-            if (button) {
-                button.removeEventListener('click', action);
-                button.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    console.log(`Düğme tıklandı: ${id}`);
-                    action();
-                }, { once: false });
-            } else {
-                console.warn(`Düğme bulunamadı: ${id}`);
-                NotificationManager.getInstance().show(`Düğme bulunamadı: ${id}`, 'warning');
-            }
-        });
-    }
+    buttons.forEach(({ id, action }) => {
+        const button = document.getElementById(id);
+        if (button) {
+            // Eski dinleyicileri kaldır
+            button.removeEventListener('click', action);
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                console.log(`Düğme tıklandı: ${id}`);
+                action();
+            }, { once: false });
+        } else {
+            console.warn(`Düğme bulunamadı: ${id}`);
+            NotificationManager.getInstance().show(`Düğme bulunamadı: ${id}`, 'warning');
+        }
+    });
+}
 
     private async initializeMenus(): Promise<void> {
         console.log("Menüler başlatılıyor");
