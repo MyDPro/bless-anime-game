@@ -217,26 +217,25 @@ private async initializeMenus(): Promise<void> {
         this.characterPreviews.set(characterId, { scene, camera, renderer: this.renderer });
 
         const loader = new GLTFLoader();
-        this.loadingPromises.push(
-            loader.loadAsync(modelPath)
-                .then(gltf => {
-                    const model = gltf.scene;
-                    model.scale.set(1, 1, 1);
-                    model.position.set(0, 0, 0);
-                    scene.add(model);
-                    
-                    const preview = this.characterPreviews.get(characterId);
-                    if (preview) {
-                        preview.model = model;
-                    }
-
-                    this.animatePreview(characterId);
-                })
-                .catch(error => {
-                    console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
-                    NotificationManager.getInstance().show(`Karakter modeli yüklenemedi: ${characterId}`, 'error');
-                })
-        );
+         this.loadingPromises.push(
+        loader.loadAsync(modelPath)
+            .then(gltf => {
+                const model = gltf.scene;
+                model.scale.set(1, 1, 1);
+                model.position.set(0, 0, 0);
+                scene.add(model);
+                const preview = this.characterPreviews.get(characterId);
+                if (preview) preview.model = model;
+                this.animatePreview(characterId);
+            })
+            .catch(error => {
+                console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
+                NotificationManager.getInstance().show(
+                    `Model yüklenemedi: ${characterId} - Doku eksik olabilir!`,
+                    'error'
+                );
+            })
+    );
     }
 
     private animatePreview(characterId: string): void {
