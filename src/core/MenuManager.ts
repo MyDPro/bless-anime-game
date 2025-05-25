@@ -68,36 +68,6 @@ export class MenuManager extends EventEmitter {
         document.body.classList.remove('loading');
     }
 
-private async initializeMenus(): Promise<void> {
-    console.log("Menüler başlatılıyor");
-    this.characters = this.modelsLoader.getAllCharacterData();
-    // loadCharacterModels çağrısını kaldırıyorum, çünkü Game.ts zaten yüklüyor
-    if (!this.characters.length) {
-        console.warn("Karakter verileri eksik, Game.ts yüklemeyi tamamlamalı");
-    }
-
-    const menuIds = [
-        { key: 'main', id: 'main-menu' },
-        { key: 'character', id: 'character-select' },
-        { key: 'scoreboard', id: 'scoreboard' },
-        { key: 'settings', id: 'settings' },
-        { key: 'pause', id: 'pause-menu' },
-        { key: 'gameOver', id: 'game-over' }
-    ];
-
-        menuIds.forEach(({ key, id }) => {
-            const element = document.getElementById(id);
-            if (element) {
-                this.menus.set(key, element);
-            } else {
-                console.error(`${key} menüsü bulunamadı (ID: ${id})`);
-            }
-        });
-
-        this.setupMenuListeners();
-        this.createCharacterCarousel();
-    }
-
     private setupMenuListeners(): void {
         console.log("Menü dinleyicileri ayarlanıyor");
         const buttons = [
@@ -124,24 +94,78 @@ private async initializeMenus(): Promise<void> {
         });
     }
 
-    private createCharacterCarousel(): void {
-        console.log("Karakter carousel'i oluşturuluyor");
-        const characterGrid = document.querySelector('.character-grid');
-        if (!characterGrid) {
-            console.error("Karakter gridi bulunamadı (.character-grid)");
-            NotificationManager.getInstance().show('Karakter carousel yüklenemedi!', 'error');
-            return;
-        }
-
-        characterGrid.innerHTML = this.generateCarouselHTML();
-        this.characters.forEach(char => {
-            this.setupCharacterPreview(char.id, char.modelPath);
-        });
-
-        this.setupCharacterCardListeners();
-        this.setupCarouselListeners();
-        this.updateCarousel();
+private async initializeMenus(): Promise<void> {
+    console.log("Menüler başlatılıyor");
+    this.characters = this.modelsLoader.getAllCharacterData();
+    if (!this.characters.length) {
+        console.error("Karakter verileri eksik!");
+        NotificationManager.getInstance().show('Karakter verileri yüklenemedi! Lütfen sayfayı yenileyin.', 'error');
+        // Fallback karakter verisi
+        this.characters = [
+            {
+                id: 'fallback',
+                name: 'Varsayılan Karakter',
+                modelPath: '/models/character/character-female-a.glb',
+                stats: { speed: 50, power: 50 }
+            }
+        ];
     }
+
+    const menuIds = [
+        { key: 'main', id: 'main-menu' },
+        { key: 'character', id: 'character-select' },
+        { key: 'scoreboard', id: 'scoreboard' },
+        { key: 'settings', id: 'settings' },
+        { key: 'pause', id: 'pause-menu' },
+        { key: 'gameOver', id: 'game-over' }
+    ];
+
+    menuIds.forEach(({ key, id }) => {
+        const element = document.getElementById(id);
+        if (element) {
+            this.menus.set(key, element);
+        } else {
+            console.error(`${key} menüsü bulunamadı (ID: ${id})`);
+            NotificationManager.getInstance().show(`Menü bulunamadı: ${id}`, 'error');
+        }
+    });
+
+    // Menü yoksa ana menüye zorla
+    if (!this.menus.has('character')) {
+        console.error('Karakter seçim menüsü eksik, ana menü gösteriliyor');
+        this.showMenu('main');
+        return;
+    }
+
+    this.setupMenuListeners();
+    this.createCharacterCarousel();
+}
+
+private createCharacterCarousel(): void {
+    console.log("Karakter carousel'i oluşturuluyor");
+    const characterGrid = document.querySelector('.character-grid');
+    if (!characterGrid) {
+        console.error("Karakter gridi bulunamadı (.character-grid)");
+        NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi! HTML yapısını kontrol edin.', 'error');
+        this.showMenu('main');
+        return;
+    }
+
+    if (!this.characters.length) {
+        console.error("Karakter verileri boş, carousel oluşturulamıyor");
+        NotificationManager.getInstance().show('Karakter verileri bulunamadı!', 'error');
+        return;
+    }
+
+    characterGrid.innerHTML = this.generateCarouselHTML();
+    this.characters.forEach(char => {
+        this.setupCharacterPreview(char.id, char.modelPath);
+    });
+
+    this.setupCharacterCardListeners();
+    this.setupCarouselListeners();
+    this.updateCarousel();
+}
 
     private generateCarouselHTML(): string {
         return `
