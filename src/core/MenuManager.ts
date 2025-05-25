@@ -425,34 +425,34 @@ private animatePreview(characterId: string): void {
     }
 
     public showMenu(menuId: string): void {
-        console.log(`Menü gösteriliyor: ${menuId}`);
-        if (this.activeMenu) {
-            const currentMenu = this.menus.get(this.activeMenu);
-            if (currentMenu) {
-                currentMenu.classList.add('hidden');
-                console.log(`Önceki menü gizlendi: ${this.activeMenu}`);
-            }
+    console.log(`Menü gösteriliyor: ${menuId}`);
+    // Tüm menüleri gizle
+    this.menus.forEach((menu, key) => {
+        if (menu) {
+            menu.classList.add('hidden');
+            console.log(`Menü gizlendi: ${key}`);
         }
+    });
 
-        if (menuId !== 'none') {
-            const newMenu = this.menus.get(menuId);
-            if (newMenu) {
-                newMenu.classList.remove('hidden');
-                this.activeMenu = menuId;
-                console.log(`Yeni menü gösterildi: ${menuId}`);
-                if (menuId === 'character') {
-                    this.updateCarousel();
-                }
-            } else {
-                console.error(`Menü bulunamadı: ${menuId}`);
-                NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
-                this.showMenu('main');
+    if (menuId !== 'none') {
+        const newMenu = this.menus.get(menuId);
+        if (newMenu) {
+            newMenu.classList.remove('hidden');
+            this.activeMenu = menuId;
+            console.log(`Yeni menü gösterildi: ${menuId}`);
+            if (menuId === 'character') {
+                this.updateCarousel();
             }
         } else {
-            this.activeMenu = null;
-            console.log("Tüm menüler gizlendi");
+            console.error(`Menü bulunamadı: ${menuId}`);
+            NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
+            this.showMenu('main');
         }
+    } else {
+        this.activeMenu = null;
+        console.log("Tüm menüler gizlendi");
     }
+}
 
     private selectCharacter(characterId: string): void {
         console.log(`Karakter seçimi: ${characterId}`);
