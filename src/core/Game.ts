@@ -233,35 +233,51 @@ export class Game extends EventEmitter {
     }
 
     public cleanup(): void {
-        if (this.animationFrameId !== null) {
-            cancelAnimationFrame(this.animationFrameId);
-        }
-
-        window.removeEventListener('resize', () => this.onWindowResize());
-        document.removeEventListener('keydown', (e) => this.onKeyDown(e));
-        document.removeEventListener('keyup', (e) => this.onKeyUp(e));
-        document.removeEventListener('mousedown', (e) => this.onMouseDown(e));
-        document.removeEventListener('mouseup', (e) => this.onMouseUp(e));
-        document.removeEventListener('mousemove', (e) => this.onMouseMove(e));
-
-        this.resources.scene.traverse((object) => {
-            if (object instanceof THREE.Mesh) {
-                object.geometry.dispose();
-                if (Array.isArray(object.material)) {
-                    object.material.forEach(material => material.dispose());
-                } else {
-                    object.material.dispose();
-                }
-            }
-        });
-
-        this.resources.renderer.dispose();
-        this.resources.controls.dispose();
-        this.modelsLoader.cleanup();
-        if (this.menuManager) this.menuManager.cleanup();
-
-        this.saveGameState();
+    if (this.animationFrameId !== null) {
+        cancelAnimationFrame(this.animationFrameId);
+        this.animationFrameId = null;
     }
+
+    // Olay dinleyicilerini kaldır
+    window.removeEventListener('resize', this.onWindowResize.bind(this));
+    document.removeEventListener('keydown', this.onKeyDown.bind(this));
+    document.removeEventListener('keyup', this.onKeyUp.bind(this));
+    document.removeEventListener('mousedown', this.onMouseDown.bind(this));
+    document.removeEventListener('mouseup', this.onMouseUp.bind(this));
+    document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+
+    // Sahneyi temizle
+    while (this.resources.scene.children.length > 0) {
+        const object = this.resources.scene.children[0];
+        this.resources.scene.remove(object);
+        if (object instanceof THREE.Mesh) {
+            object.geometry.dispose();
+            if (Array.isArray(object.material)) {
+                object.material.forEach(material => material.dispose());
+            } else {
+                object.material.dispose();
+            }
+        }
+    }
+
+    // Renderer ve kontrolleri temizle
+    this.resources.renderer.dispose();
+    this.resources.controls.dispose();
+    this.modelsLoader.cleanup();
+    if (this.menuManager) this.menuManager.cleanup();
+
+    // Oyun durumunu sıfırla
+    this.gameState.isStarted = false;
+    this.gameState.isPaused = false;
+    this.gameState.score = 0;
+    this.gameState.health = 100;
+    this.gameState.ammo = 30;
+    this.player = null;
+    this.blasters = [];
+    this.enemies = [];
+
+    this.saveGameState();
+}
 
     private setupWorld(): THREE.Mesh {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -569,9 +585,28 @@ export class Game extends EventEmitter {
     }
 
     private restartGame(): void {
-        this.cleanup();
-        this.initializeGame();
-    }
+    console.log("Oyun yeniden başlatılıyor");
+    this.cleanup();
+    // Yeni renderer ve kontroller oluştur
+    this.resources.renderer = new THREE.WebGLRenderer({
+        canvas: this.resources.renderer.domElement,
+        antialias: true,
+        powerPreference: 'high-performance'
+    });
+    this.resources.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.resources.renderer.shadowMap.enabled = true;
+    this.resources.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    this.resources.controls = new OrbitControls(this.resources.camera, this.resources.renderer.domElement);
+    this.resources.controls.enableDamping = true;
+    this.resources.controls.dampingFactor = 0.05;
+    this.resources.controls.target.set(0, 1, 0);
+
+    // Sahneyi yeniden kur
+    this.platform = this.setupWorld();
+    this.initializeGame();
+}
+
 
     private endGame(): void {
         this.gameState.isStarted = false;
@@ -584,8 +619,15 @@ export class Game extends EventEmitter {
     }
 
     private exitToMain(): void {
-        this.gameState.isStarted = false;
-        this.ui.uiContainer.classList.add('hidden');
-        this.menuManager?.showMenu('main');
+    console.log("Ana menüye dönülüyor");
+    this.gameState.isStarted = false;
+    this.gameState.isPaused = false;
+    this.ui.uiContainer.classList.add('hidden');
+    if (this.menuManager) {
+        this.menuManager.showMenu('main');
+    } else {
+        console.error("MenuManager mevcut değil!");
+        NotificationManager.getInstance().show('Ana menüye geçiş başarısız!', 'error');
     }
+}
 }
