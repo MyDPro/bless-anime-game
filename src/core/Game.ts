@@ -241,15 +241,6 @@ private async loadGameModels(): Promise<void> {
         this.animationFrameId = null;
     }
 
-    // Olay dinleyicilerini kaldır
-    window.removeEventListener('resize', this.onWindowResize.bind(this));
-    document.removeEventListener('keydown', this.onKeyDown.bind(this));
-    document.removeEventListener('keyup', this.onKeyUp.bind(this));
-    document.removeEventListener('mousedown', this.onMouseDown.bind(this));
-    document.removeEventListener('mouseup', this.onMouseUp.bind(this));
-    document.removeEventListener('mousemove', this.onMouseMove.bind(this));
-
-    // Sahneyi temizle
     while (this.resources.scene.children.length > 0) {
         const object = this.resources.scene.children[0];
         this.resources.scene.remove(object);
@@ -263,23 +254,11 @@ private async loadGameModels(): Promise<void> {
         }
     }
 
-    // Renderer ve kontrolleri temizle
-    this.resources.renderer.dispose();
-    this.resources.controls.dispose();
-    this.modelsLoader.cleanup();
-    if (this.menuManager) this.menuManager.cleanup();
-
-    // Oyun durumunu sıfırla
     this.gameState.isStarted = false;
     this.gameState.isPaused = false;
     this.gameState.score = 0;
     this.gameState.health = 100;
     this.gameState.ammo = 30;
-    this.player = null;
-    this.blasters = [];
-    this.enemies = [];
-
-    this.saveGameState();
 }
 
     private setupWorld(): THREE.Mesh {
