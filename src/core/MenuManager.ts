@@ -93,13 +93,13 @@ export class MenuManager extends EventEmitter {
     buttons.forEach(({ id, action }) => {
         const button = document.getElementById(id);
         if (button) {
-            // Mevcut dinleyicileri temizle
-            button.replaceWith(button.cloneNode(true));
-            const newButton = document.getElementById(id);
-            if (newButton) {
-                newButton.addEventListener('click', action);
-                console.log(`Düğme dinleyicisi eklendi: ${id}`);
-            }
+            // Mevcut dinleyicileri kaldır
+            button.removeEventListener('click', action); // Güvenli kaldırma
+            button.addEventListener('click', (event) => {
+                event.stopPropagation(); // Olayın yayılmasını durdur
+                console.log(`Düğme tıklandı: ${id}`);
+                action();
+            }, { once: false }); // Tekrar eklenmesini önle
         } else {
             console.warn(`Düğme bulunamadı: ${id}`);
             NotificationManager.getInstance().show(`Düğme bulunamadı: ${id}`, 'warning');
