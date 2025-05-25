@@ -136,16 +136,34 @@ export class MenuManager extends EventEmitter {
     }
 
     private createCharacterCarousel(): void {
-    const characterGrid = document.querySelector('.character-grid');
-    if (!characterGrid) return;
+        console.log("Karakter carousel'i oluşturuluyor");
+        const characterGrid = document.querySelector('.character-grid');
+        if (!characterGrid) {
+            console.error("Karakter gridi bulunamadı (.character-grid)");
+            NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi! HTML yapısını kontrol edin.', 'error');
+            this.showMenu('main');
+            return;
+        }
 
-    characterGrid.innerHTML = this.generateCarouselHTML();
-    for (let i = 0; i < 3 && i < this.characters.length; i++) {
-        const char = this.characters[i];
-        this.setupCharacterPreview(char.id, char.modelPath);
+        if (!this.characters.length) {
+            console.warn("Karakter verileri boş, carousel oluşturulamıyor");
+            this.characters = this.modelsLoader.getAllCharacterData();
+            if (!this.characters.length) {
+                console.error("Karakter verileri hala yok!");
+                NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+                return;
+            }
+        }
+
+        characterGrid.innerHTML = this.generateCarouselHTML();
+        this.characters.forEach(char => {
+            this.setupCharacterPreview(char.id, char.modelPath);
+        });
+
+        this.setupCharacterCardListeners();
+        this.setupCarouselListeners();
+        this.updateCarousel();
     }
-    this.updateCarousel();
-}
 
     private generateCarouselHTML(): string {
         return `
@@ -281,18 +299,6 @@ private animatePreview(characterId: string): void {
 
     animate();
 }
-
-    private disposeCharacterPreview(characterId: string): void {
-    const preview = this.characterPreviews.get(characterId);
-    if (preview) {
-        if (preview.animationFrameId) {
-            cancelAnimationFrame(preview.animationFrameId);
-        }
-        preview.renderer.dispose();
-        preview.scene.clear();
-        this.characterPreviews.delete(characterId);
-    }
-}
     
     private updateCharacterSelection(characterId: string): void {
         this.characterSelectState = {
@@ -301,29 +307,31 @@ private animatePreview(characterId: string): void {
             selectionTime: new Date().toISOString(),
             isConfirmed: false
         };
-        
+
         localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
     }
 
     private confirmCharacterSelection(): void {
-    if (!this.characterSelectState.selectedId) {
-        NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
-        return;
+        if (!this.characterSelectState.selectedId) {
+            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
+            return;
+        }
+
+        this.characterSelectState.isConfirmed = true;
+        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+        NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
+        this.emit('characterConfirmed', this.characterSelectState.selectedId);
+        this.showMenu('main');
     }
-    this.characterSelectState.isConfirmed = true;
-    localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-    NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
-    this.emit('characterConfirmed', this.characterSelectState.selectedId);
-}
 
     public cleanup(): void {
         console.log("MenuManager temizleniyor");
-        
+
         this.characterPreviews.forEach((preview, characterId) => {
             if (preview.animationFrameId) {
                 cancelAnimationFrame(preview.animationFrameId);
             }
-            
+
             preview.scene.traverse((object: any) => {
                 if (object.geometry) object.geometry.dispose();
                 if (object.material) {
@@ -391,28 +399,30 @@ private animatePreview(characterId: string): void {
     }
 
     private updateCarousel(): void {
-    console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
-    const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
-    if (wrapper) {
-        wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
-    }
-
-    const visibleIndices = [
-        (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length,
-        this.currentCarouselIndex,
-        (this.currentCarouselIndex + 1) % this.characters.length
-    ];
-
-    this.characters.forEach((char, index) => {
-        if (visibleIndices.includes(index)) {
-            if (!this.characterPreviews.has(char.id)) {
-                this.setupCharacterPreview(char.id, char.modelPath);
-            }
-        } else {
-            this.disposeCharacterPreview(char.id);
+        console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
+        const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
+        if (wrapper) {
+            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
         }
-    });
-}
+
+        const cards = document.querySelectorAll('.character-card');
+        cards.forEach((card, index) => {
+            if (index === this.currentCarouselIndex) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+
+        const navDots = document.querySelectorAll('.nav-dot');
+        navDots.forEach((dot, index) => {
+            if (index === this.currentCarouselIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
 
     public showMenu(menuId: string): void {
     console.log(`Menü gösteriliyor: ${menuId}`);
@@ -454,7 +464,7 @@ private animatePreview(characterId: string): void {
         if (selectedCard) {
             selectedCard.classList.add('selected');
             this.updateCharacterSelection(characterId);
-            
+
             console.log(`Karakter seçildi: ${characterId}`);
             const index = this.characters.findIndex(char => char.id === characterId);
             if (index !== -1) {
