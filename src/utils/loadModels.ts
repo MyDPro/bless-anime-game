@@ -1,4 +1,6 @@
+import * as THREE from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { Scene } from 'three';
 import { NotificationManager } from '../core/NotificationManager';
 import { EventEmitter } from './EventEmitter';
@@ -22,6 +24,7 @@ export interface CharacterData {
 
 export class ModelsLoader extends EventEmitter {
     private loader: GLTFLoader;
+    private dracoLoader: DRACOLoader;
     private scene: Scene;
     private models: Map<string, GLTF>;
     private characterData: CharacterData[] = [];
@@ -33,16 +36,21 @@ export class ModelsLoader extends EventEmitter {
         super();
         console.log("ModelsLoader başlatılıyor");
         this.loader = new GLTFLoader();
+        this.dracoLoader = new DRACOLoader();
+        this.dracoLoader.setDecoderPath('/draco/');
+        this.loader.setDRACOLoader(this.dracoLoader);
         this.scene = scene;
         this.models = new Map();
     }
 
     private async loadModelWithRetry(modelPath: string, retryCount = 0): Promise<GLTF> {
         try {
-            return await this.loader.loadAsync(modelPath);
+            const model = await this.loader.loadAsync(modelPath);
+            this.optimizeModel(model);
+            return model;
         } catch (error) {
             if (retryCount < this.MAX_RETRIES) {
-                console.warn(`Model yükleme denemesi ${retryCount + 1}/${this.MAX_RETRIES}:`, modelPath);
+                console.warn(`Model yükleme denemesi ${retryCount + 1}/${this.MAX_RETRIES}: ${modelPath}`);
                 await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY * (retryCount + 1)));
                 return this.loadModelWithRetry(modelPath, retryCount + 1);
             }
@@ -50,21 +58,37 @@ export class ModelsLoader extends EventEmitter {
         }
     }
 
-    async loadCharacterModels(): Promise<void> {
+    private optimizeModel(model: GLTF): void {
+        model.scene.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                object.frustumCulled = true;
+                object.castShadow = true;
+                object.receiveShadow = true;
+            }
+        });
+    }
+
+    async loadCharacterModels(characters?: string[]): Promise<void> {
         try {
             console.log('Karakter modelleri yükleme başlıyor...');
             this.emit(MODEL_EVENTS.LOAD_START);
 
-            const response = await fetch('/data/characters.json');
-            if (!response.ok) {
-                throw new Error('Characters.json dosyası bulunamadı');
+            if (!this.characterData.length) {
+                const response = await fetch('/data/characters.json');
+                if (!response.ok) {
+                    throw new Error('Characters.json dosyası bulunamadı');
+                }
+                this.characterData = await response.json();
             }
 
-            this.characterData = await response.json();
-            const totalCharacters = this.characterData.length;
+            const modelsToLoad = characters 
+                ? this.characterData.filter(char => characters.includes(char.id))
+                : this.characterData;
+
+            const totalCharacters = modelsToLoad.length;
             let loadedCount = 0;
 
-            const loadPromises = this.characterData.map(async (char) => {
+            const loadPromises = modelsToLoad.map(async (char) => {
                 if (this.loadingPromises.has(char.id)) {
                     return this.loadingPromises.get(char.id);
                 }
@@ -97,7 +121,7 @@ export class ModelsLoader extends EventEmitter {
             });
 
             await Promise.all(loadPromises);
-            this.emit(MODEL_EVENTS.LOAD_SUCCESS, this.characterData);
+            this.emit(MODEL_EVENTS.LOAD_SUCCESS, modelsToLoad);
             console.log('Tüm karakter modelleri yüklendi');
             NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
 
@@ -117,7 +141,6 @@ export class ModelsLoader extends EventEmitter {
             console.log('Blaster modeli yükleme denemesi...');
             const blasterModel = await this.loadModelWithRetry(blasterPath);
             blasterModel.scene.name = 'blaster';
-            this.scene.add(blasterModel.scene);
             this.models.set('blaster', blasterModel);
             console.log('Blaster modeli başarıyla yüklendi');
 
@@ -153,6 +176,7 @@ export class ModelsLoader extends EventEmitter {
     }
 
     cleanup(): void {
+        console.log("ModelsLoader temizleniyor");
         this.loadingPromises.clear();
         this.models.forEach((model) => {
             model.scene.traverse((object: any) => {
@@ -164,9 +188,12 @@ export class ModelsLoader extends EventEmitter {
                         object.material.dispose();
                     }
                 }
+                if (object.texture) object.texture.dispose();
             });
+            this.scene.remove(model.scene);
         });
         this.models.clear();
         this.characterData = [];
+        this.dracoLoader.dispose();
     }
-    }
+}
