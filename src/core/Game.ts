@@ -569,22 +569,7 @@ private async loadGameModels(): Promise<void> {
     private restartGame(): void {
     console.log("Oyun yeniden başlatılıyor");
     this.cleanup();
-    // Yeni renderer ve kontroller oluştur
-    this.resources.renderer = new THREE.WebGLRenderer({
-        canvas: this.resources.renderer.domElement,
-        antialias: true,
-        powerPreference: 'high-performance'
-    });
-    this.resources.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.resources.renderer.shadowMap.enabled = true;
-    this.resources.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    this.resources.controls = new OrbitControls(this.resources.camera, this.resources.renderer.domElement);
-    this.resources.controls.enableDamping = true;
-    this.resources.controls.dampingFactor = 0.05;
-    this.resources.controls.target.set(0, 1, 0);
-
-    // Sahneyi yeniden kur
+    this.resources.controls.reset();
     this.platform = this.setupWorld();
     this.initializeGame();
 }
