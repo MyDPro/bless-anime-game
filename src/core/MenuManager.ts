@@ -306,17 +306,15 @@ private animatePreview(characterId: string): void {
     }
 
     private confirmCharacterSelection(): void {
-        if (!this.characterSelectState.selectedId) {
-            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
-            return;
-        }
-
-        this.characterSelectState.isConfirmed = true;
-        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-        NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
-        this.emit('characterConfirmed', this.characterSelectState.selectedId);
-        this.showMenu('main');
+    if (!this.characterSelectState.selectedId) {
+        NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
+        return;
     }
+    this.characterSelectState.isConfirmed = true;
+    localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+    NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
+    this.emit('characterConfirmed', this.characterSelectState.selectedId);
+}
 
     public cleanup(): void {
         console.log("MenuManager temizleniyor");
