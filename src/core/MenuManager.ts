@@ -152,9 +152,13 @@ private createCharacterCarousel(): void {
     }
 
     if (!this.characters.length) {
-        console.error("Karakter verileri boş, carousel oluşturulamıyor");
-        NotificationManager.getInstance().show('Karakter verileri bulunamadı!', 'error');
-        return;
+        console.warn("Karakter verileri boş, carousel oluşturulamıyor");
+        this.characters = this.modelsLoader.getAllCharacterData();
+        if (!this.characters.length) {
+            console.error("Karakter verileri hala yok!");
+            NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+            return;
+        }
     }
 
     characterGrid.innerHTML = this.generateCarouselHTML();
