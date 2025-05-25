@@ -5,6 +5,7 @@ bless-anime-game/
 │   ├── core/            # Core game systems
 │   │   ├── Game.ts      # Main game logic
 │   │   └── MenuManager.ts
+│   │   └── ErrorManager.ts
 │   │   └── main.ts         
 │   │   └── NotificationManager.ts
 │   ├── utils/           # Utility functions
