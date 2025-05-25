@@ -275,12 +275,16 @@ body, html {
     border-radius: 10px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
+    position: relative; /* Canvas konumlandırması için */
 }
 
 .character-canvas {
     width: 100% !important;
     height: 100% !important;
-    display: block;
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .character-info h3 {
