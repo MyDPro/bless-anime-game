@@ -78,7 +78,6 @@ export class Game extends EventEmitter {
         
         this.resources = this.initializeResources(canvas);
         this.modelsLoader = new ModelsLoader(this.resources.scene);
-        this.menuManager = new MenuManager(this.modelsLoader);
         
         this.platform = this.setupWorld();
         this.setupEventListeners();
@@ -113,43 +112,43 @@ export class Game extends EventEmitter {
     }
 
     private async initializeGame(): Promise<void> {
-    this.ui.uiContainer.classList.add('hidden');
-    
-    try {
-        await this.loadGameModels();
-        this.animate();
-        NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
-    } catch (error) {
-        console.error('Oyun başlatılamadı:', error);
-        NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
-    }
-}
-
-private async loadGameModels(): Promise<void> {
-    try {
-        console.log('Model yükleme başlıyor...');
-        await Promise.all([
-            this.modelsLoader.loadCharacterModels(),
-            this.modelsLoader.loadBlasterModels()
-        ]);
-        console.log('Modeller başarıyla yüklendi');
-        NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
+        this.ui.uiContainer.classList.add('hidden');
         
-        // MenuManager’ı burada başlat
-        this.menuManager = new MenuManager(this.modelsLoader);
-        
-        if (this.ui.loadingScreen) {
-            this.ui.loadingScreen.classList.add('fade-out');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            this.ui.loadingScreen.classList.add('hidden');
-            this.menuManager.showMenu('main'); // main seçim ekranıyla başla
+        try {
+            await this.loadGameModels();
+            this.animate();
+            NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
+        } catch (error) {
+            console.error('Oyun başlatılamadı:', error);
+            NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
         }
-    } catch (error) {
-        console.error('Model yükleme hatası:', error);
-        NotificationManager.getInstance().show('Model yükleme hatası!', 'error');
-        throw error;
     }
-}
+
+    private async loadGameModels(): Promise<void> {
+        try {
+            console.log('Model yükleme başlıyor...');
+            await Promise.all([
+                this.modelsLoader.loadCharacterModels(),
+                this.modelsLoader.loadBlasterModels()
+            ]);
+            console.log('Modeller başarıyla yüklendi');
+            NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
+            
+            this.menuManager = new MenuManager(this.modelsLoader);
+            
+            if (this.ui.loadingScreen) {
+                this.ui.loadingScreen.classList.add('fade-out');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                this.ui.loadingScreen.classList.add('hidden');
+                this.menuManager.showMenu('main');
+            }
+        } catch (error) {
+            console.error('Model yükleme hatası:', error);
+            NotificationManager.getInstance().show('Model yükleme hatası!', 'error');
+            throw error;
+        }
+    }
+
     private setCurrentDateTime(): void {
         const now = new Date();
         const year = now.getUTCFullYear();
@@ -325,7 +324,19 @@ private async loadGameModels(): Promise<void> {
 
         this.menuManager.on('startGame', () => {
             console.log("Oyun başlatılıyor");
+            const selectedCharacter = this.menuManager.getSelectedCharacter();
+            if (!selectedCharacter) {
+                NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
+                this.menuManager.showMenu('character');
+                return;
+            }
             this.startGame();
+        });
+
+        this.menuManager.on('characterConfirmed', (characterId: string) => {
+            console.log(`Karakter onaylandı: ${characterId}`);
+            this.gameState.selectedCharacter = characterId;
+            this.saveGameState();
         });
 
         this.menuManager.on('resumeGame', () => {
@@ -341,12 +352,6 @@ private async loadGameModels(): Promise<void> {
         this.menuManager.on('exitToMain', () => {
             console.log("Ana menüye dönülüyor");
             this.exitToMain();
-        });
-
-        this.menuManager.on('characterConfirmed', (characterId: string) => {
-            console.log(`Karakter onaylandı: ${characterId}`);
-            this.gameState.selectedCharacter = characterId;
-            this.saveGameState();
         });
     }
 
@@ -577,8 +582,8 @@ private async loadGameModels(): Promise<void> {
     }
 
     private exitToMain(): void {
-        this.cleanup();
-        this.initializeGame();
+        this.gameState.isStarted = false;
+        this.ui.uiContainer.classList.add('hidden');
         this.menuManager.showMenu('main');
     }
 }
