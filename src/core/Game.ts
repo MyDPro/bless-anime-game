@@ -170,14 +170,13 @@ private async loadGameModels(): Promise<void> {
         console.log('Modeller başarıyla yüklendi');
         NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
         
-        // MenuManager'ı burada başlat
         this.menuManager = new MenuManager(this.modelsLoader);
         
         if (this.ui.loadingScreen) {
             this.ui.loadingScreen.classList.add('fade-out');
             await new Promise(resolve => setTimeout(resolve, 500));
             this.ui.loadingScreen.classList.add('hidden');
-            this.menuManager.showMenu('character'); // Doğrudan karakter seçim ekranını göster
+            this.menuManager.showMenu('main'); // Doğrudan karakter yada maini secim ekranını gösterilebilir.
         }
     } catch (error) {
         console.error('Model yükleme hatası:', error);
