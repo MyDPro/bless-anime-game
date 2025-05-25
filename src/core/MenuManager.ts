@@ -218,12 +218,14 @@ export class MenuManager extends EventEmitter {
     const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
     if (!canvas) {
         console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
+        NotificationManager.getInstance().show(`Canvas bulunamadı: ${characterId}`, 'error');
         return;
     }
 
-    // Canvas boyutlarını CSS'den al
-    const width = canvas.parentElement?.clientWidth || 300;
-    const height = canvas.parentElement?.clientHeight || 200;
+    // Canvas boyutlarını ebeveyninden al
+    const parent = canvas.parentElement;
+    const width = parent?.clientWidth || 300;
+    const height = parent?.clientHeight || 200;
     canvas.width = width * window.devicePixelRatio;
     canvas.height = height * window.devicePixelRatio;
     canvas.style.width = `${width}px`;
@@ -238,13 +240,15 @@ export class MenuManager extends EventEmitter {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    // Işıklandırma
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
     dirLight.position.set(2, 2, 2);
     scene.add(ambientLight, dirLight);
 
     this.characterPreviews.set(characterId, { scene, camera, renderer });
 
+    // Modeli yükle
     const model = this.modelsLoader.getModel(characterId);
     if (model) {
         const clonedModel = model.scene.clone();
@@ -253,6 +257,7 @@ export class MenuManager extends EventEmitter {
         scene.add(clonedModel);
         this.characterPreviews.get(characterId)!.model = clonedModel;
         this.animatePreview(characterId);
+        console.log(`Model yüklendi ve eklendi: ${characterId}`);
     } else {
         console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
         this.loadingPromises.push(
@@ -266,35 +271,33 @@ export class MenuManager extends EventEmitter {
                     if (preview) {
                         preview.model = model;
                         this.animatePreview(characterId);
+                        console.log(`Model asenkron yüklendi: ${characterId}`);
                     }
                 })
                 .catch(error => {
                     console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
-                    NotificationManager.getInstance().show(
-                        `Model yüklenemedi: ${characterId}`,
-                        'error'
-                    );
+                    NotificationManager.getInstance().show(`Model yüklenemedi: ${characterId}`, 'error');
                 })
         );
     }
 }
 
-    private animatePreview(characterId: string): void {
-        const preview = this.characterPreviews.get(characterId);
-        if (!preview || !document.getElementById(`${characterId}-preview`)?.offsetParent) return;
+private animatePreview(characterId: string): void {
+    const preview = this.characterPreviews.get(characterId);
+    if (!preview || !document.getElementById(`${characterId}-preview`)?.offsetParent) return;
 
-        const animate = () => {
-            if (!this.characterPreviews.has(characterId)) return;
+    const animate = () => {
+        if (!this.characterPreviews.has(characterId)) return;
 
-            preview.animationFrameId = requestAnimationFrame(animate);
-            if (preview.model) {
-                preview.model.rotation.y += 0.01;
-            }
-            preview.renderer.render(preview.scene, preview.camera);
-        };
+        preview.animationFrameId = requestAnimationFrame(animate);
+        if (preview.model) {
+            preview.model.rotation.y += 0.01;
+        }
+        preview.renderer.render(preview.scene, preview.camera);
+    };
 
-        animate();
-    }
+    animate();
+}
 
     private updateCharacterSelection(characterId: string): void {
         this.characterSelectState = {
