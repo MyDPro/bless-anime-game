@@ -607,3 +607,68 @@ input[type="range"]::-webkit-slider-thumb:hover {
 .notification.slide-out {
     animation: slideOut 0.3s forwards;
     }
+/* ... (Mevcut kodunuzun çoğu aynı kalacak, sadece aşağıdaki güncellemeleri/eklemeleri yapacağız) ... */
+
+/* Character Selection Info güncellemesi */
+.character-selection-info {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
+}
+
+.character-selection-info small {
+    display: block;
+    margin: 5px 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* User info güncellemesi */
+.user-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.user-info-label {
+    color: #4a90e2;
+    font-size: 12px;
+}
+
+.user-info-value {
+    color: #fff;
+    font-size: 12px;
+}
+
+/* Character carousel güncellemesi */
+.character-cards-wrapper {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0 -10px;
+    will-change: transform;
+}
+
+/* Aktif ve seçili kartlar için güncelleme */
+.character-card.active {
+    transform: scale(1);
+    opacity: 1;
+    border-color: #4a90e2;
+}
+
+.character-card.selected {
+    border-color: #2ecc71;
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+}
+
+/* Loading state için güncelleme */
+body.loading {
+    cursor: wait;
+}
+
+body.loading .menu-button,
+body.loading .character-card {
+    pointer-events: none;
+    opacity: 0.7;
+}
