@@ -152,31 +152,6 @@ private async loadGameModels(): Promise<void> {
     }
 }
 
-    private async loadGameModels(): Promise<void> {
-        try {
-            console.log('Model yükleme başlıyor...');
-            await Promise.all([
-                this.modelsLoader.loadCharacterModels(),
-                this.modelsLoader.loadBlasterModels()
-            ]);
-            console.log('Modeller başarıyla yüklendi');
-            NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
-            
-            this.menuManager = new MenuManager(this.modelsLoader);
-            
-            if (this.ui.loadingScreen) {
-                this.ui.loadingScreen.classList.add('fade-out');
-                await new Promise(resolve => setTimeout(resolve, 500));
-                this.ui.loadingScreen.classList.add('hidden');
-                this.menuManager.showMenu('main');
-            }
-        } catch (error) {
-            console.error('Model yükleme hatası:', error);
-            NotificationManager.getInstance().show('Model yükleme hatası!', 'error');
-            throw error;
-        }
-    }
-
     private setCurrentDateTime(): void {
         const now = new Date();
         const year = now.getUTCFullYear();
