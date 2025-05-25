@@ -41,6 +41,22 @@ export class ModelsLoader extends EventEmitter {
         this.loader.setDRACOLoader(this.dracoLoader);
         this.scene = scene;
         this.models = new Map();
+        // characters.json'ı constructor'da yükle
+        this.loadCharacterData();
+    }
+
+    private async loadCharacterData(): Promise<void> {
+        try {
+            const response = await fetch('/data/characters.json');
+            if (!response.ok) {
+                throw new Error('Characters.json dosyası bulunamadı');
+            }
+            this.characterData = await response.json();
+            console.log('Karakter verileri yüklendi:', this.characterData.length, 'karakter');
+        } catch (error) {
+            console.error('Karakter verileri yüklenemedi:', error);
+            NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+        }
     }
 
     private async loadModelWithRetry(modelPath: string, retryCount = 0): Promise<GLTF> {
@@ -74,11 +90,10 @@ export class ModelsLoader extends EventEmitter {
             this.emit(MODEL_EVENTS.LOAD_START);
 
             if (!this.characterData.length) {
-                const response = await fetch('/data/characters.json');
-                if (!response.ok) {
-                    throw new Error('Characters.json dosyası bulunamadı');
+                await this.loadCharacterData();
+                if (!this.characterData.length) {
+                    throw new Error('Karakter verileri yüklenemedi');
                 }
-                this.characterData = await response.json();
             }
 
             const modelsToLoad = characters 
