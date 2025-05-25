@@ -215,64 +215,69 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupCharacterPreview(characterId: string, modelPath: string): void {
-        const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
-        if (!canvas) {
-            console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
-            return;
-        }
-
-        // Canvas boyutlarını CSS'den al
-        const width = canvas.parentElement?.clientWidth || 300;
-        const height = canvas.parentElement?.clientHeight || 200;
-        canvas.width = width;
-        canvas.height = height;
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-        camera.position.set(0, 1.5, 3);
-        camera.lookAt(0, 1, 0);
-
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-        renderer.setSize(width, height);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-        dirLight.position.set(2, 2, 2);
-        scene.add(ambientLight, dirLight);
-
-        this.characterPreviews.set(characterId, { scene, camera, renderer });
-
-        const model = this.modelsLoader.getModel(characterId);
-        if (model) {
-            const clonedModel = model.scene.clone();
-            clonedModel.scale.set(1, 1, 1);
-            clonedModel.position.set(0, 0, 0);
-            scene.add(clonedModel);
-            this.characterPreviews.get(characterId)!.model = clonedModel;
-            this.animatePreview(characterId);
-        } else {
-            console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
-            this.loadingPromises.push(
-                new GLTFLoader().loadAsync(modelPath)
-                    .then(gltf => {
-                        const model = gltf.scene;
-                        model.scale.set(1, 1, 1);
-                        model.position.set(0, 0, 0);
-                        scene.add(model);
-                        const preview = this.characterPreviews.get(characterId);
-                        if (preview) preview.model = model;
-                        this.animatePreview(characterId);
-                    })
-                    .catch(error => {
-                        console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
-                        NotificationManager.getInstance().show(
-                            `Model yüklenemedi: ${characterId}`,
-                            'error'
-                        );
-                    })
-            );
-        }
+    const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
+    if (!canvas) {
+        console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
+        return;
     }
+
+    // Canvas boyutlarını CSS'den al
+    const width = canvas.parentElement?.clientWidth || 300;
+    const height = canvas.parentElement?.clientHeight || 200;
+    canvas.width = width * window.devicePixelRatio;
+    canvas.height = height * window.devicePixelRatio;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 1.5, 3);
+    camera.lookAt(0, 1, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(2, 2, 2);
+    scene.add(ambientLight, dirLight);
+
+    this.characterPreviews.set(characterId, { scene, camera, renderer });
+
+    const model = this.modelsLoader.getModel(characterId);
+    if (model) {
+        const clonedModel = model.scene.clone();
+        clonedModel.scale.set(1, 1, 1);
+        clonedModel.position.set(0, 0, 0);
+        scene.add(clonedModel);
+        this.characterPreviews.get(characterId)!.model = clonedModel;
+        this.animatePreview(characterId);
+    } else {
+        console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
+        this.loadingPromises.push(
+            new GLTFLoader().loadAsync(modelPath)
+                .then(gltf => {
+                    const model = gltf.scene;
+                    model.scale.set(1, 1, 1);
+                    model.position.set(0, 0, 0);
+                    scene.add(model);
+                    const preview = this.characterPreviews.get(characterId);
+                    if (preview) {
+                        preview.model = model;
+                        this.animatePreview(characterId);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
+                    NotificationManager.getInstance().show(
+                        `Model yüklenemedi: ${characterId}`,
+                        'error'
+                    );
+                })
+        );
+    }
+}
 
     private animatePreview(characterId: string): void {
         const preview = this.characterPreviews.get(characterId);
