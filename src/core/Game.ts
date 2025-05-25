@@ -113,16 +113,18 @@ export class Game extends EventEmitter {
     }
 
     private async initializeGame(): Promise<void> {
-        this.ui.uiContainer.classList.add('hidden');
-        
-        try {
-            await this.loadGameModels();
-            this.animate();
-            NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
-        } catch (error) {
-            throw error;
-        }
+    this.ui.uiContainer.classList.add('hidden');
+    
+    try {
+        await this.loadGameModels();
+        this.animate();
+        NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
+    } catch (error) {
+        console.error('Oyun başlatılamadı:', error);
+        NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
     }
+}
+
 
     private setCurrentDateTime(): void {
         const now = new Date();
@@ -167,11 +169,15 @@ private async loadGameModels(): Promise<void> {
         ]);
         console.log('Modeller başarıyla yüklendi');
         NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
+        
+        // MenuManager'ı burada başlat
+        this.menuManager = new MenuManager(this.modelsLoader);
+        
         if (this.ui.loadingScreen) {
             this.ui.loadingScreen.classList.add('fade-out');
             await new Promise(resolve => setTimeout(resolve, 500));
             this.ui.loadingScreen.classList.add('hidden');
-            this.menuManager.showMenu('main');
+            this.menuManager.showMenu('character'); // Doğrudan karakter seçim ekranını göster
         }
     } catch (error) {
         console.error('Model yükleme hatası:', error);
