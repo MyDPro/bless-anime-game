@@ -32,6 +32,7 @@ export class Game extends EventEmitter {
     private readonly targetFPS = 60;
     private readonly frameInterval = 1000 / this.targetFPS;
     private animationFrameId: number | null = null;
+    private platform: THREE.Mesh;
 
     private gameState: GameState = {
         isStarted: false,
@@ -42,7 +43,7 @@ export class Game extends EventEmitter {
         selectedCharacter: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-25 09:54:23'
+        lastPlayTime: '2025-05-25 17:07:00'
     };
 
     private ui = {
@@ -50,7 +51,9 @@ export class Game extends EventEmitter {
         health: document.getElementById('health') as HTMLElement,
         ammo: document.getElementById('ammo') as HTMLElement,
         uiContainer: document.getElementById('ui') as HTMLElement,
-        loadingScreen: document.getElementById('loading-screen') as HTMLElement
+        loadingScreen: document.getElementById('loading-screen') as HTMLElement,
+        finalScore: document.getElementById('final-score') as HTMLElement,
+        highScore: document.getElementById('high-score') as HTMLElement
     };
 
     private player: THREE.Object3D | null = null;
@@ -75,9 +78,9 @@ export class Game extends EventEmitter {
         
         this.resources = this.initializeResources(canvas);
         this.modelsLoader = new ModelsLoader(this.resources.scene);
-        this.menuManager = new MenuManager();
+        this.menuManager = new MenuManager(this.modelsLoader);
         
-        this.setupWorld();
+        this.platform = this.setupWorld();
         this.setupEventListeners();
         this.loadGameState();
         this.setCurrentDateTime();
@@ -96,7 +99,7 @@ export class Game extends EventEmitter {
         camera.position.set(5, 5, 5);
         camera.lookAt(0, 0, 0);
 
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -185,12 +188,11 @@ export class Game extends EventEmitter {
         const deltaTime = (currentTime - this.lastTime) / 1000;
         if (deltaTime < this.frameInterval) return;
 
-        if (!this.gameState.isPaused && this.gameState.isStarted) {
+        if (this.gameState.isStarted && !this.gameState.isPaused) {
             this.gameLoop(deltaTime);
+            this.resources.controls.update();
+            this.resources.renderer.render(this.resources.scene, this.resources.camera);
         }
-
-        this.resources.controls.update();
-        this.resources.renderer.render(this.resources.scene, this.resources.camera);
 
         this.lastTime = currentTime;
     }
@@ -220,7 +222,7 @@ export class Game extends EventEmitter {
             new THREE.Vector3(0, -1, 0)
         );
 
-        const intersects = this.raycaster.intersectObjects(this.resources.scene.children);
+        const intersects = this.raycaster.intersectObjects([this.platform]);
         if (intersects.length > 0) {
             const distance = intersects[0].distance;
             if (distance < 0.5) {
@@ -230,12 +232,10 @@ export class Game extends EventEmitter {
     }
 
     public cleanup(): void {
-        // Animation frame temizleme
         if (this.animationFrameId !== null) {
             cancelAnimationFrame(this.animationFrameId);
         }
 
-        // Event listeners temizleme
         window.removeEventListener('resize', () => this.onWindowResize());
         document.removeEventListener('keydown', (e) => this.onKeyDown(e));
         document.removeEventListener('keyup', (e) => this.onKeyUp(e));
@@ -243,7 +243,6 @@ export class Game extends EventEmitter {
         document.removeEventListener('mouseup', (e) => this.onMouseUp(e));
         document.removeEventListener('mousemove', (e) => this.onMouseMove(e));
 
-        // Three.js kaynakları temizleme
         this.resources.scene.traverse((object) => {
             if (object instanceof THREE.Mesh) {
                 object.geometry.dispose();
@@ -260,21 +259,18 @@ export class Game extends EventEmitter {
         this.modelsLoader.cleanup();
         this.menuManager.cleanup();
 
-        // Game state kaydetme
         this.saveGameState();
     }
-   // ... (Önceki kod aynen kalacak, devamı:)
 
-    private setupWorld(): void {
-        // Temel ışıklandırma
+    private setupWorld(): THREE.Mesh {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.resources.scene.add(ambientLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 1);
         dirLight.position.set(5, 10, 5);
         dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.mapSize.width = 512;
+        dirLight.shadow.mapSize.height = 512;
         dirLight.shadow.camera.near = 0.5;
         dirLight.shadow.camera.far = 50;
         dirLight.shadow.camera.left = -10;
@@ -283,7 +279,6 @@ export class Game extends EventEmitter {
         dirLight.shadow.camera.bottom = -10;
         this.resources.scene.add(dirLight);
 
-        // Platform oluşturma
         const platform = new THREE.Mesh(
             new THREE.BoxGeometry(10, 0.5, 10),
             new THREE.MeshStandardMaterial({
@@ -295,6 +290,7 @@ export class Game extends EventEmitter {
         platform.receiveShadow = true;
         platform.position.y = -0.25;
         this.resources.scene.add(platform);
+        return platform;
     }
 
     private setupEventListeners(): void {
@@ -325,24 +321,30 @@ export class Game extends EventEmitter {
             this.updateUI();
         });
 
-        document.getElementById('startBtn')?.addEventListener('click', () => {
-            console.log("Oyun başlat düğmesine tıklandı");
+        this.menuManager.on('startGame', () => {
+            console.log("Oyun başlatılıyor");
             this.startGame();
         });
 
-        document.getElementById('resumeBtn')?.addEventListener('click', () => {
+        this.menuManager.on('resumeGame', () => {
             console.log("Oyun devam ettiriliyor");
             this.resumeGame();
         });
 
-        document.getElementById('restartBtn')?.addEventListener('click', () => {
+        this.menuManager.on('restartGame', () => {
             console.log("Oyun yeniden başlatılıyor");
             this.restartGame();
         });
 
-        document.getElementById('exitToMainBtn')?.addEventListener('click', () => {
+        this.menuManager.on('exitToMain', () => {
             console.log("Ana menüye dönülüyor");
             this.exitToMain();
+        });
+
+        this.menuManager.on('characterConfirmed', (characterId: string) => {
+            console.log(`Karakter onaylandı: ${characterId}`);
+            this.gameState.selectedCharacter = characterId;
+            this.saveGameState();
         });
     }
 
@@ -407,14 +409,12 @@ export class Game extends EventEmitter {
 
     private onMouseDown(event: MouseEvent): void {
         if (!this.gameState.isStarted || this.gameState.isPaused) return;
-        if (event.button === 0) { // Sol tık
+        if (event.button === 0) {
             this.shoot();
         }
     }
 
-    private onMouseUp(event: MouseEvent): void {
-        // Mouse bırakma işlemleri gerekirse eklenebilir
-    }
+    private onMouseUp(event: MouseEvent): void {}
 
     private onMouseMove(event: MouseEvent): void {
         if (!this.gameState.isStarted || this.gameState.isPaused) return;
@@ -425,32 +425,36 @@ export class Game extends EventEmitter {
     }
 
     private updateUI(): void {
-        this.ui.score.textContent = `Skor: ${this.gameState.score}`;
-        this.ui.health.textContent = `Can: ${this.gameState.health}`;
-        this.ui.ammo.textContent = `Mermi: ${this.gameState.ammo}`;
+        if (this.ui.score.textContent !== `Skor: ${this.gameState.score}`) {
+            this.ui.score.textContent = `Skor: ${this.gameState.score}`;
+            this.ui.health.textContent = `Can: ${this.gameState.health}`;
+            this.ui.ammo.textContent = `Mermi: ${this.gameState.ammo}`;
+            this.ui.finalScore.textContent = `Skor: ${this.gameState.score}`;
+            this.ui.highScore.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
 
-        const userInfoDiv = document.createElement('div');
-        userInfoDiv.classList.add('user-info');
-        userInfoDiv.innerHTML = `
-            <div class="user-info-item">
-                <span class="user-info-label">Oyuncu:</span>
-                <span class="user-info-value">${this.gameState.currentUser}</span>
-            </div>
-            <div class="user-info-item">
-                <span class="user-info-label">Karakter:</span>
-                <span class="user-info-value">${this.gameState.selectedCharacter || 'Seçilmedi'}</span>
-            </div>
-            <div class="user-info-item">
-                <span class="user-info-label">Son Oynama:</span>
-                <span class="user-info-value">${this.gameState.lastPlayTime}</span>
-            </div>
-        `;
+            const userInfoDiv = document.createElement('div');
+            userInfoDiv.classList.add('user-info');
+            userInfoDiv.innerHTML = `
+                <div class="user-info-item">
+                    <span class="user-info-label">Oyuncu:</span>
+                    <span class="user-info-value">${this.gameState.currentUser}</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label">Karakter:</span>
+                    <span class="user-info-value">${this.gameState.selectedCharacter || 'Seçilmedi'}</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label">Son Oynama:</span>
+                    <span class="user-info-value">${this.gameState.lastPlayTime}</span>
+                </div>
+            `;
 
-        const existingUserInfo = this.ui.uiContainer.querySelector('.user-info');
-        if (!existingUserInfo) {
-            this.ui.uiContainer.querySelector('.ui-panel')?.appendChild(userInfoDiv);
-        } else {
-            existingUserInfo.innerHTML = userInfoDiv.innerHTML;
+            const existingUserInfo = this.ui.uiContainer.querySelector('.user-info');
+            if (!existingUserInfo) {
+                this.ui.uiContainer.querySelector('.ui-panel')?.appendChild(userInfoDiv);
+            } else {
+                existingUserInfo.innerHTML = userInfoDiv.innerHTML;
+            }
         }
     }
 
@@ -461,16 +465,13 @@ export class Game extends EventEmitter {
     }
 
     private updateEnemies(deltaTime: number): void {
-        // Düşman AI ve hareket mantığı buraya eklenecek
-        this.enemies.forEach(enemy => {
-            // Düşman hareketi ve davranışı
-        });
+        this.enemies.forEach(enemy => {});
     }
 
     public startGame(): void {
         const selectedCharacter = this.menuManager.getSelectedCharacter();
         if (!selectedCharacter) {
-            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
+            NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
             this.menuManager.showMenu('character');
             return;
         }
@@ -527,7 +528,6 @@ export class Game extends EventEmitter {
         this.emit('weaponFired', this.gameState.ammo);
         this.updateUI();
 
-        // Mermi efekti ve çarpışma kontrolü
         if (this.player) {
             const direction = new THREE.Vector3(0, 0, -1);
             direction.applyQuaternion(this.player.quaternion);
@@ -537,7 +537,6 @@ export class Game extends EventEmitter {
             
             if (intersects.length > 0) {
                 const hitEnemy = intersects[0].object;
-                // Düşmana hasar verme mantığı
                 this.emit('scoreUpdate', 10);
             }
         }
@@ -561,50 +560,23 @@ export class Game extends EventEmitter {
     }
 
     private restartGame(): void {
-        this.saveGameState();
-        NotificationManager.getInstance().show('Oyun yeniden başlatılıyor...', 'success');
-        this.startGame();
-    }
-
-    private exitToMain(): void {
-        this.gameState.isStarted = false;
-        this.gameState.isPaused = false;
-        this.saveGameState();
-        NotificationManager.getInstance().show('Ana menüye dönülüyor...', 'warning');
-        this.ui.uiContainer.classList.add('hidden');
-        this.menuManager.showMenu('main');
+        this.cleanup();
+        this.initializeGame();
     }
 
     private endGame(): void {
         this.gameState.isStarted = false;
         if (this.gameState.score > this.gameState.highScore) {
-            NotificationManager.getInstance().show('Yeni yüksek skor! 🏆', 'success');
+            this.gameState.highScore = this.gameState.score;
+            this.saveGameState();
         }
-        this.saveGameState();
-        NotificationManager.getInstance().show(`Oyun bitti! Skorunuz: ${this.gameState.score}`, 'error');
-
-        const finalScoreElement = document.getElementById('final-score');
-        const highScoreElement = document.getElementById('high-score');
-        if (finalScoreElement) {
-            finalScoreElement.textContent = `Skor: ${this.gameState.score}`;
-        }
-        if (highScoreElement) {
-            highScoreElement.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
-        }
+        this.updateUI();
         this.menuManager.showMenu('gameOver');
     }
 
-    // Public getter metodları
-    getCurrentUser(): string {
-        return this.gameState.currentUser;
+    private exitToMain(): void {
+        this.cleanup();
+        this.initializeGame();
+        this.menuManager.showMenu('main');
     }
-
-    getLastPlayTime(): string {
-        return this.gameState.lastPlayTime;
-    }
-
-    showMenu(menuId: string): void {
-        this.menuManager.showMenu(menuId);
-    }
-} 
-  }
+}
