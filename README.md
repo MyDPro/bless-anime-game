@@ -16,8 +16,8 @@ bless-anime-game/
 │   └── data/
 │      ├── characters.json
 │   └── models/
-│      ├── Textures
 │      ├── character
+│               ├── Textures
 │      ├── city-kit/
 │      └── kit/
 ├── tsconfig.base.json   # Base TS config
