@@ -68,22 +68,22 @@ export class MenuManager extends EventEmitter {
         document.body.classList.remove('loading');
     }
 
-    private async initializeMenus(): Promise<void> {
-        console.log("Menüler başlatılıyor");
-        this.characters = this.modelsLoader.getAllCharacterData();
-        if (!this.characters.length) {
-            await this.modelsLoader.loadCharacterModels();
-            this.characters = this.modelsLoader.getAllCharacterData();
-        }
+private async initializeMenus(): Promise<void> {
+    console.log("Menüler başlatılıyor");
+    this.characters = this.modelsLoader.getAllCharacterData();
+    // loadCharacterModels çağrısını kaldırıyorum, çünkü Game.ts zaten yüklüyor
+    if (!this.characters.length) {
+        console.warn("Karakter verileri eksik, Game.ts yüklemeyi tamamlamalı");
+    }
 
-        const menuIds = [
-            { key: 'main', id: 'main-menu' },
-            { key: 'character', id: 'character-select' },
-            { key: 'scoreboard', id: 'scoreboard' },
-            { key: 'settings', id: 'settings' },
-            { key: 'pause', id: 'pause-menu' },
-            { key: 'gameOver', id: 'game-over' }
-        ];
+    const menuIds = [
+        { key: 'main', id: 'main-menu' },
+        { key: 'character', id: 'character-select' },
+        { key: 'scoreboard', id: 'scoreboard' },
+        { key: 'settings', id: 'settings' },
+        { key: 'pause', id: 'pause-menu' },
+        { key: 'gameOver', id: 'game-over' }
+    ];
 
         menuIds.forEach(({ key, id }) => {
             const element = document.getElementById(id);
