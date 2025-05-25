@@ -111,17 +111,11 @@ private async initializeMenus(): Promise<void> {
     console.log("Menüler başlatılıyor");
     this.characters = this.modelsLoader.getAllCharacterData();
     if (!this.characters.length) {
-        console.error("Karakter verileri eksik!");
-        NotificationManager.getInstance().show('Karakter verileri yüklenemedi! Lütfen sayfayı yenileyin.', 'error');
-        // Fallback karakter verisi
-        this.characters = [
-            {
-                id: 'fallback',
-                name: 'Varsayılan Karakter',
-                modelPath: '/models/character/character-female-a.glb',
-                stats: { speed: 50, power: 50 }
-            }
-        ];
+        console.warn("Karakter verileri yüklenemedi, modellerin yüklendiğinden emin olun.");
+        // Bildirimi kaldır, çünkü modeller zaten yüklendi
+        // NotificationManager.getInstance().show('Karakter verileri yüklenemedi! Lütfen sayfayı yenileyin.', 'error');
+        // Yedek karakteri kaldır
+        // this.characters = [{ id: 'fallback', name: 'Varsayılan Karakter', modelPath: '/models/character/character-female-a.glb', stats: { speed: 50, power: 50 } }];
     }
 
     const menuIds = [
@@ -142,13 +136,6 @@ private async initializeMenus(): Promise<void> {
             NotificationManager.getInstance().show(`Menü bulunamadı: ${id}`, 'error');
         }
     });
-
-    // Menü yoksa ana menüye zorla
-    if (!this.menus.has('character')) {
-        console.error('Karakter seçim menüsü eksik, ana menü gösteriliyor');
-        this.showMenu('main');
-        return;
-    }
 
     this.setupMenuListeners();
     this.createCharacterCarousel();
