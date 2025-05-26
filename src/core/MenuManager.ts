@@ -10,7 +10,6 @@ interface CharacterPreview {
     camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
     model?: THREE.Object3D;
-    animationFrameId?: number;
 }
 
 interface CharacterSelectState {
@@ -29,7 +28,7 @@ export class MenuManager extends EventEmitter {
     private loadingPromises: Promise<any>[] = [];
     private modelsLoader: ModelsLoader;
     private characters: CharacterData[] = [];
-    private sharedRenderer: THREE.WebGLRenderer | null = null; // Paylaşılan renderer
+    private sharedRenderer: THREE.WebGLRenderer | null = null;
 
     private characterSelectState: CharacterSelectState = {
         selectedId: null,
@@ -39,12 +38,12 @@ export class MenuManager extends EventEmitter {
     };
 
     private readonly CURRENT_USER = 'MyDemir';
-    private readonly CURRENT_TIME = '2025-05-25 17:07:00';
+    private readonly CURRENT_TIME = new Date().toISOString();
 
     constructor(modelsLoader: ModelsLoader) {
         super();
         this.modelsLoader = modelsLoader;
-        console.log("MenuManager başlatılıyor");
+        console.log("MenuManager başlatılıyor...");
         this.menus = new Map();
         this.loadSavedState();
         this.initializeMenus();
@@ -53,6 +52,7 @@ export class MenuManager extends EventEmitter {
     private getSharedRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
         if (!this.sharedRenderer) {
             this.sharedRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            console.log("Paylaşılan renderer oluşturuldu");
         }
         return this.sharedRenderer;
     }
@@ -231,7 +231,7 @@ export class MenuManager extends EventEmitter {
             return;
         }
 
-        // Canvas boyutlarını ebeveyninden al
+        // Canvas boyutlarını ayarla
         const parent = canvas.parentElement;
         const width = parent?.clientWidth || 300;
         const height = parent?.clientHeight || 200;
@@ -239,24 +239,25 @@ export class MenuManager extends EventEmitter {
         canvas.height = height * window.devicePixelRatio;
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
+        console.log(`Canvas boyutları ayarlandı: ${characterId}, ${width}x${height}`);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
         camera.position.set(0, 1.5, 3);
         camera.lookAt(0, 1, 0);
 
-        // Paylaşılan renderer'ı kullan
+        // Paylaşılan renderer
         const renderer = this.getSharedRenderer(canvas);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(width, height);
 
         // Işıklandırma
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Parlaklığı artır
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); // Daha güçlü ışık
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
         dirLight.position.set(2, 2, 2);
         scene.add(ambientLight, dirLight);
 
-        // Test küpü ekle (sorun giderme için)
+        // Test küpü (hata ayıklama için)
         const testCube = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
             new THREE.MeshStandardMaterial({ color: 0xff0000 })
@@ -271,11 +272,11 @@ export class MenuManager extends EventEmitter {
             const clonedModel = model.scene.clone();
             clonedModel.scale.set(1, 1, 1);
             clonedModel.position.set(0, 0, 0);
-            scene.remove(testCube); // Test küpünü kaldır
+            scene.remove(testCube);
             scene.add(clonedModel);
             this.characterPreviews.get(characterId)!.model = clonedModel;
             console.log(`Model yüklendi: ${characterId}`);
-            this.animatePreviews(); // Tek animasyon döngüsü
+            this.animatePreviews();
         } else {
             console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
             this.loadingPromises.push(
@@ -284,7 +285,7 @@ export class MenuManager extends EventEmitter {
                         const model = gltf.scene;
                         model.scale.set(1, 1, 1);
                         model.position.set(0, 0, 0);
-                        scene.remove(testCube); // Test küpünü kaldır
+                        scene.remove(testCube);
                         scene.add(model);
                         const preview = this.characterPreviews.get(characterId);
                         if (preview) {
@@ -324,7 +325,6 @@ export class MenuManager extends EventEmitter {
             selectionTime: new Date().toISOString(),
             isConfirmed: false
         };
-
         localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
     }
 
@@ -333,7 +333,6 @@ export class MenuManager extends EventEmitter {
             NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
             return;
         }
-
         this.characterSelectState.isConfirmed = true;
         localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
         NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
@@ -343,7 +342,7 @@ export class MenuManager extends EventEmitter {
 
     public cleanup(): void {
         console.log("MenuManager temizleniyor");
-        this.characterPreviews.forEach((preview, characterId) => {
+        this.characterPreviews.forEach((preview) => {
             preview.scene.traverse((object: any) => {
                 if (object.geometry) object.geometry.dispose();
                 if (object.material) {
@@ -383,8 +382,8 @@ export class MenuManager extends EventEmitter {
 
     private setupCarouselListeners(): void {
         console.log("Carousel dinleyicileri ayarlanıyor");
-        const prevBtn = document.querySelector('.carousel-button');
-        const nextBtn = document.querySelector('.next-button');
+        const prevBtn = document.querySelector('.carousel-button.prev');
+        const nextBtn = document.querySelector('.carousel-button.next');
         const navDots = document.querySelectorAll('.nav-dot');
 
         if (prevBtn) {
@@ -432,7 +431,7 @@ export class MenuManager extends EventEmitter {
         const navDots = document.querySelectorAll('.nav-dot');
         navDots.forEach((dot, index) => {
             if (index === this.currentCarouselIndex) {
-                dot.classList.add mommy('pressed');
+                dot.classList.add('active');
             } else {
                 dot.classList.remove('active');
             }
@@ -475,10 +474,9 @@ export class MenuManager extends EventEmitter {
         });
 
         const selectedCard = document.querySelector(`[data-character="${characterId}"]`);
-        if MidiController(selectedCard) {
+        if (selectedCard) {
             selectedCard.classList.add('selected');
             this.updateCharacterSelection(characterId);
-
             console.log(`Karakter seçildi: ${characterId}`);
             const index = this.characters.findIndex(char => char.id === characterId);
             if (index !== -1) {
@@ -494,4 +492,4 @@ export class MenuManager extends EventEmitter {
     public getSelectedCharacter(): string | null {
         return this.characterSelectState.isConfirmed ? this.characterSelectState.selectedId : null;
     }
-            }
+                                                    }
