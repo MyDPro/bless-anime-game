@@ -1,3 +1,4 @@
+// src/core/MenuManager.ts
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { NotificationManager } from './NotificationManager';
@@ -28,6 +29,7 @@ export class MenuManager extends EventEmitter {
     private loadingPromises: Promise<any>[] = [];
     private modelsLoader: ModelsLoader;
     private characters: CharacterData[] = [];
+    private sharedRenderer: THREE.WebGLRenderer | null = null; // Paylaşılan renderer
 
     private characterSelectState: CharacterSelectState = {
         selectedId: null,
@@ -46,6 +48,13 @@ export class MenuManager extends EventEmitter {
         this.menus = new Map();
         this.loadSavedState();
         this.initializeMenus();
+    }
+
+    private getSharedRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
+        if (!this.sharedRenderer) {
+            this.sharedRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        }
+        return this.sharedRenderer;
     }
 
     private loadSavedState(): void {
@@ -67,43 +76,42 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupMenuListeners(): void {
-    console.log("Menü dinleyicileri ayarlanıyor");
-    const buttons = [
-        { id: 'startBtn', action: () => this.emit('startGame') },
-        { id: 'characterSelectBtn', action: () => {
-            console.log('Karakter seçim ekranına geçiş');
-            this.showMenu('character');
-        }},
-        { id: 'scoreboardBtn', action: () => this.showMenu('scoreboard') },
-        { id: 'settingsBtn', action: () => this.showMenu('settings') },
-        { id: 'backFromCharSelect', action: () => {
-            console.log('Karakter seçiminden ana menüye dönüş');
-            this.showMenu('main');
-        }},
-        { id: 'backFromScoreboard', action: () => this.showMenu('main') },
-        { id: 'backFromSettings', action: () => this.showMenu('main') },
-        { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
-        { id: 'resumeBtn', action: () => this.emit('resumeGame') },
-        { id: 'restartBtn', action: () => this.emit('restartGame') },
-        { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
-    ];
+        console.log("Menü dinleyicileri ayarlanıyor");
+        const buttons = [
+            { id: 'startBtn', action: () => this.emit('startGame') },
+            { id: 'characterSelectBtn', action: () => {
+                console.log('Karakter seçim ekranına geçiş');
+                this.showMenu('character');
+            }},
+            { id: 'scoreboardBtn', action: () => this.showMenu('scoreboard') },
+            { id: 'settingsBtn', action: () => this.showMenu('settings') },
+            { id: 'backFromCharSelect', action: () => {
+                console.log('Karakter seçiminden ana menüye dönüş');
+                this.showMenu('main');
+            }},
+            { id: 'backFromScoreboard', action: () => this.showMenu('main') },
+            { id: 'backFromSettings', action: () => this.showMenu('main') },
+            { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
+            { id: 'resumeBtn', action: () => this.emit('resumeGame') },
+            { id: 'restartBtn', action: () => this.emit('restartGame') },
+            { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
+        ];
 
-    buttons.forEach(({ id, action }) => {
-        const button = document.getElementById(id);
-        if (button) {
-            // Eski dinleyicileri kaldır
-            button.removeEventListener('click', action);
-            button.addEventListener('click', (event) => {
-                event.stopPropagation();
-                console.log(`Düğme tıklandı: ${id}`);
-                action();
-            }, { once: false });
-        } else {
-            console.warn(`Düğme bulunamadı: ${id}`);
-            NotificationManager.getInstance().show(`Düğme bulunamadı: ${id}`, 'warning');
-        }
-    });
-}
+        buttons.forEach(({ id, action }) => {
+            const button = document.getElementById(id);
+            if (button) {
+                button.removeEventListener('click', action);
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    console.log(`Düğme tıklandı: ${id}`);
+                    action();
+                }, { once: false });
+            } else {
+                console.warn(`Düğme bulunamadı: ${id}`);
+                NotificationManager.getInstance().show(`Düğme bulunamadı: ${id}`, 'warning');
+            }
+        });
+    }
 
     private async initializeMenus(): Promise<void> {
         console.log("Menüler başlatılıyor");
@@ -216,90 +224,99 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupCharacterPreview(characterId: string, modelPath: string): void {
-    const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
-    if (!canvas) {
-        console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
-        NotificationManager.getInstance().show(`Canvas bulunamadı: ${characterId}`, 'error');
-        return;
-    }
-
-    // Canvas boyutlarını ebeveyninden al
-    const parent = canvas.parentElement;
-    const width = parent?.clientWidth || 300;
-    const height = parent?.clientHeight || 200;
-    canvas.width = width * window.devicePixelRatio;
-    canvas.height = height * window.devicePixelRatio;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 1.5, 3);
-    camera.lookAt(0, 1, 0);
-
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(width, height);
-
-    // Işıklandırma
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(2, 2, 2);
-    scene.add(ambientLight, dirLight);
-
-    this.characterPreviews.set(characterId, { scene, camera, renderer });
-
-    // Modeli yükle
-    const model = this.modelsLoader.getModel(characterId);
-    if (model) {
-        const clonedModel = model.scene.clone();
-        clonedModel.scale.set(1, 1, 1);
-        clonedModel.position.set(0, 0, 0);
-        scene.add(clonedModel);
-        this.characterPreviews.get(characterId)!.model = clonedModel;
-        this.animatePreview(characterId);
-        console.log(`Model yüklendi ve eklendi: ${characterId}`);
-    } else {
-        console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
-        this.loadingPromises.push(
-            new GLTFLoader().loadAsync(modelPath)
-                .then(gltf => {
-                    const model = gltf.scene;
-                    model.scale.set(1, 1, 1);
-                    model.position.set(0, 0, 0);
-                    scene.add(model);
-                    const preview = this.characterPreviews.get(characterId);
-                    if (preview) {
-                        preview.model = model;
-                        this.animatePreview(characterId);
-                        console.log(`Model asenkron yüklendi: ${characterId}`);
-                    }
-                })
-                .catch(error => {
-                    console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
-                    NotificationManager.getInstance().show(`Model yüklenemedi: ${characterId}`, 'error');
-                })
-        );
-    }
-}
-
-private animatePreview(characterId: string): void {
-    const preview = this.characterPreviews.get(characterId);
-    if (!preview || !document.getElementById(`${characterId}-preview`)?.offsetParent) return;
-
-    const animate = () => {
-        if (!this.characterPreviews.has(characterId)) return;
-
-        preview.animationFrameId = requestAnimationFrame(animate);
-        if (preview.model) {
-            preview.model.rotation.y += 0.01;
+        const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
+        if (!canvas) {
+            console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
+            NotificationManager.getInstance().show(`Canvas bulunamadı: ${characterId}`, 'error');
+            return;
         }
-        preview.renderer.render(preview.scene, preview.camera);
-    };
 
-    animate();
-}
-    
+        // Canvas boyutlarını ebeveyninden al
+        const parent = canvas.parentElement;
+        const width = parent?.clientWidth || 300;
+        const height = parent?.clientHeight || 200;
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera.position.set(0, 1.5, 3);
+        camera.lookAt(0, 1, 0);
+
+        // Paylaşılan renderer'ı kullan
+        const renderer = this.getSharedRenderer(canvas);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(width, height);
+
+        // Işıklandırma
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Parlaklığı artır
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); // Daha güçlü ışık
+        dirLight.position.set(2, 2, 2);
+        scene.add(ambientLight, dirLight);
+
+        // Test küpü ekle (sorun giderme için)
+        const testCube = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 1, 1),
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        scene.add(testCube);
+
+        this.characterPreviews.set(characterId, { scene, camera, renderer });
+
+        // Modeli yükle
+        const model = this.modelsLoader.getModel(characterId);
+        if (model) {
+            const clonedModel = model.scene.clone();
+            clonedModel.scale.set(1, 1, 1);
+            clonedModel.position.set(0, 0, 0);
+            scene.remove(testCube); // Test küpünü kaldır
+            scene.add(clonedModel);
+            this.characterPreviews.get(characterId)!.model = clonedModel;
+            console.log(`Model yüklendi: ${characterId}`);
+            this.animatePreviews(); // Tek animasyon döngüsü
+        } else {
+            console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
+            this.loadingPromises.push(
+                new GLTFLoader().loadAsync(modelPath)
+                    .then(gltf => {
+                        const model = gltf.scene;
+                        model.scale.set(1, 1, 1);
+                        model.position.set(0, 0, 0);
+                        scene.remove(testCube); // Test küpünü kaldır
+                        scene.add(model);
+                        const preview = this.characterPreviews.get(characterId);
+                        if (preview) {
+                            preview.model = model;
+                            console.log(`Model asenkron yüklendi: ${characterId}`);
+                            this.animatePreviews();
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
+                        NotificationManager.getInstance().show(`Model yüklenemedi: ${characterId}`, 'error');
+                    })
+            );
+        }
+    }
+
+    private animatePreviews(): void {
+        const animate = () => {
+            this.characterPreviews.forEach((preview, characterId) => {
+                const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
+                if (canvas?.offsetParent && preview.model) {
+                    preview.model.rotation.y += 0.01;
+                    preview.renderer.setViewport(0, 0, canvas.width, canvas.height);
+                    preview.renderer.render(preview.scene, preview.camera);
+                }
+            });
+            requestAnimationFrame(animate);
+        };
+        if (!this.characterPreviews.size) return;
+        animate();
+    }
+
     private updateCharacterSelection(characterId: string): void {
         this.characterSelectState = {
             selectedId: characterId,
@@ -326,12 +343,7 @@ private animatePreview(characterId: string): void {
 
     public cleanup(): void {
         console.log("MenuManager temizleniyor");
-
         this.characterPreviews.forEach((preview, characterId) => {
-            if (preview.animationFrameId) {
-                cancelAnimationFrame(preview.animationFrameId);
-            }
-
             preview.scene.traverse((object: any) => {
                 if (object.geometry) object.geometry.dispose();
                 if (object.material) {
@@ -341,11 +353,14 @@ private animatePreview(characterId: string): void {
                         object.material.dispose();
                     }
                 }
-                if (object.texture) object.texture.dispose();
             });
             preview.scene.clear();
-            preview.renderer.dispose();
         });
+        if (this.sharedRenderer) {
+            this.sharedRenderer.dispose();
+            this.sharedRenderer.forceContextLoss();
+            this.sharedRenderer = null;
+        }
         this.characterPreviews.clear();
         this.isLoading = false;
         document.body.classList.remove('loading');
@@ -368,8 +383,8 @@ private animatePreview(characterId: string): void {
 
     private setupCarouselListeners(): void {
         console.log("Carousel dinleyicileri ayarlanıyor");
-        const prevBtn = document.querySelector('.carousel-button.prev');
-        const nextBtn = document.querySelector('.carousel-button.next');
+        const prevBtn = document.querySelector('.carousel-button');
+        const nextBtn = document.querySelector('.next-button');
         const navDots = document.querySelectorAll('.nav-dot');
 
         if (prevBtn) {
@@ -417,7 +432,7 @@ private animatePreview(characterId: string): void {
         const navDots = document.querySelectorAll('.nav-dot');
         navDots.forEach((dot, index) => {
             if (index === this.currentCarouselIndex) {
-                dot.classList.add('active');
+                dot.classList.add mommy('pressed');
             } else {
                 dot.classList.remove('active');
             }
@@ -425,34 +440,33 @@ private animatePreview(characterId: string): void {
     }
 
     public showMenu(menuId: string): void {
-    console.log(`Menü gösteriliyor: ${menuId}`);
-    // Tüm menüleri gizle
-    this.menus.forEach((menu, key) => {
-        if (menu) {
-            menu.classList.add('hidden');
-            console.log(`Menü gizlendi: ${key}`);
-        }
-    });
+        console.log(`Menü gösteriliyor: ${menuId}`);
+        this.menus.forEach((menu, key) => {
+            if (menu) {
+                menu.classList.add('hidden');
+                console.log(`Menü gizlendi: ${key}`);
+            }
+        });
 
-    if (menuId !== 'none') {
-        const newMenu = this.menus.get(menuId);
-        if (newMenu) {
-            newMenu.classList.remove('hidden');
-            this.activeMenu = menuId;
-            console.log(`Yeni menü gösterildi: ${menuId}`);
-            if (menuId === 'character') {
-                this.updateCarousel();
+        if (menuId !== 'none') {
+            const newMenu = this.menus.get(menuId);
+            if (newMenu) {
+                newMenu.classList.remove('hidden');
+                this.activeMenu = menuId;
+                console.log(`Yeni menü gösterildi: ${menuId}`);
+                if (menuId === 'character') {
+                    this.updateCarousel();
+                }
+            } else {
+                console.error(`Menü bulunamadı: ${menuId}`);
+                NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
+                this.showMenu('main');
             }
         } else {
-            console.error(`Menü bulunamadı: ${menuId}`);
-            NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
-            this.showMenu('main');
+            this.activeMenu = null;
+            console.log("Tüm menüler gizlendi");
         }
-    } else {
-        this.activeMenu = null;
-        console.log("Tüm menüler gizlendi");
     }
-}
 
     private selectCharacter(characterId: string): void {
         console.log(`Karakter seçimi: ${characterId}`);
@@ -461,7 +475,7 @@ private animatePreview(characterId: string): void {
         });
 
         const selectedCard = document.querySelector(`[data-character="${characterId}"]`);
-        if (selectedCard) {
+        if MidiController(selectedCard) {
             selectedCard.classList.add('selected');
             this.updateCharacterSelection(characterId);
 
@@ -480,4 +494,4 @@ private animatePreview(characterId: string): void {
     public getSelectedCharacter(): string | null {
         return this.characterSelectState.isConfirmed ? this.characterSelectState.selectedId : null;
     }
-}
+            }
