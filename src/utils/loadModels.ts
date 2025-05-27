@@ -16,9 +16,21 @@ export interface CharacterData {
     id: string;
     name: string;
     modelPath: string;
+    photoPath: string;
     stats: {
         speed: number;
         power: number;
+    };
+}
+
+export interface KitData {
+    id: string;
+    name: string;
+    modelPath: string;
+    photoPath: string;
+    stats: {
+        fireRate: number;
+        damage: number;
     };
 }
 
@@ -28,6 +40,7 @@ export class ModelsLoader extends EventEmitter {
     private scene: Scene;
     private models: Map<string, GLTF>;
     private characterData: CharacterData[] = [];
+    private kitData: KitData[] = [];
     private loadingPromises: Map<string, Promise<GLTF>> = new Map();
     private readonly MAX_RETRIES = 3;
     private readonly RETRY_DELAY = 1000;
@@ -41,8 +54,8 @@ export class ModelsLoader extends EventEmitter {
         this.loader.setDRACOLoader(this.dracoLoader);
         this.scene = scene;
         this.models = new Map();
-        // characters.json'ı constructor'da yükle
         this.loadCharacterData();
+        this.loadKitData();
     }
 
     private async loadCharacterData(): Promise<void> {
@@ -56,6 +69,20 @@ export class ModelsLoader extends EventEmitter {
         } catch (error) {
             console.error('Karakter verileri yüklenemedi:', error);
             NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+        }
+    }
+
+    private async loadKitData(): Promise<void> {
+        try {
+            const response = await fetch('/data/kits.json');
+            if (!response.ok) {
+                throw new Error('Kits.json dosyası bulunamadı');
+            }
+            this.kitData = await response.json();
+            console.log('Silah verileri yüklendi:', this.kitData.length, 'silah');
+        } catch (error) {
+            console.error('Silah verileri yüklenemedi:', error);
+            NotificationManager.getInstance().show('Silah verileri yüklenemedi!', 'error');
         }
     }
 
@@ -113,14 +140,12 @@ export class ModelsLoader extends EventEmitter {
                         model.scene.name = char.id;
                         this.models.set(char.id, model);
                         loadedCount++;
-                        
                         this.emit(MODEL_EVENTS.LOAD_PROGRESS, {
                             characterId: char.id,
                             progress: (loadedCount / totalCharacters) * 100,
                             total: totalCharacters,
                             loaded: loadedCount
                         });
-
                         console.log(`${char.name} modeli yüklendi (${loadedCount}/${totalCharacters})`);
                         return model;
                     })
@@ -139,7 +164,6 @@ export class ModelsLoader extends EventEmitter {
             this.emit(MODEL_EVENTS.LOAD_SUCCESS, modelsToLoad);
             console.log('Tüm karakter modelleri yüklendi');
             NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
-
         } catch (error) {
             console.error('Karakter modelleri yüklenirken genel hata:', error);
             NotificationManager.getInstance().show('Karakter modelleri yüklenemedi!', 'error');
@@ -148,25 +172,64 @@ export class ModelsLoader extends EventEmitter {
         }
     }
 
-    async loadBlasterModels(): Promise<void> {
+    async loadKitModels(kits?: string[]): Promise<void> {
         try {
             console.log('Silah modelleri yükleme başlıyor...');
-            const blasterPath = '/models/kit/blaster-r.glb';
+            this.emit(MODEL_EVENTS.LOAD_START);
 
-            console.log('Blaster modeli yükleme denemesi...');
-            const blasterModel = await this.loadModelWithRetry(blasterPath);
-            blasterModel.scene.name = 'blaster';
-            this.models.set('blaster', blasterModel);
-            console.log('Blaster modeli başarıyla yüklendi');
-
-            blasterModel.scene.scale.set(1, 1, 1);
-        } catch (error) {
-            console.error('Silah modeli yüklenirken spesifik hata:', error);
-            NotificationManager.getInstance().show('Silah modeli yüklenemedi!', 'error');
-            if (error instanceof Error) {
-                throw new Error(`Silah modeli yüklenemedi: ${error.message}`);
+            if (!this.kitData.length) {
+                await this.loadKitData();
+                if (!this.kitData.length) {
+                    throw new Error('Silah verileri yüklenemedi');
+                }
             }
-            throw new Error('Silah modeli yüklenemedi: Bilinmeyen hata');
+
+            const kitsToLoad = kits 
+                ? this.kitData.filter(kit => kits.includes(kit.id))
+                : this.kitData;
+
+            const totalKits = kitsToLoad.length;
+            let loadedCount = 0;
+
+            const loadPromises = kitsToLoad.map(async (kit) => {
+                if (this.loadingPromises.has(kit.id)) {
+                    return this.loadingPromises.get(kit.id);
+                }
+
+                const loadPromise = this.loadModelWithRetry(kit.modelPath)
+                    .then(model => {
+                        model.scene.name = kit.id;
+                        this.models.set(kit.id, model);
+                        loadedCount++;
+                        this.emit(MODEL_EVENTS.LOAD_PROGRESS, {
+                            kitId: kit.id,
+                            progress: (loadedCount / totalKits) * 100,
+                            total: totalKits,
+                            loaded: loadedCount
+                        });
+                        console.log(`${kit.name} modeli yüklendi (${loadedCount}/${totalKits})`);
+                        return model;
+                    })
+                    .catch(error => {
+                        console.error(`${kit.name} yüklenirken hata:`, error);
+                        NotificationManager.getInstance().show(`${kit.name} yüklenemedi!`, 'error');
+                        this.emit(MODEL_EVENTS.LOAD_ERROR, kit.id, error);
+                        throw error;
+                    });
+
+                this.loadingPromises.set(kit.id, loadPromise);
+                return loadPromise;
+            });
+
+            await Promise.all(loadPromises);
+            this.emit(MODEL_EVENTS.LOAD_SUCCESS, kitsToLoad);
+            console.log('Tüm silah modelleri yüklendi');
+            NotificationManager.getInstance().show('Tüm silahlar yüklendi!', 'success');
+        } catch (error) {
+            console.error('Silah modelleri yüklenirken genel hata:', error);
+            NotificationManager.getInstance().show('Silah modelleri yüklenemedi!', 'error');
+            this.emit(MODEL_EVENTS.LOAD_ERROR, 'all', error);
+            throw error;
         }
     }
 
@@ -180,6 +243,14 @@ export class ModelsLoader extends EventEmitter {
 
     getCharacterData(characterId: string): CharacterData | undefined {
         return this.characterData.find(char => char.id === characterId);
+    }
+
+    getAllKitData(): KitData[] {
+        return this.kitData;
+    }
+
+    getKitData(kitId: string): KitData | undefined {
+        return this.kitData.find(kit => kit.id === kitId);
     }
 
     isModelLoaded(modelId: string): boolean {
@@ -209,6 +280,7 @@ export class ModelsLoader extends EventEmitter {
         });
         this.models.clear();
         this.characterData = [];
+        this.kitData = [];
         this.dracoLoader.dispose();
     }
 }
