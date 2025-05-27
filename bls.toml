@@ -31,4 +31,4 @@ assets = "public/models"
 
 [deployment]
 permission = "public"
-nodes = 1
+nodes = 3
