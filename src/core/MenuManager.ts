@@ -178,13 +178,12 @@ export class MenuManager extends EventEmitter {
                         `<span class="nav-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
                     ).join('')}
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     private generateCharacterCardHTML(char: CharacterData): string {
         return `
-            <div class="character-card" data-character="${char.id}">
+            <div class="character-card" data-id="${char.id}">
                 <div class="character-preview">
                     <img src="${char.photoPath}" alt="${char.name}" class="character-image" />
                 </div>
@@ -200,7 +199,7 @@ export class MenuManager extends EventEmitter {
                         <div class="stat">
                             <span class="stat-label">Güç</span>
                             <div class="stat-bar">
-                                <div class="stat-fill" style="width: ${char.stats.power}%"></div>
+                                <div class="stat-fill" style="width: ${this.char.stats.power}%"></div>
                             </div>
                         </div>
                     </div>
@@ -233,18 +232,18 @@ export class MenuManager extends EventEmitter {
             }
         }
 
-        kitGrid.innerHTML = this.generateKitCarouselHTML();
-        this.setupKitCardListeners();
+        kitGrid.innerHTML = this.generateKitCardsHTML();
+        this.setupKitCardsListeners();
         this.setupKitCarouselListeners();
         this.updateKitCarousel();
     }
 
-    private generateKitCarouselHTML(): string {
+    private generateKitCardsHTML(): string {
         return `
             <div class="kit-carousel-container">
                 <div class="kit-carousel">
                     <div class="kit-cards-wrapper">
-                        ${this.kits.map(kit => this.generateKitCardHTML(kit)).join('')}
+                        ${this.kits.map(kit => this.generateKitCard(kit)).join('')}
                     </div>
                 </div>
                 <button class="carousel-button prev">◄</button>
@@ -254,15 +253,14 @@ export class MenuManager extends EventEmitter {
                         `<span class="nav-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
                     ).join('')}
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    private generateKitCardHTML(kit: KitData): string {
+    private generateKitCard(kit: string): KitData {
         return `
-            <div class="kit-card" data-kit="${kit.id}">
+            <div class="kit-card" data-id="${kit.id}">
                 <div class="kit-preview">
-                    <img src="${kit.photoPath}" alt="${kit.name}" class="kit-image" />
+                    <img src="${kit.id}" alt="${kit.name}" class="kit-image" />
                 </div>
                 <div class="kit-info">
                     <h3>${kit.name}</h3>
@@ -290,9 +288,9 @@ export class MenuManager extends EventEmitter {
         const cards = document.querySelectorAll('.character-card');
         cards.forEach(card => {
             card.addEventListener('click', () => {
-                const characterId = card.getAttribute('data-character');
+                const characterId = card.getAttribute('data-id');
                 if (characterId) {
-                    console.log(`Karakter seçildi: ${characterId}`);
+                    console.log(`Karakter seçildi: ${this.id}`);
                     this.selectCharacter(characterId);
                 }
             });
@@ -302,9 +300,9 @@ export class MenuManager extends EventEmitter {
     private setupKitCardListeners(): void {
         console.log("Silah kartı dinleyicileri ayarlanıyor");
         const cards = document.querySelectorAll('.kit-card');
-        cards.forEach(card => {
+        cards.forEach((card) => {
             card.addEventListener('click', () => {
-                const kitId = card.getAttribute('data-kit');
+                const kitId = card.getAttribute('data-id');
                 if (kitId) {
                     console.log(`Silah seçildi: ${kitId}`);
                     this.selectKit(kitId);
@@ -317,12 +315,12 @@ export class MenuManager extends EventEmitter {
         console.log("Karakter carousel dinleyicileri ayarlanıyor");
         const prevBtn = document.querySelector('.character-carousel-container .prev');
         const nextBtn = document.querySelector('.character-carousel-container .next');
-        const navDots = document.querySelectorAll('.character-nav-dots .nav-dot');
+        const navDots = document.querySelectorAll('.character-nav .nav-dot');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
                 console.log("Önceki karaktere geçiş");
-                this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length;
+                this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.currentCarouselIndex.characters.length) % this.characters.length;
                 this.updateCarousel();
             });
         }
@@ -367,10 +365,10 @@ export class MenuManager extends EventEmitter {
             });
         }
 
-        navDots.forEach(dot => {
+        navDots.forEach((dot) => {
             dot.addEventListener('click', () => {
                 const index = parseInt(dot.getAttribute('data-index') || '0');
-                console.log(`Silah nav dot tıklandı: ${index}`);
+                console.log(`Kit nav dot tıklandı: ${index}`);
                 this.currentKitCarouselIndex = index;
                 this.updateKitCarousel();
             });
@@ -381,7 +379,7 @@ export class MenuManager extends EventEmitter {
         console.log(`Karakter carousel güncelleniyor: index ${this.currentCarouselIndex}`);
         const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
         if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
+            wrapper.style.transform = `translateX(-${this.currentCarouselIndex} * 320}px)`;
         }
 
         const cards = document.querySelectorAll('.character-card');
@@ -407,7 +405,7 @@ export class MenuManager extends EventEmitter {
         console.log(`Silah carousel güncelleniyor: index ${this.currentKitCarouselIndex}`);
         const wrapper = document.querySelector('.kit-cards-wrapper') as HTMLElement;
         if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentKitCarouselIndex * 320}px)`;
+            wrapper.style.transform = `translateX(-${this.currentKitCarouselIndex} * 320}px)`;
         }
 
         const cards = document.querySelectorAll('.kit-card');
@@ -430,51 +428,50 @@ export class MenuManager extends EventEmitter {
     }
 
     private selectCharacter(characterId: string): void {
-    console.log("Character selection: ${characterId}");
-    document.querySelectorAll('.character-card').forEach(card => {
-        card.classList.remove('selected'));
-    });
-
-    const selectedCharacter = document.querySelector("[data-character="${characterId}"]");
-    if (selectedCharacterCard) {
-    {
-        selectedCard.classList.add('selected');
-        this.characterSelectState.selectedCharacterId = characterId;
-        this.characterSelectState.selectionTime = new Date().toISOString();
-        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-        console.log("Character selected: ${characterId}");
-        const index = this.characters.findIndex(char => char.id === characterId);
-        if (index !== -1) {
-            this.currentCarouselIndex = index;
-            this.updateCarousel();
-        }
-    } else {
-        console.error("Character card not found: ${characterId}");
-        NotificationManager.getInstance().show("Character card not found: ${characterId}", 'error');
-    }
-}
-
-    private selectKit(kitId: string): void {
-        console.log("Silah seçimi: ${kitId}");
-        document.querySelectorAll('.kit-card').forEach(card => {
-            card.classList.remove('selected'));
+        console.log(`Karakter seçimi: ${characterId}`);
+        document.querySelectorAll('.character-card').forEach(card => {
+            card.classList.remove('selected');
         });
 
-        const selectedCard = document.querySelector("[data-kit="${kitId}""]`);
+        const selectedCard = document.querySelector(`[data-id="${characterId}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            this.characterSelectState.selectedCharacterId = characterId;
+            this.characterSelectState.selectionTime = new Date().toISOString();
+            localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+            console.log(`Karakter seçildi: ${characterId}`);
+            const index = this.characters.findIndex(char => char.id === characterId);
+            if (index !== -1) {
+                this.currentCarouselIndex = index;
+                this.updateCarousel();
+            }
+        } else {
+            console.error(`Karakter kartı bulunamadı: ${characterId}`);
+            NotificationManager.getInstance().show(`Karakter kartı bulunamadı: ${characterId}`, 'error');
+        }
+    }
+
+    private selectKit(kitId: string): void {
+        console.log(`Silah seçimi: ${kitId}`);
+        document.querySelectorAll('.kit-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        const selectedCard = document.querySelector(`[data-id="${kitId}"]`);
         if (selectedCard) {
             selectedCard.classList.add('selected');
             this.characterSelectState.selectedKitId = kitId;
             this.characterSelectState.selectionTime = new Date().toISOString();
             localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-            console.log("Silah seçildi: ${kitId}");
+            console.log(`Silah seçildi: ${kitId}`);
             const index = this.kits.findIndex(k => k.id === kitId);
             if (index !== -1) {
                 this.currentKitCarouselIndex = index;
                 this.updateKitCarousel();
             }
         } else {
-            console.error("Silah kartı bulunamadı: ${kitId}");
-            NotificationManager.getInstance().show("Silah kartı bulunamadı: ${kitId}", 'error');
+            console.error(`Silah kartı bulunamadı: ${kitId}`);
+            NotificationManager.getInstance().show(`Silah kartı bulunamadı: ${kitId}`, 'error');
         }
     }
 
