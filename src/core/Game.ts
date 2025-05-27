@@ -12,6 +12,7 @@ interface GameState {
     health: number;
     ammo: number;
     selectedCharacter: string | null;
+    selectedKit: string | null; // Yeni alan
     highScore: number;
     currentUser: string;
     lastPlayTime: string;
@@ -27,9 +28,9 @@ interface GameResources {
 export class Game extends EventEmitter {
     private resources: GameResources;
     private modelsLoader: ModelsLoader;
-    private menuManager: MenuManager | null = null; // null olarak başlat
+    private menuManager: MenuManager | null = null;
     private lastTime: number = 0;
-    private readonly targetFPS = 60;
+    private readonly targetFPS = 50;
     private readonly frameInterval = 1000 / this.targetFPS;
     private animationFrameId: number | null = null;
     private platform: THREE.Mesh;
@@ -41,9 +42,10 @@ export class Game extends EventEmitter {
         health: 100,
         ammo: 30,
         selectedCharacter: null,
+        selectedKit: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-25 17:07:00'
+        lastPlayTime: '2025-05-27 18:31:00'
     };
 
     private ui = {
@@ -57,6 +59,7 @@ export class Game extends EventEmitter {
     };
 
     private player: THREE.Object3D | null = null;
+    private weapon: THREE.Object3D | null = null; // Yeni alan
     private blasters: THREE.Object3D[] = [];
     private enemies: THREE.Object3D[] = [];
     private moveState = {
@@ -83,10 +86,7 @@ export class Game extends EventEmitter {
         this.loadGameState();
         this.setCurrentDateTime();
         
-        this.initializeGame().catch(error => {
-            console.error('Oyun başlatılamadı:', error);
-            NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
-        });
+        this.initializeGame();
     }
 
     private initializeResources(canvas: HTMLCanvasElement): GameResources {
@@ -111,53 +111,31 @@ export class Game extends EventEmitter {
     }
 
     private async initializeGame(): Promise<void> {
-    this.ui.uiContainer.classList.add('hidden');
-    
-    try {
-        await this.loadGameModels();
-        this.setupEventListeners();
-        this.animate();
-        NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
-    } catch (error) {
-        console.error('Oyun başlatılamadı:', error);
-        NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
-    }
-}
-
-private async loadGameModels(): Promise<void> {
-    try {
-        console.log('Model yükleme başlıyor...');
-        await Promise.all([
-            this.modelsLoader.loadCharacterModels(),
-            this.modelsLoader.loadBlasterModels()
-        ]);
-        console.log('Modeller başarıyla yüklendi');
-        NotificationManager.getInstance().show('Tüm karakterler yüklendi!', 'success');
+        this.ui.uiContainer.classList.add('hidden');
         
-        this.menuManager = new MenuManager(this.modelsLoader);
-        // MenuManager dinleyicilerini yeniden bağla
-        this.menuManager.cleanup();
-        this.menuManager['initializeMenus'](); // protected metodu çağır
-        
-        if (this.ui.loadingScreen) {
-            this.ui.loadingScreen.classList.add('fade-out');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            this.ui.loadingScreen.classList.add('hidden');
-            this.menuManager.showMenu('main');
+        try {
+            this.menuManager = new MenuManager(this.modelsLoader);
+            this.setupMenuListeners();
+            if (this.ui.loadingScreen) {
+                this.ui.loadingScreen.classList.add('fade-out');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                this.ui.loadingScreen.classList.add('hidden');
+                this.menuManager.showMenu('main');
+            }
+            this.animate();
+            NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
+        } catch (error) {
+            console.error('Oyun başlatılamadı:', error);
+            NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
         }
-    } catch (error) {
-        console.error('Model yükleme hatası:', error);
-        NotificationManager.getInstance().show('Model yükleme hatası!', 'error');
-        throw error;
     }
-}
 
     private setCurrentDateTime(): void {
         const now = new Date();
         const year = now.getUTCFullYear();
         const month = String(now.getUTCMonth() + 1).padStart(2, '0');
         const day = String(now.getUTCDate()).padStart(2, '0');
-        const hours = String(now.getUTCHours()).padStart(2, '0');
+        const hours = String(now.getUTCHours() + 3).padStart(2, '0'); // +03:00
         const minutes = String(now.getUTCMinutes()).padStart(2, '0');
         const seconds = String(now.getUTCSeconds()).padStart(2, '0');
         this.gameState.lastPlayTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
@@ -180,10 +158,49 @@ private async loadGameModels(): Promise<void> {
         const stateToSave = {
             highScore: this.gameState.highScore,
             lastPlayTime: this.gameState.lastPlayTime,
-            selectedCharacter: this.gameState.selectedCharacter
+            selectedCharacter: this.gameState.selectedCharacter,
+            selectedKit: this.gameState.selectedKit
         };
         localStorage.setItem('gameState', JSON.stringify(stateToSave));
         localStorage.setItem('highScore', this.gameState.highScore.toString());
+    }
+
+    private setupMenuListeners(): void {
+        if (this.menuManager) {
+            this.menuManager.on('startGame', () => {
+                console.log("Oyun başlatılıyor");
+                const selectedCharacter = this.menuManager!.getSelectedCharacter();
+                const selectedKit = this.menuManager!.getSelectedKit();
+                if (!selectedCharacter || !selectedKit) {
+                    NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
+                    this.menuManager!.showMenu('character');
+                    return;
+                }
+                this.startGame();
+            });
+
+            this.menuManager.on('characterSelected', (characterId: string, kitId: string) => {
+                console.log(`Karakter ve silah seçildi: ${characterId}, ${kitId}`);
+                this.gameState.selectedCharacter = characterId;
+                this.gameState.selectedKit = kitId;
+                this.saveGameState();
+            });
+
+            this.menuManager.on('resumeGame', () => {
+                console.log("Oyun devam ettiriliyor");
+                this.resumeGame();
+            });
+
+            this.menuManager.on('restartGame', () => {
+                console.log("Oyun yeniden başlatılıyor");
+                this.restartGame();
+            });
+
+            this.menuManager.on('exitToMain', () => {
+                console.log("Ana menüye dönülüyor");
+                this.exitToMain();
+            });
+        }
     }
 
     private animate(currentTime: number = 0): void {
@@ -216,6 +233,14 @@ private async loadGameModels(): Promise<void> {
             this.player.position.add(this.moveDirection);
             this.checkCollisions();
         }
+
+        // Silahı oyuncuya bağla
+        if (this.weapon && this.player) {
+            this.weapon.position.copy(this.player.position);
+            this.weapon.rotation.copy(this.player.rotation);
+            this.weapon.position.y += 0.5; // Silahı el hizasına getir
+            this.weapon.position.z -= 0.3;
+        }
     }
 
     private checkCollisions(): void {
@@ -236,51 +261,48 @@ private async loadGameModels(): Promise<void> {
     }
 
     public cleanup(): void {
-    if (this.animationFrameId !== null) {
-        cancelAnimationFrame(this.animationFrameId);
-        this.animationFrameId = null;
-    }
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
 
-    // Olay dinleyicilerini kaldır
-    window.removeEventListener('resize', this.onWindowResize.bind(this));
-    document.removeEventListener('keydown', this.onKeyDown.bind(this));
-    document.removeEventListener('keyup', this.onKeyUp.bind(this));
-    document.removeEventListener('mousedown', this.onMouseDown.bind(this));
-    document.removeEventListener('mouseup', this.onMouseUp.bind(this));
-    document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+        window.removeEventListener('resize', this.onWindowResize.bind(this));
+        document.removeEventListener('keydown', this.onKeyDown.bind(this));
+        document.removeEventListener('keyup', this.onKeyUp.bind(this));
+        document.removeEventListener('mousedown', this.onMouseDown.bind(this));
+        document.removeEventListener('mouseup', this.onMouseUp.bind(this));
+        document.removeEventListener('mousemove', this.onMouseMove.bind(this));
 
-    // Sahneyi temizle
-    while (this.resources.scene.children.length > 0) {
-        const object = this.resources.scene.children[0];
-        this.resources.scene.remove(object);
-        if (object instanceof THREE.Mesh) {
-            object.geometry.dispose();
-            if (Array.isArray(object.material)) {
-                object.material.forEach(material => material.dispose());
-            } else {
-                object.material.dispose();
+        while (this.resources.scene.children.length > 0) {
+            const object = this.resources.scene.children[0];
+            this.resources.scene.remove(object);
+            if (object instanceof THREE.Mesh) {
+                object.geometry.dispose();
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(material => material.dispose());
+                } else {
+                    object.material.dispose();
+                }
             }
         }
+
+        this.resources.renderer.dispose();
+        this.resources.controls.dispose();
+        this.modelsLoader.cleanup();
+        if (this.menuManager) this.menuManager.cleanup();
+
+        this.gameState.isStarted = false;
+        this.gameState.isPaused = false;
+        this.gameState.score = 0;
+        this.gameState.health = 100;
+        this.gameState.ammo = 30;
+        this.player = null;
+        this.weapon = null;
+        this.blasters = [];
+        this.enemies = [];
+
+        this.saveGameState();
     }
-
-    // Renderer ve kontrolleri temizle
-    this.resources.renderer.dispose();
-    this.resources.controls.dispose();
-    this.modelsLoader.cleanup();
-    if (this.menuManager) this.menuManager.cleanup();
-
-    // Oyun durumunu sıfırla
-    this.gameState.isStarted = false;
-    this.gameState.isPaused = false;
-    this.gameState.score = 0;
-    this.gameState.health = 100;
-    this.gameState.ammo = 30;
-    this.player = null;
-    this.blasters = [];
-    this.enemies = [];
-
-    this.saveGameState();
-}
 
     private setupWorld(): THREE.Mesh {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -311,69 +333,6 @@ private async loadGameModels(): Promise<void> {
         platform.position.y = -0.25;
         this.resources.scene.add(platform);
         return platform;
-    }
-
-    private setupEventListeners(): void {
-        window.addEventListener('resize', () => this.onWindowResize());
-        document.addEventListener('keydown', (e) => this.onKeyDown(e));
-        document.addEventListener('keyup', (e) => this.onKeyUp(e));
-        document.addEventListener('mousedown', (e) => this.onMouseDown(e));
-        document.addEventListener('mouseup', (e) => this.onMouseUp(e));
-        document.addEventListener('mousemove', (e) => this.onMouseMove(e));
-
-        this.on('playerDamage', (damage: number) => {
-            this.gameState.health -= damage;
-            if (this.gameState.health <= 30) {
-                NotificationManager.getInstance().show('Kritik hasar! Can düşük!', 'warning');
-            }
-            this.updateUI();
-            if (this.gameState.health <= 0) {
-                NotificationManager.getInstance().show('Öldünüz!', 'error');
-                this.endGame();
-            }
-        });
-
-        this.on('scoreUpdate', (points: number) => {
-            this.gameState.score += points;
-            if (points > 0) {
-                NotificationManager.getInstance().show(`+${points} puan!`, 'success');
-            }
-            this.updateUI();
-        });
-
-        if (this.menuManager) {
-            this.menuManager.on('startGame', () => {
-                console.log("Oyun başlatılıyor");
-                const selectedCharacter = this.menuManager!.getSelectedCharacter();
-                if (!selectedCharacter) {
-                    NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
-                    this.menuManager!.showMenu('character');
-                    return;
-                }
-                this.startGame();
-            });
-
-            this.menuManager.on('characterConfirmed', (characterId: string) => {
-                console.log(`Karakter onaylandı: ${characterId}`);
-                this.gameState.selectedCharacter = characterId;
-                this.saveGameState();
-            });
-
-            this.menuManager.on('resumeGame', () => {
-                console.log("Oyun devam ettiriliyor");
-                this.resumeGame();
-            });
-
-            this.menuManager.on('restartGame', () => {
-                console.log("Oyun yeniden başlatılıyor");
-                this.restartGame();
-            });
-
-            this.menuManager.on('exitToMain', () => {
-                console.log("Ana menüye dönülüyor");
-                this.exitToMain();
-            });
-        }
     }
 
     private onWindowResize(): void {
@@ -455,13 +414,13 @@ private async loadGameModels(): Promise<void> {
     private updateUI(): void {
         if (this.ui.score.textContent !== `Skor: ${this.gameState.score}`) {
             this.ui.score.textContent = `Skor: ${this.gameState.score}`;
-            this.ui.health.textContent = `Can: ${this.gameState.health}`;
+            this.ui.healthTextContent = `Can: ${this.gameState.health}`;
             this.ui.ammo.textContent = `Mermi: ${this.gameState.ammo}`;
             this.ui.finalScore.textContent = `Skor: ${this.gameState.score}`;
-            this.ui.highScore.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
+            this.ui.highScoreTextContent = `En Yüksek Skor: ${this.gameState.highScore}`;
 
             const userInfoDiv = document.createElement('div');
-            userInfoDiv.classList.add('user-info');
+            userInfoDiv.classList.add('user-info-item');
             userInfoDiv.innerHTML = `
                 <div class="user-info-item">
                     <span class="user-info-label">Oyuncu:</span>
@@ -472,11 +431,14 @@ private async loadGameModels(): Promise<void> {
                     <span class="user-info-value">${this.gameState.selectedCharacter || 'Seçilmedi'}</span>
                 </div>
                 <div class="user-info-item">
+                    <span class="user-info-label">Silah:</span>
+                    <span class="user-info-value">${this.gameState.selectedKit || 'Seçilmedi'}</span>
+                </div>
+                <div class="user-info-item">
                     <span class="user-info-label">Son Oynama:</span>
                     <span class="user-info-value">${this.gameState.lastPlayTime}</span>
                 </div>
-            `;
-
+            `</div>
             const existingUserInfo = this.ui.uiContainer.querySelector('.user-info');
             if (!existingUserInfo) {
                 this.ui.uiContainer.querySelector('.ui-panel')?.appendChild(userInfoDiv);
@@ -494,52 +456,77 @@ private async loadGameModels(): Promise<void> {
 
     private updateEnemies(deltaTime: number): void {
         this.enemies.forEach(enemy => {});
-    }
+        });
 
     public startGame(): void {
-        const selectedCharacter = this.menuManager?.getSelectedCharacter();
-        if (!selectedCharacter) {
-            NotificationManager.getInstance().show('Lütfen bir karakter seçin ve onaylayın!', 'error');
-            this.menuManager?.showMenu('character');
-            return;
-        }
+    const selectedCharacter = this.menuManager?.getSelectedCharacter();
+    const selectedKit = this.menuManager?.getSelectedKit();
+    if (!selectedCharacter || !selectedKit) {
+        NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
+        this.menuManager?.showMenu('character');
+        return;
+    }
 
+    this.gameState.selectedCharacter = selectedCharacter;
+    this.gameState.selectedKit = selectedKit;
+
+    // Modelleri yükle
+    Promise.all([
+        this.modelsLoader.loadCharacterModels([selectedCharacter]),
+            this.modelsLoader.loadKitModels([selectedKit])
+    ]).then(() => {
         const characterModel = this.modelsLoader.getModel(selectedCharacter);
-        if (!characterModel || !characterModel.scene) {
-            NotificationManager.getInstance().show(`Karakter modeli yüklenemedi: ${selectedCharacter}`, 'error');
+        const kitModel = this.modelsLoader.getModel(selectedKit);
+        if (!characterModel || !kitModel) {
+            NotificationManager.getInstance().show(`Karakter veya silah modeli yüklenemedi: ${selectedCharacter}, ${selectedKit}`, 'error');
             this.menuManager?.showMenu('character');
             return;
         }
 
-        NotificationManager.getInstance().show(`${this.gameState.currentUser} olarak oyuna başlandı!`, 'success');
+        NotificationManager.getInstance().show(`${this.gameState.currentUser} olarak ${selectedCharacter} ve ${selectedKit} ile oyuna başlandı!`, 'success');
 
+        // Eski oyuncuyu ve silahı kaldır
         if (this.player) {
             this.resources.scene.remove(this.player);
         }
+        if (this.weapon) {
+            this.resources.scene.remove(this.weapon);
+        }
 
-        const newPlayer = characterModel.scene.clone();
-        if (!newPlayer) {
+        // Yeni karakter
+        this.player = characterModel.scene.clone();
+        if (!this.player) {
             NotificationManager.getInstance().show('Karakter modeli klonlanamadı!', 'error');
             return;
         }
-
-        this.player = newPlayer;
         this.player.name = selectedCharacter;
         this.player.position.set(0, 0, 0);
         this.resources.scene.add(this.player);
+
+        // Yeni silah
+        this.weapon = kitModel.scene.clone();
+        if (!this.weapon) {
+            NotificationManager.getInstance().show('Silah modeli klonlanamadı!', 'error');
+            return;
+        }
+        this.weapon.name = selectedKit;
+        this.resources.scene.add(this.weapon);
 
         this.gameState.isStarted = true;
         this.gameState.isPaused = false;
         this.gameState.score = 0;
         this.gameState.health = 100;
         this.gameState.ammo = 30;
-        this.gameState.selectedCharacter = selectedCharacter;
         this.setCurrentDateTime();
 
         this.ui.uiContainer.classList.remove('hidden');
         this.menuManager?.showMenu('none');
         this.updateUI();
-    }
+    }).catch(error => {
+        console.error('Model yükleme hatası:', error);
+        NotificationManager.getInstance().show('Model yüklenemedi!', 'error');
+    });
+}
 
     private shoot(): void {
         if (this.gameState.ammo <= 0) {
@@ -556,10 +543,9 @@ private async loadGameModels(): Promise<void> {
         this.emit('weaponFired', this.gameState.ammo);
         this.updateUI();
 
-        if (this.player) {
+        if (this.player && this.weapon) {
             const direction = new THREE.Vector3(0, 0, -1);
-            direction.applyQuaternion(this.player.quaternion);
-            
+            direction.apply(this.weaponQuaternion.quaternion));
             this.raycaster.set(this.player.position, direction);
             const intersects = this.raycaster.intersectObjects(this.enemies);
             
@@ -573,7 +559,7 @@ private async loadGameModels(): Promise<void> {
     private togglePause(): void {
         this.gameState.isPaused = !this.gameState.isPaused;
         if (this.gameState.isPaused) {
-            NotificationManager.getInstance().show('Oyun duraklatıldı', 'warning');
+            NotificationManager.getInstance().show('Oyun duraklatıldı');
             this.menuManager?.showMenu('pause');
         } else {
             NotificationManager.getInstance().show('Oyun devam ediyor', 'success');
@@ -588,27 +574,25 @@ private async loadGameModels(): Promise<void> {
     }
 
     private restartGame(): void {
-    console.log("Oyun yeniden başlatılıyor");
-    this.cleanup();
-    // Yeni renderer ve kontroller oluştur
-    this.resources.renderer = new THREE.WebGLRenderer({
-        canvas: this.resources.renderer.domElement,
-        antialias: true,
-        powerPreference: 'high-performance'
-    });
-    this.resources.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.resources.renderer.shadowMap.enabled = true;
-    this.resources.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        console.log("Oyun yeniden başlatılıyor");
+        this.cleanup();
+        this.resources.renderer = new THREE.WebGLRenderer({
+            canvas: this.resources.renderer.domElement,
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
+        this.resources.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.resources.renderer.shadowMap.enabled = true;
+        this.resources.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    this.resources.controls = new OrbitControls(this.resources.camera, this.resources.renderer.domElement);
-    this.resources.controls.enableDamping = true;
-    this.resources.controls.dampingFactor = 0.05;
-    this.resources.controls.target.set(0, 1, 0);
+        this.resources.controls = new OrbitControls(this.resources.camera, this.resources.renderer.domElement);
+        this.resources.controls.enableDamping = true;
+        this.resources.controls.dampingFactor = 0.05;
+        this.resources.controls.target.set(0, 1, 0);
 
-    // Sahneyi yeniden kur
-    this.platform = this.setupWorld();
-    this.initializeGame();
-}
+        this.platform = this.setupWorld();
+        this.initializeGame();
+    }
 
     private endGame(): void {
         this.gameState.isStarted = false;
@@ -621,15 +605,15 @@ private async loadGameModels(): Promise<void> {
     }
 
     private exitToMain(): void {
-    console.log("Ana menüye dönülüyor");
-    this.gameState.isStarted = false;
-    this.gameState.isPaused = false;
-    this.ui.uiContainer.classList.add('hidden');
-    if (this.menuManager) {
-        this.menuManager.showMenu('main');
-    } else {
-        console.error("MenuManager mevcut değil!");
-        NotificationManager.getInstance().show('Ana menüye geçiş başarısız!', 'error');
+        console.log("Ana menüye dönülüyor");
+        this.gameState.isStarted = false;
+        this.gameState.isPaused = false;
+        this.ui.uiContainer.classList.add('hidden');
+        if (this.menuManager) {
+            this.menuManager.showMenu('main');
+        } else {
+            console.error("MenuManager mevcut değil!");
+            NotificationManager.getInstance().show('Ana menüye geçiş başarısız!', 'error');
+        }
     }
-}
 }
