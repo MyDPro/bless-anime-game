@@ -36,7 +36,7 @@ export class MenuManager extends EventEmitter {
     constructor(modelsLoader: ModelsLoader) {
         super();
         this.modelsLoader = modelsLoader;
-        console.log("MenuManager started...");
+        console.log("MenuManager başlatılıyor...");
         this.menus = new Map();
         this.loadSavedState();
         this.initializeMenus();
@@ -60,30 +60,39 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupMenuListeners(): void {
-        console.log("Setting up menu listeners");
+        console.log("Menü listener’ları ayarlanıyor");
         const buttons = [
             { id: 'startBtn', action: () => this.emit('startGame') },
             { id: 'characterSelectBtn', action: () => {
-                console.log('Switching to character selection');
+                console.log('Karakter seçimi ekranına geçiş');
                 this.showMenu('character');
             }},
             { id: 'scoreboardBtn', action: () => this.showMenu('scoreboard') },
             { id: 'settingsBtn', action: () => this.showMenu('settings') },
             { id: 'backFromCharSelect', action: () => {
-                console.log('Returning to main menu from character selection');
+                console.log('Karakter seçiminden ana menüye dönüş');
                 this.showMenu('main');
             }},
             { id: 'backFromKitSelect', action: () => {
-                console.log('Returning to character selection from kit selection');
+                console.log('Silah seçiminden karakter seçimine dönüş');
                 this.showMenu('character');
             }},
             { id: 'backFromScoreboard', action: () => this.showMenu('main') },
             { id: 'backFromSettings', action: () => this.showMenu('main') },
             { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
             { id: 'confirmKit', action: () => this.confirmKitSelection() },
-            { id: 'resumeBtn', action: () => this.emit('resumeGame') },
-            { id: 'restartBtn', action: () => this.emit('restartGame') },
-            { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
+            { id: 'resumeBtn', action: () => {
+                console.log("Devam Et butonuna basıldı");
+                this.emit('resumeGame');
+            }},
+            { id: 'restartBtn', action: () => {
+                console.log("Yeniden Başlat butonuna basıldı");
+                this.emit('restartGame');
+            }},
+            { id: 'exitToMainBtn', action: () => {
+                console.log("Ana Menüye Dön butonuna basıldı");
+                this.emit('exitToMain');
+            }}
         ];
 
         buttons.forEach(({ id, action }) => {
@@ -92,34 +101,28 @@ export class MenuManager extends EventEmitter {
                 button.removeEventListener('click', action);
                 button.addEventListener('click', (event) => {
                     event.preventDefault();
-                    console.log(`Button clicked: ${id}`);
+                    console.log(`Buton tıklandı: ${id}`);
                     action();
                 }, { once: false });
             } else {
-                console.warn(`Button not found: ${id}`);
-                NotificationManager.getInstance().show(`Button not found: ${id}`, 'warning');
+                console.warn(`Buton bulunamadı: ${id}`);
+                NotificationManager.getInstance().show(`Buton bulunamadı: ${id}`, 'warning');
             }
         });
     }
 
     private async initializeMenus(): Promise<void> {
-        console.log("Initializing menus");
+        console.log("Menüler başlatılıyor");
         if (!this.modelsLoader.isLoaded()) {
-            console.log("Data not loaded, calling initialize...");
+            console.log("Veri yüklenmedi, initialize çağrılıyor...");
             await this.modelsLoader.initialize();
         }
 
         this.characters = this.modelsLoader.getAllCharacterData();
         this.kits = this.modelsLoader.getAllKitData();
-        if (!this.characters.length) {
-            console.error("Character data could not be loaded.");
-            NotificationManager.getInstance().show('Character data could not be loaded!', 'error');
-            this.showMenu('main');
-            return;
-        }
-        if (!this.kits.length) {
-            console.error("Kit data could not be loaded.");
-            NotificationManager.getInstance().show('Kit data could not be loaded!', 'error');
+        if (!this.characters.length || !this.kits.length) {
+            console.error("Karakter veya silah verileri yüklenemedi.");
+            NotificationManager.getInstance().show('Veriler yüklenemedi!', 'error');
             this.showMenu('main');
             return;
         }
@@ -138,9 +141,10 @@ export class MenuManager extends EventEmitter {
             const element = document.getElementById(id);
             if (element) {
                 this.menus.set(key, element);
+                console.log(`Menü kaydedildi: ${key} (ID: ${id})`);
             } else {
-                console.error(`Menu not found: ${key} (ID: ${id})`);
-                NotificationManager.getInstance().show(`Menu not found: ${id}`, 'error');
+                console.error(`Menü bulunamadı: ${key} (ID: ${id})`);
+                NotificationManager.getInstance().show(`Menü bulunamadı: ${id}`, 'error');
             }
         });
 
@@ -150,11 +154,11 @@ export class MenuManager extends EventEmitter {
     }
 
     private createCharacterCarousel(): void {
-        console.log("Creating character carousel");
+        console.log("Karakter karakteri oluşturuluyor");
         const characterGrid = document.querySelector('.character-grid');
         if (!characterGrid) {
-            console.error("Character grid not found (.character-grid)");
-            NotificationManager.getInstance().show('Character selection screen could not be loaded!', 'error');
+            console.error("Karakter grid bulunamadı (.character-grid)");
+            NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi!', 'error');
             this.showMenu('main');
             return;
         }
@@ -214,11 +218,11 @@ export class MenuManager extends EventEmitter {
     }
 
     private createKitCarousel(): void {
-        console.log("Creating kit carousel");
+        console.log("Kit carousel oluşturuluyor");
         const kitGrid = document.querySelector('.kit-grid');
         if (!kitGrid) {
-            console.error("Kit grid not found (.kit-grid)");
-            NotificationManager.getInstance().show('Kit selection screen could not be loaded!', 'error');
+            console.error("Kit grid bulunamadı (.kit-grid)");
+            NotificationManager.getInstance().show('Silah seçim ekranı yüklenemedi!', 'error');
             this.showMenu('main');
             return;
         }
@@ -274,13 +278,13 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupCharacterCardListeners(): void {
-        console.log("Setting up character card listeners");
+        console.log("Karakter kartı listener’ları ayarlanıyor");
         const cards = document.querySelectorAll('.character-card');
         cards.forEach(card => {
             card.addEventListener('click', () => {
                 const characterId = card.getAttribute('data-character-id');
                 if (characterId) {
-                    console.log(`Character selected: ${characterId}`);
+                    console.log(`Karakter seçildi: ${characterId}`);
                     this.selectCharacter(characterId);
                 }
             });
@@ -288,13 +292,13 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupKitCardListeners(): void {
-        console.log("Setting up kit card listeners");
+        console.log("Silah kartı listener’ları ayarlanıyor");
         const cards = document.querySelectorAll('.kit-card');
         cards.forEach(card => {
             card.addEventListener('click', () => {
                 const kitId = card.getAttribute('data-kit-id');
                 if (kitId) {
-                    console.log(`Kit selected: ${kitId}`);
+                    console.log(`Silah seçildi: ${kitId}`);
                     this.selectKit(kitId);
                 }
             });
@@ -302,14 +306,14 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupCarouselListeners(): void {
-        console.log("Setting up character carousel listeners");
+        console.log("Karakter carousel listener’ları ayarlanıyor");
         const prevBtn = document.querySelector('.character-carousel-container .prev');
         const nextBtn = document.querySelector('.character-carousel-container .next');
         const navDots = document.querySelectorAll('.character-nav-dots .nav-dot');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
-                console.log("Previous character");
+                console.log("Önceki karakter");
                 this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length;
                 this.updateCarousel();
             });
@@ -317,7 +321,7 @@ export class MenuManager extends EventEmitter {
 
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
-                console.log("Next character");
+                console.log("Sonraki karakter");
                 this.currentCarouselIndex = (this.currentCarouselIndex + 1) % this.characters.length;
                 this.updateCarousel();
             });
@@ -326,7 +330,7 @@ export class MenuManager extends EventEmitter {
         navDots.forEach(dot => {
             dot.addEventListener('click', () => {
                 const index = parseInt(dot.getAttribute('data-index') || '0');
-                console.log(`Character nav dot clicked: ${index}`);
+                console.log(`Karakter nav noktası tıklandı: ${index}`);
                 this.currentCarouselIndex = index;
                 this.updateCarousel();
             });
@@ -334,14 +338,14 @@ export class MenuManager extends EventEmitter {
     }
 
     private setupKitCarouselListeners(): void {
-        console.log("Setting up kit carousel listeners");
+        console.log("Silah carousel listener’ları ayarlanıyor");
         const prevBtn = document.querySelector('.kit-carousel-container .prev');
         const nextBtn = document.querySelector('.kit-carousel-container .next');
         const navDots = document.querySelectorAll('.kit-nav-dots .nav-dot');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
-                console.log("Previous kit");
+                console.log("Önceki silah");
                 this.currentKitCarouselIndex = (this.currentKitCarouselIndex - 1 + this.kits.length) % this.kits.length;
                 this.updateKitCarousel();
             });
@@ -349,7 +353,7 @@ export class MenuManager extends EventEmitter {
 
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
-                console.log("Next kit");
+                console.log("Sonraki silah");
                 this.currentKitCarouselIndex = (this.currentKitCarouselIndex + 1) % this.kits.length;
                 this.updateKitCarousel();
             });
@@ -358,7 +362,7 @@ export class MenuManager extends EventEmitter {
         navDots.forEach(dot => {
             dot.addEventListener('click', () => {
                 const index = parseInt(dot.getAttribute('data-index') || '0');
-                console.log(`Kit nav dot clicked: ${index}`);
+                console.log(`Silah nav noktası tıklandı: ${index}`);
                 this.currentKitCarouselIndex = index;
                 this.updateKitCarousel();
             });
@@ -366,7 +370,7 @@ export class MenuManager extends EventEmitter {
     }
 
     private updateCarousel(): void {
-        console.log(`Updating character carousel: index ${this.currentCarouselIndex}`);
+        console.log(`Karakter carousel güncelleniyor: index ${this.currentCarouselIndex}`);
         const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
         if (wrapper) {
             wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
@@ -392,7 +396,7 @@ export class MenuManager extends EventEmitter {
     }
 
     private updateKitCarousel(): void {
-        console.log(`Updating kit carousel: index ${this.currentKitCarouselIndex}`);
+        console.log(`Silah carousel güncelleniyor: index ${this.currentKitCarouselIndex}`);
         const wrapper = document.querySelector('.kit-cards-wrapper') as HTMLElement;
         if (wrapper) {
             wrapper.style.transform = `translateX(-${this.currentKitCarouselIndex * 320}px)`;
@@ -418,7 +422,7 @@ export class MenuManager extends EventEmitter {
     }
 
     private selectCharacter(characterId: string): void {
-        console.log(`Selecting character: ${characterId}`);
+        console.log(`Karakter seçiliyor: ${characterId}`);
         document.querySelectorAll('.character-card').forEach(card => {
             card.classList.remove('selected');
         });
@@ -429,20 +433,20 @@ export class MenuManager extends EventEmitter {
             this.characterSelectState.selectedCharacterId = characterId;
             this.characterSelectState.selectionTime = new Date().toISOString();
             localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-            console.log(`Character selected: ${characterId}`);
+            console.log(`Karakter seçildi: ${characterId}`);
             const index = this.characters.findIndex(char => char.id === characterId);
             if (index !== -1) {
                 this.currentCarouselIndex = index;
                 this.updateCarousel();
             }
         } else {
-            console.error(`Character card not found: ${characterId}`);
-            NotificationManager.getInstance().show(`Character card not found: ${characterId}`, 'error');
+            console.error(`Karakter kartı bulunamadı: ${characterId}`);
+            NotificationManager.getInstance().show(`Karakter kartı bulunamadı: ${characterId}`, 'error');
         }
     }
 
     private selectKit(kitId: string): void {
-        console.log(`Selecting kit: ${kitId}`);
+        console.log(`Silah seçiliyor: ${kitId}`);
         document.querySelectorAll('.kit-card').forEach(card => {
             card.classList.remove('selected');
         });
@@ -453,37 +457,37 @@ export class MenuManager extends EventEmitter {
             this.characterSelectState.selectedKitId = kitId;
             this.characterSelectState.selectionTime = new Date().toISOString();
             localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-            console.log(`Kit selected: ${kitId}`);
+            console.log(`Silah seçildi: ${kitId}`);
             const index = this.kits.findIndex(kit => kit.id === kitId);
             if (index !== -1) {
                 this.currentKitCarouselIndex = index;
                 this.updateKitCarousel();
             }
         } else {
-            console.error(`Kit card not found: ${kitId}`);
-            NotificationManager.getInstance().show(`Kit card not found: ${kitId}`, 'error');
+            console.error(`Silah kartı bulunamadı: ${kitId}`);
+            NotificationManager.getInstance().show(`Silah kartı bulunamadı: ${kitId}`, 'error');
         }
     }
 
     private confirmCharacterSelection(): void {
         if (!this.characterSelectState.selectedCharacterId) {
-            NotificationManager.getInstance().show('Please select a character!', 'error');
+            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
             return;
         }
         this.characterSelectState.isCharacterConfirmed = true;
         localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-        NotificationManager.getInstance().show('Character selection confirmed!', 'success');
+        NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
         this.showMenu('kit');
     }
 
     private confirmKitSelection(): void {
         if (!this.characterSelectState.selectedKitId) {
-            NotificationManager.getInstance().show('Please select a kit!', 'error');
+            NotificationManager.getInstance().show('Lütfen bir silah seçin!', 'error');
             return;
         }
         this.characterSelectState.isKitConfirmed = true;
         localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-        NotificationManager.getInstance().show('Kit selection confirmed!', 'success');
+        NotificationManager.getInstance().show('Silah seçimi onaylandı!', 'success');
         this.emit('characterSelected', this.characterSelectState.selectedCharacterId, this.characterSelectState.selectedKitId);
         this.showMenu('main');
     }
@@ -497,17 +501,17 @@ export class MenuManager extends EventEmitter {
     }
 
     public cleanup(): void {
-        console.log("Cleaning up MenuManager");
+        console.log("MenuManager temizleniyor");
         this.isLoading = false;
         document.body.classList.remove('loading');
     }
 
     public showMenu(menuId: string): void {
-        console.log(`Menu shown: ${menuId}`);
+        console.log(`Menü gösteriliyor: ${menuId}`);
         this.menus.forEach((menu, key) => {
             if (menu) {
                 menu.classList.add('hidden');
-                console.log(`Menu hidden: ${key}`);
+                console.log(`Menü gizlendi: ${key}`);
             }
         });
 
@@ -516,20 +520,27 @@ export class MenuManager extends EventEmitter {
             if (newMenu) {
                 newMenu.classList.remove('hidden');
                 this.activeMenu = menuId;
-                console.log(`New menu shown: ${menuId}`);
-                if (menuId === 'character') {
-                    this.updateCarousel();
-                } else if (menuId === 'kit') {
-                    this.updateKitCarousel();
+                console.log(`Yeni menü gösterildi: ${menuId}`);
+                if (menuId === 'pause') {
+                    console.log("Pause menüsü gösteriliyor, butonlar kontrol ediliyor...");
+                    ['resumeBtn', 'restartBtn', 'exitToMainBtn'].forEach(btnId => {
+                        const btn = document.getElementById(btnId);
+                        if (!btn) {
+                            console.error(`Pause menü butonu bulunamadı: ${btnId}`);
+                            NotificationManager.getInstance().show(`Buton bulunamadı: ${btnId}`, 'error');
+                        } else {
+                            console.log(`Buton bulundu: ${btnId}`);
+                        }
+                    });
                 }
             } else {
-                console.error(`Menu not found: ${menuId}`);
-                NotificationManager.getInstance().show(`Menu not found: ${menuId}`, 'error');
+                console.error(`Menü bulunamadı: ${menuId}`);
+                NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
                 this.showMenu('main');
             }
         } else {
             this.activeMenu = null;
-            console.log("All menus hidden");
+            console.log("Tüm menüler gizlendi");
         }
     }
 }
