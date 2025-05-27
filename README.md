@@ -23,7 +23,7 @@ bless-anime-game/
 │      ├── city-kit/
 │      └── kit/
 │           ├── Textures
-│           ├── photo  #character photos
+│           ├── photo    #kit photos
 ├── tsconfig.base.json   # Base TS config
 ├── tsconfig.debug.json  # Debug TS config
 ├── tsconfig.release.json# Release TS config
