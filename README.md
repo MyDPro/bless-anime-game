@@ -15,12 +15,15 @@ bless-anime-game/
 │   └── index.html
 │   └── style.css
 │   └── data/
-│      ├── characters.json
+│       ├── characters.json
 │   └── models/
-│      ├── character
+│       ├── character/
 │               ├── Textures
+│               ├── photo  #character photos
 │      ├── city-kit/
 │      └── kit/
+│           ├── Textures
+│           ├── photo  #character photos
 ├── tsconfig.base.json   # Base TS config
 ├── tsconfig.debug.json  # Debug TS config
 ├── tsconfig.release.json# Release TS config
