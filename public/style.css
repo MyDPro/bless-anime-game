@@ -79,7 +79,6 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    opacity: 1;
     transition: opacity 0.3s ease;
     backdrop-filter: blur(10px);
 }
@@ -166,28 +165,27 @@ body, html {
     margin-left: 10px;
 }
 
-/* Character Selection */
-.character-grid {
-    display: block; /* Carousel için grid yerine block */
+/* Character and Kit Selection */
+.character-grid, .kit-grid {
+    display: block;
+    margin: 30px 0;
 }
 
-.character-carousel-container {
+.character-carousel-container, .kit-carousel-container {
     position: relative;
     width: 100%;
-    margin: 30px 0;
-    max-width: 660px; /* 2 kart + boşluklar için optimize edildi */
-}
-
-.character-carousel {
-    width: 100%;
+    max-width: 660px;
+    margin: 0 auto;
     overflow: hidden;
 }
 
-.character-cards-wrapper {
+.character-carousel, .kit-carousel {
+    width: 100%;
+}
+
+.character-cards-wrapper, .kit-cards-wrapper {
     display: flex;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    margin: 0 -10px;
-    will-change: transform;
 }
 
 .carousel-button {
@@ -202,8 +200,7 @@ body, html {
     color: #fff;
     font-size: 20px;
     cursor: pointer;
-    z-index: 2;
-    transition: all 0.3s ease;
+    transition: background 0.3s ease;
 }
 
 .carousel-button:hover {
@@ -218,7 +215,7 @@ body, html {
     right: -20px;
 }
 
-.character-nav-dots {
+.character-nav-dots, .kit-nav-dots {
     display: flex;
     justify-content: center;
     gap: 8px;
@@ -239,62 +236,57 @@ body, html {
     transform: scale(1.2);
 }
 
-.character-card {
+.character-card, .kit-card {
     flex: 0 0 300px;
     margin: 0 10px;
-    transform: scale(0.9);
-    opacity: 0.7;
-    transition: all 0.3s ease;
     background: rgba(40, 40, 40, 0.8);
     padding: 20px;
     border-radius: 15px;
     cursor: pointer;
     border: 2px solid transparent;
+    transition: all 0.3s ease;
+    transform: scale(0.9);
+    opacity: 0.7;
 }
 
-.character-card.active {
+.character-card.active, .kit-card.active {
     transform: scale(1);
     opacity: 1;
     border-color: #4a90e2;
 }
 
-.character-card:hover {
+.character-card:hover, .kit-card:hover {
     transform: scale(0.95);
     box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
 }
 
-.character-card.selected {
+.character-card.selected, .kit-card.selected {
     border-color: #2ecc71;
     box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
 }
 
-.character-preview {
+.character-preview, .kit-preview {
     width: 100%;
     height: 200px;
     margin-bottom: 15px;
     border-radius: 10px;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
-    position: relative; /* Canvas konumlandırması için */
 }
 
-.character-canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block !important;
-    position: absolute;
-    top: 0;
-    left: 0;
+.character-image, .kit-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
-.character-info h3 {
+.character-info h3, .kit-info h3 {
     color: #fff;
     margin-bottom: 15px;
     font-size: 20px;
 }
 
-/* Character Stats */
-.character-stats {
+.character-stats, .kit-stats {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -400,16 +392,11 @@ input[type="range"]::-webkit-slider-thumb:hover {
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #fff;
     font-size: 18px;
-    pointer-events: none;
 }
 
 .ui-panel div {
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.ui-panel div:last-child {
-    margin-bottom: 0;
 }
 
 /* Crosshair */
@@ -449,61 +436,15 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* Utility Classes */
 .hidden {
-    display: none !important;
+    display: none;
 }
 
 .fade-out {
-    opacity: 0 !important;
-    pointer-events: none !important;
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .menu-content {
-        padding: 20px;
-    }
-
-    .game-logo h1 {
-        font-size: 2em;
-    }
-
-    .menu-button {
-        width: 240px;
-        padding: 12px 24px;
-        font-size: 14px;
-    }
-
-    .character-card {
-        flex: 0 0 260px;
-    }
-
-    .carousel-button {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-    }
-
-    .ui-panel {
-        padding: 15px;
-        font-size: 16px;
-    }
-
-    .character-carousel-container {
-        max-width: 540px;
-    }
-}
-
-@media (max-width: 480px) {
-    .character-card {
-        flex: 0 0 220px;
-    }
-
-    .character-carousel-container {
-        max-width: 460px;
-    }
-}
-
-/* Kullanıcı bilgileri için stiller */
+/* User Info */
 .user-info {
     margin-top: 15px;
     padding-top: 15px;
@@ -512,11 +453,39 @@ input[type="range"]::-webkit-slider-thumb:hover {
     color: #aaa;
 }
 
-.user-info div {
-    margin-bottom: 5px;
+.user-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
 }
 
-/* Modern Bildirim Sistemi */
+.user-info-label {
+    color: #4a90e2;
+    font-size: 12px;
+}
+
+.user-info-value {
+    color: #fff;
+    font-size: 12px;
+}
+
+/* Character Selection Info */
+.character-selection-info {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
+}
+
+.character-selection-info small {
+    display: block;
+    margin: 5px 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Notification System */
 .notification-container {
     position: fixed;
     top: 20px;
@@ -572,7 +541,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    flex-shrink: 0;
 }
 
 .notification-message {
@@ -597,23 +565,14 @@ input[type="range"]::-webkit-slider-thumb:hover {
     color: #fff;
 }
 
-/* Bildirim Animasyonları */
 @keyframes slideIn {
-    from {
-        transform: translateX(120%);
-    }
-    to {
-        transform: translateX(0);
-    }
+    from { transform: translateX(120%); }
+    to { transform: translateX(0); }
 }
 
 @keyframes slideOut {
-    from {
-        transform: translateX(0);
-    }
-    to {
-        transform: translateX(120%);
-    }
+    from { transform: translateX(0); }
+    to { transform: translateX(120%); }
 }
 
 .notification.slide-in {
@@ -624,46 +583,44 @@ input[type="range"]::-webkit-slider-thumb:hover {
     animation: slideOut 0.3s forwards;
 }
 
-/* Character Selection Info güncellemesi */
-.character-selection-info {
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: #aaa;
-}
-
-.character-selection-info small {
-    display: block;
-    margin: 5px 0;
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-/* User info güncellemesi */
-.user-info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 5px 0;
-}
-
-.user-info-label {
-    color: #4a90e2;
-    font-size: 12px;
-}
-
-.user-info-value {
-    color: #fff;
-    font-size: 12px;
-}
-
-/* Loading state için güncelleme */
+/* Loading State */
 body.loading {
     cursor: wait;
 }
 
 body.loading .menu-button,
-body.loading .character-card {
+body.loading .character-card,
+body.loading .kit-card {
     pointer-events: none;
     opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .menu-content {
+        padding: 20px;
     }
+
+    .game-logo h1 {
+        font-size: 2em;
+    }
+
+    .menu-button {
+        width: 240px;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    .character-card, .kit-card {
+        flex: 0 0 260px;
+    }
+
+    .character-carousel-container, .kit-carousel-container {
+        max-width: 540px;
+    }
+
+    .ui-panel {
+        padding: 15px;
+        font-size: 16px;
+    }
+}
