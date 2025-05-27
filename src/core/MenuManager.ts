@@ -183,7 +183,7 @@ export class MenuManager extends EventEmitter {
 
     private generateCharacterCardHTML(char: CharacterData): string {
         return `
-            <div class="character-card" data-id="${char.id}">
+            <div class="character-card" data-character-id="${char.id}">
                 <div class="character-preview">
                     <img src="${char.photoPath}" alt="${char.name}" class="character-image" />
                 </div>
@@ -199,7 +199,7 @@ export class MenuManager extends EventEmitter {
                         <div class="stat">
                             <span class="stat-label">Güç</span>
                             <div class="stat-bar">
-                                <div class="stat-fill" style="width: ${this.char.stats.power}%"></div>
+                                <div class="stat-fill" style="width: ${char.stats.power}%"></div>
                             </div>
                         </div>
                     </div>
@@ -208,8 +208,7 @@ export class MenuManager extends EventEmitter {
                         <small>Son Seçim: ${this.CURRENT_TIME}</small>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     private createKitCarousel(): void {
@@ -232,18 +231,18 @@ export class MenuManager extends EventEmitter {
             }
         }
 
-        kitGrid.innerHTML = this.generateKitCardsHTML();
-        this.setupKitCardsListeners();
+        kitGrid.innerHTML = this.generateKitCarouselHTML();
+        this.setupKitCardListeners();
         this.setupKitCarouselListeners();
         this.updateKitCarousel();
     }
 
-    private generateKitCardsHTML(): string {
+    private generateKitCarouselHTML(): string {
         return `
             <div class="kit-carousel-container">
                 <div class="kit-carousel">
                     <div class="kit-cards-wrapper">
-                        ${this.kits.map(kit => this.generateKitCard(kit)).join('')}
+                        ${this.kits.map(kit => this.generateKitCardHTML(kit)).join('')}
                     </div>
                 </div>
                 <button class="carousel-button prev">◄</button>
@@ -256,11 +255,11 @@ export class MenuManager extends EventEmitter {
             </div>`;
     }
 
-    private generateKitCard(kit: string): KitData {
+    private generateKitCardHTML(kit: KitData): string {
         return `
-            <div class="kit-card" data-id="${kit.id}">
+            <div class="kit-card" data-kit-id="${kit.id}">
                 <div class="kit-preview">
-                    <img src="${kit.id}" alt="${kit.name}" class="kit-image" />
+                    <img src="${kit.photoPath}" alt="${kit.name}" class="kit-image" />
                 </div>
                 <div class="kit-info">
                     <h3>${kit.name}</h3>
@@ -279,8 +278,7 @@ export class MenuManager extends EventEmitter {
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     private setupCharacterCardListeners(): void {
@@ -288,9 +286,9 @@ export class MenuManager extends EventEmitter {
         const cards = document.querySelectorAll('.character-card');
         cards.forEach(card => {
             card.addEventListener('click', () => {
-                const characterId = card.getAttribute('data-id');
+                const characterId = card.getAttribute('data-character-id');
                 if (characterId) {
-                    console.log(`Karakter seçildi: ${this.id}`);
+                    console.log(`Karakter seçildi: ${characterId}`);
                     this.selectCharacter(characterId);
                 }
             });
@@ -300,9 +298,9 @@ export class MenuManager extends EventEmitter {
     private setupKitCardListeners(): void {
         console.log("Silah kartı dinleyicileri ayarlanıyor");
         const cards = document.querySelectorAll('.kit-card');
-        cards.forEach((card) => {
+        cards.forEach(card => {
             card.addEventListener('click', () => {
-                const kitId = card.getAttribute('data-id');
+                const kitId = card.getAttribute('data-kit-id');
                 if (kitId) {
                     console.log(`Silah seçildi: ${kitId}`);
                     this.selectKit(kitId);
@@ -315,12 +313,12 @@ export class MenuManager extends EventEmitter {
         console.log("Karakter carousel dinleyicileri ayarlanıyor");
         const prevBtn = document.querySelector('.character-carousel-container .prev');
         const nextBtn = document.querySelector('.character-carousel-container .next');
-        const navDots = document.querySelectorAll('.character-nav .nav-dot');
+        const navDots = document.querySelectorAll('.character-nav-dots .nav-dot');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
                 console.log("Önceki karaktere geçiş");
-                this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.currentCarouselIndex.characters.length) % this.characters.length;
+                this.currentCarouselIndex = (this.currentCarouselIndex - 1 + this.characters.length) % this.characters.length;
                 this.updateCarousel();
             });
         }
@@ -365,10 +363,10 @@ export class MenuManager extends EventEmitter {
             });
         }
 
-        navDots.forEach((dot) => {
+        navDots.forEach(dot => {
             dot.addEventListener('click', () => {
                 const index = parseInt(dot.getAttribute('data-index') || '0');
-                console.log(`Kit nav dot tıklandı: ${index}`);
+                console.log(`Silah nav dot tıklandı: ${index}`);
                 this.currentKitCarouselIndex = index;
                 this.updateKitCarousel();
             });
@@ -379,7 +377,7 @@ export class MenuManager extends EventEmitter {
         console.log(`Karakter carousel güncelleniyor: index ${this.currentCarouselIndex}`);
         const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
         if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentCarouselIndex} * 320}px)`;
+            wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
         }
 
         const cards = document.querySelectorAll('.character-card');
@@ -405,7 +403,7 @@ export class MenuManager extends EventEmitter {
         console.log(`Silah carousel güncelleniyor: index ${this.currentKitCarouselIndex}`);
         const wrapper = document.querySelector('.kit-cards-wrapper') as HTMLElement;
         if (wrapper) {
-            wrapper.style.transform = `translateX(-${this.currentKitCarouselIndex} * 320}px)`;
+            wrapper.style.transform = `translateX(-${this.currentKitCarouselIndex * 320}px)`;
         }
 
         const cards = document.querySelectorAll('.kit-card');
@@ -433,7 +431,7 @@ export class MenuManager extends EventEmitter {
             card.classList.remove('selected');
         });
 
-        const selectedCard = document.querySelector(`[data-id="${characterId}"]`);
+        const selectedCard = document.querySelector(`.character-card[data-character-id="${characterId}"]`);
         if (selectedCard) {
             selectedCard.classList.add('selected');
             this.characterSelectState.selectedCharacterId = characterId;
@@ -457,14 +455,14 @@ export class MenuManager extends EventEmitter {
             card.classList.remove('selected');
         });
 
-        const selectedCard = document.querySelector(`[data-id="${kitId}"]`);
+        const selectedCard = document.querySelector(`.kit-card[data-kit-id="${kitId}"]`);
         if (selectedCard) {
             selectedCard.classList.add('selected');
             this.characterSelectState.selectedKitId = kitId;
             this.characterSelectState.selectionTime = new Date().toISOString();
             localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
             console.log(`Silah seçildi: ${kitId}`);
-            const index = this.kits.findIndex(k => k.id === kitId);
+            const index = this.kits.findIndex(kit => kit.id === kitId);
             if (index !== -1) {
                 this.currentKitCarouselIndex = index;
                 this.updateKitCarousel();
@@ -513,11 +511,11 @@ export class MenuManager extends EventEmitter {
     }
 
     public showMenu(menuId: string): void {
-        console.log(`Menü gösteriliyor: ${menuId}`);
+        console.log(`Menu shown: ${menuId}`);
         this.menus.forEach((menu, key) => {
             if (menu) {
                 menu.classList.add('hidden');
-                console.log(`Menü gizlendi: ${key}`);
+                console.log(`Menu hidden: ${key}`);
             }
         });
 
@@ -526,20 +524,20 @@ export class MenuManager extends EventEmitter {
             if (newMenu) {
                 newMenu.classList.remove('hidden');
                 this.activeMenu = menuId;
-                console.log(`Yeni menü gösterildi: ${menuId}`);
+                console.log(`New menu shown: ${menuId}`);
                 if (menuId === 'character') {
                     this.updateCarousel();
                 } else if (menuId === 'kit') {
                     this.updateKitCarousel();
                 }
             } else {
-                console.error(`Menü bulunamadı: ${menuId}`);
-                NotificationManager.getInstance().show(`Menü bulunamadı: ${menuId}`, 'error');
+                console.error(`Menu not found: ${menuId}`);
+                NotificationManager.getInstance().show(`Menu not found: ${menuId}`, 'error');
                 this.showMenu('main');
             }
         } else {
             this.activeMenu = null;
-            console.log("Tüm menüler gizlendi");
+            console.log("All menus hidden");
         }
     }
 }
