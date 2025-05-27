@@ -45,7 +45,7 @@ export class Game extends EventEmitter {
         selectedKit: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-27 19:48:00'
+        lastPlayTime: '2025-05-27 19:58:00'
     };
 
     private ui = {
@@ -460,8 +460,8 @@ export class Game extends EventEmitter {
     }
 
     public startGame(): void {
-        const selectedCharacter: string | null = this.menuManager?.getSelectedCharacterId();
-        const selectedKit: string | null = this.menuManager?.getSelectedKit();
+        const selectedCharacter = this.menuManager?.getSelectedCharacterId();
+        const selectedKit = this.menuManager?.getSelectedKit();
         if (!selectedCharacter || !selectedKit) {
             NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
             this.menuManager?.showMenu('character');
@@ -537,12 +537,12 @@ export class Game extends EventEmitter {
             NotificationManager.getInstance().show('Mermi azalıyor!', 'warning');
         }
 
-        this.emit('weaponFired');
+        this.emit('weaponFired', this.gameState.ammo);
         this.updateUI();
 
         if (this.player && this.weapon) {
             const direction = new THREE.Vector3(0, 0, -1);
-            direction.applyQuaternion(this.weapon.quaternion));
+            direction.applyQuaternion(this.weapon.quaternion);
             this.raycaster.set(this.player.position, direction);
             const intersects = this.raycaster.intersectObjects(this.enemies);
             
@@ -584,7 +584,7 @@ export class Game extends EventEmitter {
 
         this.resources.controls = new OrbitControls(this.resources.camera, this.resources.renderer.domElement);
         this.resources.controls.enableDamping = true;
-        this.controls.controls.dampingFactor = 0.05;
+        this.resources.controls.dampingFactor = 0.05;
         this.resources.controls.target.set(0, 1, 0);
 
         this.platform = this.setupWorld();
