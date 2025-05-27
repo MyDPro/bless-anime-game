@@ -1,3 +1,4 @@
+// src/utils/loadModels.ts
 import * as THREE from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -17,10 +18,7 @@ export interface CharacterData {
     name: string;
     modelPath: string;
     photoPath: string;
-    stats: {
-        speed: number;
-        power: number;
-    };
+    stats: { speed: number; power: number };
 }
 
 export interface KitData {
@@ -28,10 +26,7 @@ export interface KitData {
     name: string;
     modelPath: string;
     photoPath: string;
-    stats: {
-        fireRate: number;
-        damage: number;
-    };
+    stats: { fireRate: number; damage: number };
 }
 
 export class ModelsLoader extends EventEmitter {
@@ -44,6 +39,7 @@ export class ModelsLoader extends EventEmitter {
     private loadingPromises: Map<string, Promise<GLTF>> = new Map();
     private readonly MAX_RETRIES = 3;
     private readonly RETRY_DELAY = 1000;
+    private isDataLoaded: boolean = false;
 
     constructor(scene: Scene) {
         super();
@@ -54,35 +50,52 @@ export class ModelsLoader extends EventEmitter {
         this.loader.setDRACOLoader(this.dracoLoader);
         this.scene = scene;
         this.models = new Map();
-        this.loadCharacterData();
-        this.loadKitData();
+    }
+
+    public async initialize(): Promise<void> {
+        try {
+            await Promise.all([this.loadCharacterData(), this.loadKitData()]);
+            this.isDataLoaded = true;
+            console.log(`Veri yükleme tamamlandı: ${this.characterData.length} karakter, ${this.kitData.length} silah`);
+            NotificationManager.getInstance().show('Veriler yüklendi!', 'success');
+        } catch (error) {
+            console.error('Veri yükleme hatası:', error);
+            NotificationManager.getInstance().show('Veriler yüklenemedi!', 'error');
+            throw error;
+        }
+    }
+
+    public isLoaded(): boolean {
+        return this.isDataLoaded;
     }
 
     private async loadCharacterData(): Promise<void> {
         try {
-            const response = await fetch('/data/characters.json');
+            const response = await fetch('/data/characters.json', { cache: 'no-cache' });
             if (!response.ok) {
-                throw new Error('Characters.json dosyası bulunamadı');
+                throw new Error(`Characters.json dosyası bulunamadı: ${response.status}`);
             }
             this.characterData = await response.json();
             console.log('Karakter verileri yüklendi:', this.characterData.length, 'karakter');
         } catch (error) {
             console.error('Karakter verileri yüklenemedi:', error);
             NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
+            throw error;
         }
     }
 
     private async loadKitData(): Promise<void> {
         try {
-            const response = await fetch('/data/kits.json');
+            const response = await fetch('/data/kits.json', { cache: 'no-cache' });
             if (!response.ok) {
-                throw new Error('Kits.json dosyası bulunamadı');
+                throw new Error(`Kits.json dosyası bulunamadı: ${response.status}`);
             }
             this.kitData = await response.json();
             console.log('Silah verileri yüklendi:', this.kitData.length, 'silah');
         } catch (error) {
             console.error('Silah verileri yüklenemedi:', error);
             NotificationManager.getInstance().show('Silah verileri yüklenemedi!', 'error');
+            throw error;
         }
     }
 
@@ -281,6 +294,7 @@ export class ModelsLoader extends EventEmitter {
         this.models.clear();
         this.characterData = [];
         this.kitData = [];
+        this.isDataLoaded = false;
         this.dracoLoader.dispose();
     }
 }
