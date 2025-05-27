@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@blockless/sdk-ts": "^1.0.5",
-    "three": "^0.150.0",
+    "three": "^0.169.0",
     "mkdirp": "^3.0.1"
   },
   "devDependencies": {
