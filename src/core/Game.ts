@@ -1,3 +1,4 @@
+// src/core/Game.ts
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { MenuManager } from './MenuManager';
@@ -30,7 +31,7 @@ export class Game extends EventEmitter {
     private modelsLoader: ModelsLoader;
     private menuManager: MenuManager | null = null;
     private lastTime: number = 0;
-    private readonly targetFPS = 50;
+    private readonly targetFPS = 60;
     private readonly frameInterval = 1000 / this.targetFPS;
     private animationFrameId: number | null = null;
     private platform: THREE.Mesh;
@@ -45,7 +46,7 @@ export class Game extends EventEmitter {
         selectedKit: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-27 19:58:00'
+        lastPlayTime: '2025-05-27 20:31:00'
     };
 
     private ui = {
@@ -114,6 +115,7 @@ export class Game extends EventEmitter {
         this.ui.uiContainer.classList.add('hidden');
         
         try {
+            await this.modelsLoader.initialize(); // Veri yüklemesini bekle
             this.menuManager = new MenuManager(this.modelsLoader);
             this.setupMenuListeners();
             if (this.ui.loadingScreen) {
@@ -451,6 +453,7 @@ export class Game extends EventEmitter {
         this.updatePlayerMovement(deltaTime);
         this.updateEnemies(deltaTime);
         this.checkCollisions();
+        this.updateUI();
     }
 
     private updateEnemies(deltaTime: number): void {
@@ -549,6 +552,9 @@ export class Game extends EventEmitter {
             if (intersects.length > 0) {
                 const hitEnemy = intersects[0].object;
                 this.emit('scoreUpdate', 10);
+                this.gameState.score += 10;
+                this.resources.scene.remove(hitEnemy);
+                this.enemies = this.enemies.filter(enemy => enemy !== hitEnemy);
             }
         }
     }
