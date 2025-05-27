@@ -1,42 +1,34 @@
-// src/core/MenuManager.ts
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { NotificationManager } from './NotificationManager';
 import { EventEmitter } from '../utils/EventEmitter';
-import { ModelsLoader, CharacterData } from '../utils/loadModels';
-
-interface CharacterPreview {
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
-    renderer: THREE.WebGLRenderer;
-    model?: THREE.Object3D;
-}
+import { ModelsLoader, CharacterData, KitData } from '../utils/loadModels';
 
 interface CharacterSelectState {
-    selectedId: string | null;
-    previousId: string | null;
+    selectedCharacterId: string | null;
+    selectedKitId: string | null;
+    previousCharacterId: string | null;
     selectionTime: string | null;
-    isConfirmed: boolean;
+    isCharacterConfirmed: boolean;
+    isKitConfirmed: boolean;
 }
 
 export class MenuManager extends EventEmitter {
     private menus: Map<string, HTMLElement>;
     private activeMenu: string | null = null;
-    private characterPreviews: Map<string, CharacterPreview> = new Map();
     private currentCarouselIndex: number = 0;
+    private currentKitCarouselIndex: number = 0;
     private isLoading: boolean = false;
-    private loadingPromises: Promise<any>[] = [];
     private modelsLoader: ModelsLoader;
     private characters: CharacterData[] = [];
-    private sharedRenderer: THREE.WebGLRenderer | null = null;
-
+    private kits: KitData[] = [];
     private characterSelectState: CharacterSelectState = {
-        selectedId: null,
-        previousId: null,
+        selectedCharacterId: null,
+        selectedKitId: null,
+        previousCharacterId: null,
         selectionTime: null,
-        isConfirmed: false
+        isCharacterConfirmed: false,
+        isKitConfirmed: false
     };
-
     private readonly CURRENT_USER = 'MyDemir';
     private readonly CURRENT_TIME = new Date().toISOString();
 
@@ -47,14 +39,6 @@ export class MenuManager extends EventEmitter {
         this.menus = new Map();
         this.loadSavedState();
         this.initializeMenus();
-    }
-
-    private getSharedRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
-        if (!this.sharedRenderer) {
-            this.sharedRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-            console.log("Paylaşılan renderer oluşturuldu");
-        }
-        return this.sharedRenderer;
     }
 
     private loadSavedState(): void {
@@ -70,7 +54,6 @@ export class MenuManager extends EventEmitter {
     }
 
     private async hideLoadingState(): Promise<void> {
-        await Promise.all(this.loadingPromises);
         this.isLoading = false;
         document.body.classList.remove('loading');
     }
@@ -89,9 +72,14 @@ export class MenuManager extends EventEmitter {
                 console.log('Karakter seçiminden ana menüye dönüş');
                 this.showMenu('main');
             }},
+            { id: 'backFromKitSelect', action: () => {
+                console.log('Silah seçiminden karakter seçimine dönüş');
+                this.showMenu('character');
+            }},
             { id: 'backFromScoreboard', action: () => this.showMenu('main') },
             { id: 'backFromSettings', action: () => this.showMenu('main') },
             { id: 'confirmCharacter', action: () => this.confirmCharacterSelection() },
+            { id: 'confirmKit', action: () => this.confirmKitSelection() },
             { id: 'resumeBtn', action: () => this.emit('resumeGame') },
             { id: 'restartBtn', action: () => this.emit('restartGame') },
             { id: 'exitToMainBtn', action: () => this.emit('exitToMain') }
@@ -102,7 +90,7 @@ export class MenuManager extends EventEmitter {
             if (button) {
                 button.removeEventListener('click', action);
                 button.addEventListener('click', (event) => {
-                    event.stopPropagation();
+                    event.preventDefault();
                     console.log(`Düğme tıklandı: ${id}`);
                     action();
                 }, { once: false });
@@ -116,13 +104,18 @@ export class MenuManager extends EventEmitter {
     private async initializeMenus(): Promise<void> {
         console.log("Menüler başlatılıyor");
         this.characters = this.modelsLoader.getAllCharacterData();
+        this.kits = this.modelsLoader.getAllKitData();
         if (!this.characters.length) {
-            console.warn("Karakter verileri yüklenemedi, modellerin yüklendiğinden emin olun.");
+            console.warn("Karakter verileri yüklenemedi.");
+        }
+        if (!this.kits.length) {
+            console.warn("Silah verileri yüklenemedi.");
         }
 
         const menuIds = [
             { key: 'main', id: 'main-menu' },
             { key: 'character', id: 'character-select' },
+            { key: 'kit', id: 'kit-select' },
             { key: 'scoreboard', id: 'scoreboard' },
             { key: 'settings', id: 'settings' },
             { key: 'pause', id: 'pause-menu' },
@@ -141,6 +134,7 @@ export class MenuManager extends EventEmitter {
 
         this.setupMenuListeners();
         this.createCharacterCarousel();
+        this.createKitCarousel();
     }
 
     private createCharacterCarousel(): void {
@@ -148,7 +142,7 @@ export class MenuManager extends EventEmitter {
         const characterGrid = document.querySelector('.character-grid');
         if (!characterGrid) {
             console.error("Karakter gridi bulunamadı (.character-grid)");
-            NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi! HTML yapısını kontrol edin.', 'error');
+            NotificationManager.getInstance().show('Karakter seçim ekranı yüklenemedi!', 'error');
             this.showMenu('main');
             return;
         }
@@ -157,17 +151,13 @@ export class MenuManager extends EventEmitter {
             console.warn("Karakter verileri boş, carousel oluşturulamıyor");
             this.characters = this.modelsLoader.getAllCharacterData();
             if (!this.characters.length) {
-                console.error("Karakter verileri hala yok!");
+                console.error("Karakter verileri yok!");
                 NotificationManager.getInstance().show('Karakter verileri yüklenemedi!', 'error');
                 return;
             }
         }
 
         characterGrid.innerHTML = this.generateCarouselHTML();
-        this.characters.forEach(char => {
-            this.setupCharacterPreview(char.id, char.modelPath);
-        });
-
         this.setupCharacterCardListeners();
         this.setupCarouselListeners();
         this.updateCarousel();
@@ -196,7 +186,7 @@ export class MenuManager extends EventEmitter {
         return `
             <div class="character-card" data-character="${char.id}">
                 <div class="character-preview">
-                    <canvas id="${char.id}-preview" class="character-canvas"></canvas>
+                    <img src="${char.photoPath}" alt="${char.name}" class="character-image" />
                 </div>
                 <div class="character-info">
                     <h3>${char.name}</h3>
@@ -223,147 +213,76 @@ export class MenuManager extends EventEmitter {
         `;
     }
 
-    private setupCharacterPreview(characterId: string, modelPath: string): void {
-        const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
-        if (!canvas) {
-            console.error(`Karakter önizleme canvas'ı bulunamadı: ${characterId}-preview`);
-            NotificationManager.getInstance().show(`Canvas bulunamadı: ${characterId}`, 'error');
+    private createKitCarousel(): void {
+        console.log("Silah carousel'i oluşturuluyor");
+        const kitGrid = document.querySelector('.kit-grid');
+        if (!kitGrid) {
+            console.error("Silah gridi bulunamadı (.kit-grid)");
+            NotificationManager.getInstance().show('Silah seçim ekranı yüklenemedi!', 'error');
+            this.showMenu('main');
             return;
         }
 
-        // Canvas boyutlarını ayarla
-        const parent = canvas.parentElement;
-        const width = parent?.clientWidth || 300;
-        const height = parent?.clientHeight || 200;
-        canvas.width = width * window.devicePixelRatio;
-        canvas.height = height * window.devicePixelRatio;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        console.log(`Canvas boyutları ayarlandı: ${characterId}, ${width}x${height}`);
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-        camera.position.set(0, 1.5, 3);
-        camera.lookAt(0, 1, 0);
-
-        // Paylaşılan renderer
-        const renderer = this.getSharedRenderer(canvas);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(width, height);
-
-        // Işıklandırma
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-        dirLight.position.set(2, 2, 2);
-        scene.add(ambientLight, dirLight);
-
-        // Test küpü (hata ayıklama için)
-        const testCube = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshStandardMaterial({ color: 0xff0000 })
-        );
-        scene.add(testCube);
-
-        this.characterPreviews.set(characterId, { scene, camera, renderer });
-
-        // Modeli yükle
-        const model = this.modelsLoader.getModel(characterId);
-        if (model) {
-            const clonedModel = model.scene.clone();
-            clonedModel.scale.set(1, 1, 1);
-            clonedModel.position.set(0, 0, 0);
-            scene.remove(testCube);
-            scene.add(clonedModel);
-            this.characterPreviews.get(characterId)!.model = clonedModel;
-            console.log(`Model yüklendi: ${characterId}`);
-            this.animatePreviews();
-        } else {
-            console.warn(`Model bulunamadı, yükleniyor: ${characterId}`);
-            this.loadingPromises.push(
-                new GLTFLoader().loadAsync(modelPath)
-                    .then(gltf => {
-                        const model = gltf.scene;
-                        model.scale.set(1, 1, 1);
-                        model.position.set(0, 0, 0);
-                        scene.remove(testCube);
-                        scene.add(model);
-                        const preview = this.characterPreviews.get(characterId);
-                        if (preview) {
-                            preview.model = model;
-                            console.log(`Model asenkron yüklendi: ${characterId}`);
-                            this.animatePreviews();
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`Karakter modeli yüklenemedi: ${characterId}`, error);
-                        NotificationManager.getInstance().show(`Model yüklenemedi: ${characterId}`, 'error');
-                    })
-            );
+        if (!this.kits.length) {
+            console.warn("Silah verileri boş, carousel oluşturulamıyor");
+            this.kits = this.modelsLoader.getAllKitData();
+            if (!this.kits.length) {
+                console.error("Silah verileri yok!");
+                NotificationManager.getInstance().show('Silah verileri yüklenemedi!', 'error');
+                return;
+            }
         }
+
+        kitGrid.innerHTML = this.generateKitCarouselHTML();
+        this.setupKitCardListeners();
+        this.setupKitCarouselListeners();
+        this.updateKitCarousel();
     }
 
-    private animatePreviews(): void {
-        const animate = () => {
-            this.characterPreviews.forEach((preview, characterId) => {
-                const canvas = document.getElementById(`${characterId}-preview`) as HTMLCanvasElement;
-                if (canvas?.offsetParent && preview.model) {
-                    preview.model.rotation.y += 0.01;
-                    preview.renderer.setViewport(0, 0, canvas.width, canvas.height);
-                    preview.renderer.render(preview.scene, preview.camera);
-                }
-            });
-            requestAnimationFrame(animate);
-        };
-        if (!this.characterPreviews.size) return;
-        animate();
+    private generateKitCarouselHTML(): string {
+        return `
+            <div class="kit-carousel-container">
+                <div class="kit-carousel">
+                    <div class="kit-cards-wrapper">
+                        ${this.kits.map(kit => this.generateKitCardHTML(kit)).join('')}
+                    </div>
+                </div>
+                <button class="carousel-button prev">◄</button>
+                <button class="carousel-button next">►</button>
+                <div class="kit-nav-dots">
+                    ${this.kits.map((_, i) => 
+                        `<span class="nav-dot${i === 0 ? ' active' : ''}" data-index="${i}"></span>`
+                    ).join('')}
+                </div>
+            </div>
+        `;
     }
 
-    private updateCharacterSelection(characterId: string): void {
-        this.characterSelectState = {
-            selectedId: characterId,
-            previousId: this.characterSelectState.selectedId,
-            selectionTime: new Date().toISOString(),
-            isConfirmed: false
-        };
-        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-    }
-
-    private confirmCharacterSelection(): void {
-        if (!this.characterSelectState.selectedId) {
-            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
-            return;
-        }
-        this.characterSelectState.isConfirmed = true;
-        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
-        NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
-        this.emit('characterConfirmed', this.characterSelectState.selectedId);
-        this.showMenu('main');
-    }
-
-    public cleanup(): void {
-        console.log("MenuManager temizleniyor");
-        this.characterPreviews.forEach((preview) => {
-            preview.scene.traverse((object: any) => {
-                if (object.geometry) object.geometry.dispose();
-                if (object.material) {
-                    if (Array.isArray(object.material)) {
-                        object.material.forEach((material: any) => material.dispose());
-                    } else {
-                        object.material.dispose();
-                    }
-                }
-            });
-            preview.scene.clear();
-        });
-        if (this.sharedRenderer) {
-            this.sharedRenderer.dispose();
-            this.sharedRenderer.forceContextLoss();
-            this.sharedRenderer = null;
-        }
-        this.characterPreviews.clear();
-        this.isLoading = false;
-        document.body.classList.remove('loading');
-        this.loadingPromises = [];
+    private generateKitCardHTML(kit: KitData): string {
+        return `
+            <div class="kit-card" data-kit="${kit.id}">
+                <div class="kit-preview">
+                    <img src="${kit.photoPath}" alt="${kit.name}" class="kit-image" />
+                </div>
+                <div class="kit-info">
+                    <h3>${kit.name}</h3>
+                    <div class="kit-stats">
+                        <div class="stat">
+                            <span class="stat-label">Ateş Hızı</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width: ${kit.stats.fireRate}%"></div>
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Hasar</span>
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width: ${kit.stats.damage}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     private setupCharacterCardListeners(): void {
@@ -380,11 +299,25 @@ export class MenuManager extends EventEmitter {
         });
     }
 
+    private setupKitCardListeners(): void {
+        console.log("Silah kartı dinleyicileri ayarlanıyor");
+        const cards = document.querySelectorAll('.kit-card');
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                const kitId = card.getAttribute('data-kit');
+                if (kitId) {
+                    console.log(`Silah seçildi: ${kitId}`);
+                    this.selectKit(kitId);
+                }
+            });
+        });
+    }
+
     private setupCarouselListeners(): void {
-        console.log("Carousel dinleyicileri ayarlanıyor");
-        const prevBtn = document.querySelector('.carousel-button.prev');
-        const nextBtn = document.querySelector('.carousel-button.next');
-        const navDots = document.querySelectorAll('.nav-dot');
+        console.log("Karakter carousel dinleyicileri ayarlanıyor");
+        const prevBtn = document.querySelector('.character-carousel-container .prev');
+        const nextBtn = document.querySelector('.character-carousel-container .next');
+        const navDots = document.querySelectorAll('.character-nav-dots .nav-dot');
 
         if (prevBtn) {
             prevBtn.addEventListener('click', () => {
@@ -405,15 +338,47 @@ export class MenuManager extends EventEmitter {
         navDots.forEach(dot => {
             dot.addEventListener('click', () => {
                 const index = parseInt(dot.getAttribute('data-index') || '0');
-                console.log(`Nav dot tıklandı: ${index}`);
+                console.log(`Karakter nav dot tıklandı: ${index}`);
                 this.currentCarouselIndex = index;
                 this.updateCarousel();
             });
         });
     }
 
+    private setupKitCarouselListeners(): void {
+        console.log("Silah carousel dinleyicileri ayarlanıyor");
+        const prevBtn = document.querySelector('.kit-carousel-container .prev');
+        const nextBtn = document.querySelector('.kit-carousel-container .next');
+        const navDots = document.querySelectorAll('.kit-nav-dots .nav-dot');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                console.log("Önceki silaha geçiş");
+                this.currentKitCarouselIndex = (this.currentKitCarouselIndex - 1 + this.kits.length) % this.kits.length;
+                this.updateKitCarousel();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                console.log("Sonraki silaha geçiş");
+                this.currentKitCarouselIndex = (this.currentKitCarouselIndex + 1) % this.kits.length;
+                this.updateKitCarousel();
+            });
+        }
+
+        navDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const index = parseInt(dot.getAttribute('data-index') || '0');
+                console.log(`Silah nav dot tıklandı: ${index}`);
+                this.currentKitCarouselIndex = index;
+                this.updateKitCarousel();
+            });
+        });
+    }
+
     private updateCarousel(): void {
-        console.log(`Carousel güncelleniyor: index ${this.currentCarouselIndex}`);
+        console.log(`Karakter carousel güncelleniyor: index ${this.currentCarouselIndex}`);
         const wrapper = document.querySelector('.character-cards-wrapper') as HTMLElement;
         if (wrapper) {
             wrapper.style.transform = `translateX(-${this.currentCarouselIndex * 320}px)`;
@@ -428,7 +393,7 @@ export class MenuManager extends EventEmitter {
             }
         });
 
-        const navDots = document.querySelectorAll('.nav-dot');
+        const navDots = document.querySelectorAll('.character-nav-dots .nav-dot');
         navDots.forEach((dot, index) => {
             if (index === this.currentCarouselIndex) {
                 dot.classList.add('active');
@@ -436,6 +401,118 @@ export class MenuManager extends EventEmitter {
                 dot.classList.remove('active');
             }
         });
+    }
+
+    private updateKitCarousel(): void {
+        console.log(`Silah carousel güncelleniyor: index ${this.currentKitCarouselIndex}`);
+        const wrapper = document.querySelector('.kit-cards-wrapper') as HTMLElement;
+        if (wrapper) {
+            wrapper.style.transform = `translateX(-${this.currentKitCarouselIndex * 320}px)`;
+        }
+
+        const cards = document.querySelectorAll('.kit-card');
+        cards.forEach((card, index) => {
+            if (index === this.currentKitCarouselIndex) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+
+        const navDots = document.querySelectorAll('.kit-nav-dots .nav-dot');
+        navDots.forEach((dot, index) => {
+            if (index === this.currentKitCarouselIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    private selectCharacter(characterId: string): void {
+    console.log("Character selection: ${characterId}");
+    document.querySelectorAll('.character-card').forEach(card => {
+        card.classList.remove('selected'));
+    });
+
+    const selectedCharacter = document.querySelector("[data-character="${characterId}"]");
+    if (selectedCharacterCard) {
+    {
+        selectedCard.classList.add('selected');
+        this.characterSelectState.selectedCharacterId = characterId;
+        this.characterSelectState.selectionTime = new Date().toISOString();
+        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+        console.log("Character selected: ${characterId}");
+        const index = this.characters.findIndex(char => char.id === characterId);
+        if (index !== -1) {
+            this.currentCarouselIndex = index;
+            this.updateCarousel();
+        }
+    } else {
+        console.error("Character card not found: ${characterId}");
+        NotificationManager.getInstance().show("Character card not found: ${characterId}", 'error');
+    }
+}
+
+    private selectKit(kitId: string): void {
+        console.log("Silah seçimi: ${kitId}");
+        document.querySelectorAll('.kit-card').forEach(card => {
+            card.classList.remove('selected'));
+        });
+
+        const selectedCard = document.querySelector("[data-kit="${kitId}""]`);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            this.characterSelectState.selectedKitId = kitId;
+            this.characterSelectState.selectionTime = new Date().toISOString();
+            localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+            console.log("Silah seçildi: ${kitId}");
+            const index = this.kits.findIndex(k => k.id === kitId);
+            if (index !== -1) {
+                this.currentKitCarouselIndex = index;
+                this.updateKitCarousel();
+            }
+        } else {
+            console.error("Silah kartı bulunamadı: ${kitId}");
+            NotificationManager.getInstance().show("Silah kartı bulunamadı: ${kitId}", 'error');
+        }
+    }
+
+    private confirmCharacterSelection(): void {
+        if (!this.characterSelectState.selectedCharacterId) {
+            NotificationManager.getInstance().show('Lütfen bir karakter seçin!', 'error');
+            return;
+        }
+        this.characterSelectState.isCharacterConfirmed = true;
+        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+        NotificationManager.getInstance().show('Karakter seçimi onaylandı!', 'success');
+        this.showMenu('kit');
+    }
+
+    private confirmKitSelection(): void {
+        if (!this.characterSelectState.selectedKitId) {
+            NotificationManager.getInstance().show('Lütfen bir silah seçin!', 'error');
+            return;
+        }
+        this.characterSelectState.isKitConfirmed = true;
+        localStorage.setItem('characterSelectState', JSON.stringify(this.characterSelectState));
+        NotificationManager.getInstance().show('Silah seçimi onaylandı!', 'success');
+        this.emit('characterSelected', this.characterSelectState.selectedCharacterId, this.characterSelectState.selectedKitId);
+        this.showMenu('main');
+    }
+
+    public getSelectedCharacterId(): string | null {
+        return this.characterSelectState.isCharacterConfirmed ? this.characterSelectState.selectedCharacterId : null;
+    }
+
+    public getSelectedKit(): string | null {
+        return this.characterSelectState.isKitConfirmed ? this.characterSelectState.selectedKitId : null;
+    }
+
+    public cleanup(): void {
+        console.log("MenuManager temizleniyor");
+        this.isLoading = false;
+        document.body.classList.remove('loading');
     }
 
     public showMenu(menuId: string): void {
@@ -455,6 +532,8 @@ export class MenuManager extends EventEmitter {
                 console.log(`Yeni menü gösterildi: ${menuId}`);
                 if (menuId === 'character') {
                     this.updateCarousel();
+                } else if (menuId === 'kit') {
+                    this.updateKitCarousel();
                 }
             } else {
                 console.error(`Menü bulunamadı: ${menuId}`);
@@ -466,30 +545,4 @@ export class MenuManager extends EventEmitter {
             console.log("Tüm menüler gizlendi");
         }
     }
-
-    private selectCharacter(characterId: string): void {
-        console.log(`Karakter seçimi: ${characterId}`);
-        document.querySelectorAll('.character-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-
-        const selectedCard = document.querySelector(`[data-character="${characterId}"]`);
-        if (selectedCard) {
-            selectedCard.classList.add('selected');
-            this.updateCharacterSelection(characterId);
-            console.log(`Karakter seçildi: ${characterId}`);
-            const index = this.characters.findIndex(char => char.id === characterId);
-            if (index !== -1) {
-                this.currentCarouselIndex = index;
-                this.updateCarousel();
-            }
-        } else {
-            console.error(`Karakter kartı bulunamadı: ${characterId}`);
-            NotificationManager.getInstance().show(`Karakter kartı bulunamadı: ${characterId}`, 'error');
-        }
-    }
-
-    public getSelectedCharacter(): string | null {
-        return this.characterSelectState.isConfirmed ? this.characterSelectState.selectedId : null;
-    }
-                                                    }
+}
