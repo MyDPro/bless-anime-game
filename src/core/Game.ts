@@ -12,7 +12,7 @@ interface GameState {
     health: number;
     ammo: number;
     selectedCharacter: string | null;
-    selectedKit: string | null; // Yeni alan
+    selectedKit: string | null;
     highScore: number;
     currentUser: string;
     lastPlayTime: string;
@@ -45,7 +45,7 @@ export class Game extends EventEmitter {
         selectedKit: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-27 18:31:00'
+        lastPlayTime: '2025-05-27 19:48:00'
     };
 
     private ui = {
@@ -59,7 +59,7 @@ export class Game extends EventEmitter {
     };
 
     private player: THREE.Object3D | null = null;
-    private weapon: THREE.Object3D | null = null; // Yeni alan
+    private weapon: THREE.Object3D | null = null;
     private blasters: THREE.Object3D[] = [];
     private enemies: THREE.Object3D[] = [];
     private moveState = {
@@ -135,7 +135,7 @@ export class Game extends EventEmitter {
         const year = now.getUTCFullYear();
         const month = String(now.getUTCMonth() + 1).padStart(2, '0');
         const day = String(now.getUTCDate()).padStart(2, '0');
-        const hours = String(now.getUTCHours() + 3).padStart(2, '0'); // +03:00
+        const hours = String(now.getUTCHours() + 3).padStart(2, '0');
         const minutes = String(now.getUTCMinutes()).padStart(2, '0');
         const seconds = String(now.getUTCSeconds()).padStart(2, '0');
         this.gameState.lastPlayTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
@@ -169,7 +169,7 @@ export class Game extends EventEmitter {
         if (this.menuManager) {
             this.menuManager.on('startGame', () => {
                 console.log("Oyun başlatılıyor");
-                const selectedCharacter = this.menuManager!.getSelectedCharacter();
+                const selectedCharacter = this.menuManager!.getSelectedCharacterId();
                 const selectedKit = this.menuManager!.getSelectedKit();
                 if (!selectedCharacter || !selectedKit) {
                     NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
@@ -234,11 +234,10 @@ export class Game extends EventEmitter {
             this.checkCollisions();
         }
 
-        // Silahı oyuncuya bağla
         if (this.weapon && this.player) {
             this.weapon.position.copy(this.player.position);
             this.weapon.rotation.copy(this.player.rotation);
-            this.weapon.position.y += 0.5; // Silahı el hizasına getir
+            this.weapon.position.y += 0.5;
             this.weapon.position.z -= 0.3;
         }
     }
@@ -414,10 +413,10 @@ export class Game extends EventEmitter {
     private updateUI(): void {
         if (this.ui.score.textContent !== `Skor: ${this.gameState.score}`) {
             this.ui.score.textContent = `Skor: ${this.gameState.score}`;
-            this.ui.healthTextContent = `Can: ${this.gameState.health}`;
+            this.ui.health.textContent = `Can: ${this.gameState.health}`;
             this.ui.ammo.textContent = `Mermi: ${this.gameState.ammo}`;
             this.ui.finalScore.textContent = `Skor: ${this.gameState.score}`;
-            this.ui.highScoreTextContent = `En Yüksek Skor: ${this.gameState.highScore}`;
+            this.ui.highScore.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
 
             const userInfoDiv = document.createElement('div');
             userInfoDiv.classList.add('user-info-item');
@@ -438,7 +437,7 @@ export class Game extends EventEmitter {
                     <span class="user-info-label">Son Oynama:</span>
                     <span class="user-info-value">${this.gameState.lastPlayTime}</span>
                 </div>
-            `</div>
+            `;
             const existingUserInfo = this.ui.uiContainer.querySelector('.user-info');
             if (!existingUserInfo) {
                 this.ui.uiContainer.querySelector('.ui-panel')?.appendChild(userInfoDiv);
@@ -455,78 +454,76 @@ export class Game extends EventEmitter {
     }
 
     private updateEnemies(deltaTime: number): void {
-        this.enemies.forEach(enemy => {});
+        this.enemies.forEach(enemy => {
+            // Düşman güncelleme mantığı
         });
-
-    public startGame(): void {
-    const selectedCharacter = this.menuManager?.getSelectedCharacter();
-    const selectedKit = this.menuManager?.getSelectedKit();
-    if (!selectedCharacter || !selectedKit) {
-        NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
-        this.menuManager?.showMenu('character');
-        return;
     }
 
-    this.gameState.selectedCharacter = selectedCharacter;
-    this.gameState.selectedKit = selectedKit;
-
-    // Modelleri yükle
-    Promise.all([
-        this.modelsLoader.loadCharacterModels([selectedCharacter]),
-            this.modelsLoader.loadKitModels([selectedKit])
-    ]).then(() => {
-        const characterModel = this.modelsLoader.getModel(selectedCharacter);
-        const kitModel = this.modelsLoader.getModel(selectedKit);
-        if (!characterModel || !kitModel) {
-            NotificationManager.getInstance().show(`Karakter veya silah modeli yüklenemedi: ${selectedCharacter}, ${selectedKit}`, 'error');
+    public startGame(): void {
+        const selectedCharacter: string | null = this.menuManager?.getSelectedCharacterId();
+        const selectedKit: string | null = this.menuManager?.getSelectedKit();
+        if (!selectedCharacter || !selectedKit) {
+            NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
             this.menuManager?.showMenu('character');
             return;
         }
 
-        NotificationManager.getInstance().show(`${this.gameState.currentUser} olarak ${selectedCharacter} ve ${selectedKit} ile oyuna başlandı!`, 'success');
+        this.gameState.selectedCharacter = selectedCharacter;
+        this.gameState.selectedKit = selectedKit;
 
-        // Eski oyuncuyu ve silahı kaldır
-        if (this.player) {
-            this.resources.scene.remove(this.player);
-        }
-        if (this.weapon) {
-            this.resources.scene.remove(this.weapon);
-        }
+        Promise.all([
+            this.modelsLoader.loadCharacterModels([selectedCharacter]),
+            this.modelsLoader.loadKitModels([selectedKit])
+        ]).then(() => {
+            const characterModel = this.modelsLoader.getModel(selectedCharacter);
+            const kitModel = this.modelsLoader.getModel(selectedKit);
+            if (!characterModel || !kitModel) {
+                NotificationManager.getInstance().show(`Karakter veya silah modeli yüklenemedi: ${selectedCharacter}, ${selectedKit}`, 'error');
+                this.menuManager?.showMenu('character');
+                return;
+            }
 
-        // Yeni karakter
-        this.player = characterModel.scene.clone();
-        if (!this.player) {
-            NotificationManager.getInstance().show('Karakter modeli klonlanamadı!', 'error');
-            return;
-        }
-        this.player.name = selectedCharacter;
-        this.player.position.set(0, 0, 0);
-        this.resources.scene.add(this.player);
+            NotificationManager.getInstance().show(`${this.gameState.currentUser} olarak ${selectedCharacter} ve ${selectedKit} ile oyuna başlandı!`, 'success');
 
-        // Yeni silah
-        this.weapon = kitModel.scene.clone();
-        if (!this.weapon) {
-            NotificationManager.getInstance().show('Silah modeli klonlanamadı!', 'error');
-            return;
-        }
-        this.weapon.name = selectedKit;
-        this.resources.scene.add(this.weapon);
+            if (this.player) {
+                this.resources.scene.remove(this.player);
+            }
+            if (this.weapon) {
+                this.resources.scene.remove(this.weapon);
+            }
 
-        this.gameState.isStarted = true;
-        this.gameState.isPaused = false;
-        this.gameState.score = 0;
-        this.gameState.health = 100;
-        this.gameState.ammo = 30;
-        this.setCurrentDateTime();
+            this.player = characterModel.scene.clone();
+            if (!this.player) {
+                NotificationManager.getInstance().show('Karakter modeli klonlanamadı!', 'error');
+                return;
+            }
+            this.player.name = selectedCharacter;
+            this.player.position.set(0, 1, 0);
+            this.resources.scene.add(this.player);
 
-        this.ui.uiContainer.classList.remove('hidden');
-        this.menuManager?.showMenu('none');
-        this.updateUI();
-    }).catch(error => {
-        console.error('Model yükleme hatası:', error);
-        NotificationManager.getInstance().show('Model yüklenemedi!', 'error');
-    });
-}
+            this.weapon = kitModel.scene.clone();
+            if (!this.weapon) {
+                NotificationManager.getInstance().show('Silah modeli klonlanamadı!', 'error');
+                return;
+            }
+            this.weapon.name = selectedKit;
+            this.resources.scene.add(this.weapon);
+
+            this.gameState.isStarted = true;
+            this.gameState.isPaused = false;
+            this.gameState.score = 0;
+            this.gameState.health = 100;
+            this.gameState.ammo = 30;
+            this.setCurrentDateTime();
+
+            this.ui.uiContainer.classList.remove('hidden');
+            this.menuManager?.showMenu('none');
+            this.updateUI();
+        }).catch(error => {
+            console.error('Model yükleme hatası:', error);
+            NotificationManager.getInstance().show('Model yüklenemedi!', 'error');
+        });
+    }
 
     private shoot(): void {
         if (this.gameState.ammo <= 0) {
@@ -540,12 +537,12 @@ export class Game extends EventEmitter {
             NotificationManager.getInstance().show('Mermi azalıyor!', 'warning');
         }
 
-        this.emit('weaponFired', this.gameState.ammo);
+        this.emit('weaponFired');
         this.updateUI();
 
         if (this.player && this.weapon) {
             const direction = new THREE.Vector3(0, 0, -1);
-            direction.apply(this.weaponQuaternion.quaternion));
+            direction.applyQuaternion(this.weapon.quaternion));
             this.raycaster.set(this.player.position, direction);
             const intersects = this.raycaster.intersectObjects(this.enemies);
             
@@ -587,7 +584,7 @@ export class Game extends EventEmitter {
 
         this.resources.controls = new OrbitControls(this.resources.camera, this.resources.renderer.domElement);
         this.resources.controls.enableDamping = true;
-        this.resources.controls.dampingFactor = 0.05;
+        this.controls.controls.dampingFactor = 0.05;
         this.resources.controls.target.set(0, 1, 0);
 
         this.platform = this.setupWorld();
