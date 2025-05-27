@@ -1,5 +1,4 @@
 // src/core/main.ts
-
 import { Game } from './Game';
 import { NotificationManager } from './NotificationManager';
 
@@ -9,10 +8,10 @@ import { NotificationManager } from './NotificationManager';
 };
 
 // Oyun başlatma
-window.addEventListener('load', () => {
+document.addEventListener('DOMContentLoaded', () => {
     console.log("Sayfa yüklendi");
-    const canvas = document.querySelector('#webgl-canvas');
-    if (canvas instanceof HTMLCanvasElement) {
+    const canvas = document.querySelector('#webgl-canvas') as HTMLCanvasElement;
+    if (canvas) {
         const game = new Game(canvas);
         NotificationManager.getInstance().show('Hoş geldin!', 'success');
     } else {
