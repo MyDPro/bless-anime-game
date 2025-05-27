@@ -1,0 +1,72 @@
+[
+    {
+        "id": "blaster_a",
+        "name": "Blaster A",
+        "modelPath": "/models/kit/blaster-a.glb",
+        "photoPath": "/models/kit/photo/blaster-a.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+    {
+        "id": "blaster_b",
+        "name": "Blaster B",
+        "modelPath": "/models/kit/blaster-b.glb",
+        "photoPath": "/models/kit/photo/blaster-b.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+  {
+        "id": "blaster_c",
+        "name": "Blaster C",
+        "modelPath": "/models/kit/blaster-c.glb",
+        "photoPath": "/models/kit/photo/blaster-c.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+  {
+        "id": "blaster_d",
+        "name": "Blaster D",
+        "modelPath": "/models/kit/blaster-d.glb",
+        "photoPath": "/models/kit/photo/blaster-d.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+  {
+        "id": "blaster_e",
+        "name": "Blaster E",
+        "modelPath": "/models/kit/blaster-e.glb",
+        "photoPath": "/models/kit/photo/blaster-e.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+  {
+        "id": "blaster_f",
+        "name": "Blaster F",
+        "modelPath": "/models/kit/blaster-f.glb",
+        "photoPath": "/models/kit/photo/blaster-f.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+  {
+        "id": "blaster_g",
+        "name": "Blaster G",
+        "modelPath": "/models/kit/blaster-g.glb",
+        "photoPath": "/models/kit/photo/blaster-g.png",
+        "stats": {
+            "fireRate": 80,
+            "damage": 50
+        }
+    },
+]
