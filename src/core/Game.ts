@@ -46,7 +46,7 @@ export class Game extends EventEmitter {
         selectedKit: null,
         highScore: 0,
         currentUser: 'MyDemir',
-        lastPlayTime: '2025-05-27 20:31:00'
+        lastPlayTime: '2025-05-27 21:10:00'
     };
 
     private ui = {
@@ -87,6 +87,14 @@ export class Game extends EventEmitter {
         this.loadGameState();
         this.setCurrentDateTime();
         
+        // Event listener’ları bağla
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
+        document.addEventListener('keyup', this.onKeyUp.bind(this));
+        document.addEventListener('mousedown', this.onMouseDown.bind(this));
+        document.addEventListener('mouseup', this.onMouseUp.bind(this));
+        document.addEventListener('mousemove', this.onMouseMove.bind(this));
+        window.addEventListener('resize', this.onWindowResize.bind(this));
+        
         this.initializeGame();
     }
 
@@ -115,15 +123,15 @@ export class Game extends EventEmitter {
         this.ui.uiContainer.classList.add('hidden');
         
         try {
-            await this.modelsLoader.initialize(); // Veri yüklemesini bekle
+            await this.modelsLoader.initialize();
             this.menuManager = new MenuManager(this.modelsLoader);
             this.setupMenuListeners();
             if (this.ui.loadingScreen) {
                 this.ui.loadingScreen.classList.add('fade-out');
                 await new Promise(resolve => setTimeout(resolve, 500));
                 this.ui.loadingScreen.classList.add('hidden');
-                this.menuManager.showMenu('main');
             }
+            this.menuManager.showMenu('main');
             this.animate();
             NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
         } catch (error) {
@@ -202,6 +210,8 @@ export class Game extends EventEmitter {
                 console.log("Ana menüye dönülüyor");
                 this.exitToMain();
             });
+        } else {
+            console.error("MenuManager başlatılmadı!");
         }
     }
 
@@ -267,12 +277,12 @@ export class Game extends EventEmitter {
             this.animationFrameId = null;
         }
 
-        window.removeEventListener('resize', this.onWindowResize.bind(this));
         document.removeEventListener('keydown', this.onKeyDown.bind(this));
         document.removeEventListener('keyup', this.onKeyUp.bind(this));
         document.removeEventListener('mousedown', this.onMouseDown.bind(this));
         document.removeEventListener('mouseup', this.onMouseUp.bind(this));
         document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+        window.removeEventListener('resize', this.onWindowResize.bind(this));
 
         while (this.resources.scene.children.length > 0) {
             const object = this.resources.scene.children[0];
@@ -343,7 +353,11 @@ export class Game extends EventEmitter {
     }
 
     private onKeyDown(event: KeyboardEvent): void {
-        if (!this.gameState.isStarted || this.gameState.isPaused) return;
+        console.log(`Key pressed: ${event.code}`);
+        if (!this.gameState.isStarted) {
+            console.log("Oyun başlamadı, ESC tuşu yok sayılıyor");
+            return;
+        }
 
         switch (event.code) {
             case 'KeyW':
@@ -366,6 +380,7 @@ export class Game extends EventEmitter {
                 this.moveState.jump = true;
                 break;
             case 'Escape':
+                console.log("ESC tuşuna basıldı, pause toggling...");
                 this.togglePause();
                 break;
         }
@@ -561,12 +576,21 @@ export class Game extends EventEmitter {
 
     private togglePause(): void {
         this.gameState.isPaused = !this.gameState.isPaused;
+        console.log(`Oyun durumu: isPaused=${this.gameState.isPaused}`);
         if (this.gameState.isPaused) {
-            NotificationManager.getInstance().show('Oyun duraklatıldı');
-            this.menuManager?.showMenu('pause');
+            NotificationManager.getInstance().show('Oyun duraklatıldı', 'warning');
+            if (this.menuManager) {
+                this.menuManager.showMenu('pause');
+                console.log("Pause menüsü gösterilmeye çalışılıyor");
+            } else {
+                console.error("MenuManager mevcut değil!");
+                NotificationManager.getInstance().show('Pause menüsü açılamadı!', 'error');
+            }
         } else {
             NotificationManager.getInstance().show('Oyun devam ediyor', 'success');
-            this.menuManager?.showMenu('none');
+            if (this.menuManager) {
+                this.menuManager.showMenu('none');
+            }
         }
     }
 
