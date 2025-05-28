@@ -18,7 +18,13 @@ export interface CharacterData {
     name: string;
     modelPath: string;
     photoPath: string;
-    stats: { speed: number; power: number };
+    stats: {
+        speed: number;
+        power: number;
+        health: number;
+        ability: string;
+        abilityDescription: string;
+    };
 }
 
 export interface KitData {
@@ -26,7 +32,12 @@ export interface KitData {
     name: string;
     modelPath: string;
     photoPath: string;
-    stats: { fireRate: number; damage: number };
+    stats: {
+        fireRate: number;
+        damage: number;
+        effect: string;
+        effectDescription: string;
+    };
 }
 
 export interface CityData {
@@ -37,8 +48,6 @@ export interface CityData {
         type: string;
         size: { width: number; height: number; depth: number };
         region: string[];
-        position: { x: number; y: number; z: number }; // Yeni: Konum
-        scale: number; // Yeni: Ölçek
     }[];
     roads: {
         id: string;
@@ -47,8 +56,6 @@ export interface CityData {
         type: string;
         size: { width: number; height: number; depth: number };
         region: string[];
-        position: { x: number; y: number; z: number }; // Yeni: Konum
-        scale: number; // Yeni: Ölçek
     }[];
     props: {
         id: string;
@@ -59,8 +66,6 @@ export interface CityData {
         region: string[];
         effect?: string;
         effectDescription?: string;
-        position: { x: number; y: number; z: number }; // Yeni: Konum
-        scale: number; // Yeni: Ölçek
     }[];
 }
 
@@ -71,7 +76,7 @@ export class ModelsLoader extends EventEmitter {
     private models: Map<string, GLTF>;
     private characterData: CharacterData[] = [];
     private kitData: KitData[] = [];
-    private cityData: CityData = { buildings: [], roads: [], props: [] }; // Yeni: Şehir verileri
+    private cityData: CityData = { buildings: [], roads: [], props: [] };
     private loadingPromises: Map<string, Promise<GLTF>> = new Map();
     private readonly MAX_RETRIES = 3;
     private readonly RETRY_DELAY = 1000;
