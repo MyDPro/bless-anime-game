@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
-// Veri tipi tanımları
+// Veri tipleri
 interface EnemyData {
   level: number;
   enemy_count: number;
@@ -21,6 +21,9 @@ interface StructureData {
 // Veri yükleme
 async function loadData<T>(file: string): Promise<T[]> {
   const response = await fetch(`/data/${file}`);
+  if (!response.ok) {
+    throw new Error(`Veri dosyası yüklenemedi: ${file}`);
+  }
   return await response.json();
 }
 
@@ -52,7 +55,7 @@ async function trainEnemyModel(): Promise<void> {
 
   await model.save('localstorage://enemy-selection-model');
   xs.dispose();
-  ys.delete();
+  ys.dispose();
 }
 
 // Yapı yerleşimi modeli
@@ -88,11 +91,16 @@ async function trainStructureModel(): Promise<void> {
 
   await model.save('localstorage://structure-placement-model');
   xs.dispose();
-  ys.delete();
+  ys.dispose();
 }
 
 // Eğitim başlat
 export async function trainModels(): Promise<void> {
-  await Promise.all([trainEnemyModel(), trainStructureModel()]);
-  console.log('Modeller eğitildi ve kaydedildi.');
+  try {
+    await Promise.all([trainEnemyModel(), trainStructureModel()]);
+    console.log('Modeller eğitildi ve kaydedildi.');
+  } catch (error) {
+    console.error('Model eğitimi hatası:', error);
+    throw error;
+  }
 }
