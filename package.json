@@ -15,8 +15,9 @@
     "@tensorflow/tfjs": "^4.22.0"
   },
   "devDependencies": {
-    "@types/three": "^0.150.1",
-    "esbuild": "^0.25.4"
+    "@types/three": "^0.169.0",
+    "esbuild": "^0.25.4",
+    "@tensorflow/tfjs": "^4.22.0"
   },
   "bls": {
     "functionId": "bless-function_bless-anime-game-1.0.0"
