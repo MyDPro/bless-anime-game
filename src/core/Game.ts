@@ -105,25 +105,26 @@ export class Game extends EventEmitter {
     }
 
     private initializeResources(canvas: HTMLCanvasElement): GameResources {
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xbfd1e5);
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xbfd1e5);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 5, 10);
-        camera.lookAt(0, 1, 0);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000); // far: 1000 -> 2000
+    camera.position.set(0, 50, 100); // Daha geniş görüş
+    camera.lookAt(0, 1, 0);
 
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.target.set(0, 1, 0);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.target.set(0, 1, 0);
+    controls.maxDistance = 200; // Daha büyük harita için
 
-        return { scene, camera, renderer, controls };
-    }
+    return { scene, camera, renderer, controls };
+}
 
     private async initializeGame(): Promise<void> {
         this.ui.uiContainer.classList.add('hidden');
@@ -239,36 +240,36 @@ export class Game extends EventEmitter {
     }
 
     private updatePlayerMovement(deltaTime: number): void {
-        if (!this.player) return;
+    if (!this.player) return;
 
-        this.moveDirection.set(0, 0, 0);
+    this.moveDirection.set(0, 0, 0);
 
-        if (this.moveState.forward) this.moveDirection.z -= 1;
-        if (this.moveState.backward) this.moveDirection.z += 1;
-        if (this.moveState.left) this.moveDirection.x -= 1;
-        if (this.moveState.right) this.moveDirection.x += 1;
+    if (this.moveState.forward) this.moveDirection.z -= 1;
+    if (this.moveState.backward) this.moveDirection.z += 1;
+    if (this.moveState.left) this.moveDirection.x -= 1;
+    if (this.moveState.right) this.moveDirection.x += 1;
 
-        if (this.moveDirection.length() > 0) {
-            const speed = this.characterStats ? this.characterStats.speed / 10 : this.movementSpeed;
-            this.moveDirection.normalize().multiplyScalar(speed * deltaTime);
-            this.player.position.add(this.moveDirection);
-            this.checkCollisions();
-        }
-
-        if (this.weapon && this.player) {
-            this.weapon.position.copy(this.player.position);
-            this.weapon.rotation.copy(this.player.rotation);
-            this.weapon.position.y += 0.5;
-            this.weapon.position.z -= 0.3;
-
-            this.resources.camera.position.set(
-                this.player.position.x,
-                this.player.position.y + 5,
-                this.player.position.z + 10
-            );
-            this.resources.camera.lookAt(this.player.position);
-        }
+    if (this.moveDirection.length() > 0) {
+        const speed = this.characterStats ? this.characterStats.speed / 5 : 10; // Hız artır (5 -> 10)
+        this.moveDirection.normalize().multiplyScalar(speed * deltaTime);
+        this.player.position.add(this.moveDirection);
+        this.checkCollisions();
     }
+
+    if (this.weapon && this.player) {
+        this.weapon.position.copy(this.player.position);
+        this.weapon.rotation.copy(this.player.rotation);
+        this.weapon.position.y += 0.5;
+        this.weapon.position.z -= 0.3;
+
+        this.resources.camera.position.set(
+            this.player.position.x,
+            this.player.position.y + 10, // Daha yukarı
+            this.player.position.z + 20 // Daha uzak
+        );
+        this.resources.camera.lookAt(this.player.position);
+    }
+}
 
     private checkCollisions(): void {
         if (!this.player) return;
@@ -566,9 +567,9 @@ export class Game extends EventEmitter {
     }
 
     private calculateMapDensity(): number {
-        const buildingCount = this.aiManager.getStructures().length;
-        return buildingCount / 100;
-    }
+    const buildingCount = this.aiManager.getStructures().length;
+    return Math.min(buildingCount / 200, 1); // 200 bina = max yoğunluk, veri ile uyumlu
+}
 
     private updateLevel(): void {
         const newLevel = Math.floor(this.gameState.score / 50) + 1;
