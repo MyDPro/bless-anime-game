@@ -29,6 +29,35 @@ export interface KitData {
     stats: { fireRate: number; damage: number };
 }
 
+export interface CityData {
+    buildings: {
+        id: string;
+        name: string;
+        modelPath: string;
+        type: string;
+        size: { width: number; height: number; depth: number };
+        region: string[];
+    }[];
+    roads: {
+        id: string;
+        name: string;
+        modelPath: string;
+        type: string;
+        size: { width: number; height: number; depth: number };
+        region: string[];
+    }[];
+    props: {
+        id: string;
+        name: string;
+        modelPath: string;
+        type: string;
+        size: { width: number; height: number; depth: number };
+        region: string[];
+        effect?: string;
+        effectDescription?: string;
+    }[];
+}
+
 export class ModelsLoader extends EventEmitter {
     private loader: GLTFLoader;
     private dracoLoader: DRACOLoader;
@@ -36,6 +65,7 @@ export class ModelsLoader extends EventEmitter {
     private models: Map<string, GLTF>;
     private characterData: CharacterData[] = [];
     private kitData: KitData[] = [];
+    private cityData: CityData = { buildings: [], roads: [], props: [] };
     private loadingPromises: Map<string, Promise<GLTF>> = new Map();
     private readonly MAX_RETRIES = 3;
     private readonly RETRY_DELAY = 1000;
@@ -54,9 +84,9 @@ export class ModelsLoader extends EventEmitter {
 
     public async initialize(): Promise<void> {
         try {
-            await Promise.all([this.loadCharacterData(), this.loadKitData()]);
+            await Promise.all([this.loadCharacterData(), this.loadKitData(), this.loadCityData()]);
             this.isDataLoaded = true;
-            console.log(`Veri yükleme tamamlandı: ${this.characterData.length} karakter, ${this.kitData.length} silah`);
+            console.log(`Veri yükleme tamamlandı: ${this.characterData.length} karakter, ${this.kitData.length} silah, şehir verileri yüklendi`);
             NotificationManager.getInstance().show('Veriler yüklendi!', 'success');
         } catch (error) {
             console.error('Veri yükleme hatası:', error);
@@ -95,6 +125,21 @@ export class ModelsLoader extends EventEmitter {
         } catch (error) {
             console.error('Silah verileri yüklenemedi:', error);
             NotificationManager.getInstance().show('Silah verileri yüklenemedi!', 'error');
+            throw error;
+        }
+    }
+
+    private async loadCityData(): Promise<void> {
+        try {
+            const response = await fetch('/data/citys.json', { cache: 'no-cache' });
+            if (!response.ok) {
+                throw new Error(`Citys.json dosyası bulunamadı: ${response.status}`);
+            }
+            this.cityData = await response.json();
+            console.log('Şehir verileri yüklendi:', this.cityData.buildings.length, 'bina,', this.cityData.roads.length, 'yol,', this.cityData.props.length, 'çevre elemanı');
+        } catch (error) {
+            console.error('Şehir verileri yüklenemedi:', error);
+            NotificationManager.getInstance().show('Şehir verileri yüklenemedi!', 'error');
             throw error;
         }
     }
@@ -246,6 +291,69 @@ export class ModelsLoader extends EventEmitter {
         }
     }
 
+    async loadCityModels(): Promise<void> {
+        try {
+            console.log('Şehir modelleri yükleme başlıyor...');
+            this.emit(MODEL_EVENTS.LOAD_START);
+
+            if (!this.cityData.buildings.length && !this.cityData.roads.length && !this.cityData.props.length) {
+                await this.loadCityData();
+                if (!this.cityData.buildings.length && !this.cityData.roads.length && !this.cityData.props.length) {
+                    throw new Error('Şehir verileri yüklenemedi');
+                }
+            }
+
+            const modelsToLoad = [
+                ...this.cityData.buildings.map(b => ({ id: b.id, path: b.modelPath, name: b.name })),
+                ...this.cityData.roads.map(r => ({ id: r.id, path: r.modelPath, name: r.name })),
+                ...this.cityData.props.map(p => ({ id: p.id, path: p.modelPath, name: p.name })),
+            ];
+
+            const totalModels = modelsToLoad.length;
+            let loadedCount = 0;
+
+            const loadPromises = modelsToLoad.map(async (item) => {
+                if (this.loadingPromises.has(item.id)) {
+                    return this.loadingPromises.get(item.id);
+                }
+
+                const loadPromise = this.loadModelWithRetry(item.path)
+                    .then(model => {
+                        model.scene.name = item.id;
+                        this.models.set(item.id, model);
+                        loadedCount++;
+                        this.emit(MODEL_EVENTS.LOAD_PROGRESS, {
+                            modelId: item.id,
+                            progress: (loadedCount / totalModels) * 100,
+                            total: totalModels,
+                            loaded: loadedCount,
+                        });
+                        console.log(`${item.name} modeli yüklendi (${loadedCount}/${totalModels})`);
+                        return model;
+                    })
+                    .catch(error => {
+                        console.error(`${item.name} yüklenirken hata:`, error);
+                        NotificationManager.getInstance().show(`${item.name} yüklenemedi!`, 'error');
+                        this.emit(MODEL_EVENTS.LOAD_ERROR, item.id, error);
+                        throw error;
+                    });
+
+                this.loadingPromises.set(item.id, loadPromise);
+                return loadPromise;
+            });
+
+            await Promise.all(loadPromises);
+            this.emit(MODEL_EVENTS.LOAD_SUCCESS, modelsToLoad);
+            console.log('Tüm şehir modelleri yüklendi');
+            NotificationManager.getInstance().show('Tüm şehir modelleri yüklendi!', 'success');
+        } catch (error) {
+            console.error('Şehir modelleri yüklenirken hata:', error);
+            NotificationManager.getInstance().show('Şehir modelleri yüklenemedi!', 'error');
+            this.emit(MODEL_EVENTS.LOAD_ERROR, 'all', error);
+            throw error;
+        }
+    }
+
     getModel(modelId: string): GLTF | undefined {
         return this.models.get(modelId);
     }
@@ -264,6 +372,10 @@ export class ModelsLoader extends EventEmitter {
 
     getKitData(kitId: string): KitData | undefined {
         return this.kitData.find(kit => kit.id === kitId);
+    }
+
+    getCityData(): CityData {
+        return this.cityData;
     }
 
     isModelLoaded(modelId: string): boolean {
@@ -294,6 +406,7 @@ export class ModelsLoader extends EventEmitter {
         this.models.clear();
         this.characterData = [];
         this.kitData = [];
+        this.cityData = { buildings: [], roads: [], props: [] };
         this.isDataLoaded = false;
         this.dracoLoader.dispose();
     }
