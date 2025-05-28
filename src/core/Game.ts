@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { MenuManager } from './MenuManager';
-import { ModelsLoader } from '../utils/loadModels';
+import { ModelsLoader, CharacterData, KitData } from '../utils/loadModels';
 import { AIManager } from '../ai/AIManager';
 import { EventEmitter } from '../utils/EventEmitter';
 import { NotificationManager } from './NotificationManager';
@@ -18,7 +18,7 @@ interface GameState {
     highScore: number;
     currentUser: string;
     lastPlayTime: string;
-    level: number; // Yeni: Seviye takibi
+    level: number;
 }
 
 interface GameResources {
@@ -50,7 +50,7 @@ export class Game extends EventEmitter {
         highScore: 0,
         currentUser: 'MyDemir',
         lastPlayTime: '2025-05-27 21:10:00',
-        level: 1 // Yeni: Başlangıç seviyesi
+        level: 1
     };
 
     private ui = {
@@ -61,12 +61,11 @@ export class Game extends EventEmitter {
         loadingScreen: document.getElementById('loading-screen') as HTMLElement,
         finalScore: document.getElementById('final-score') as HTMLElement,
         highScore: document.getElementById('high-score') as HTMLElement,
-        task: document.getElementById('task') as HTMLElement // Yeni: Görev UI
+        task: document.getElementById('task') as HTMLElement
     };
 
     private player: THREE.Object3D | null = null;
     private weapon: THREE.Object3D | null = null;
-    private blasters: THREE.Object3D[] = [];
     private moveState = {
         forward: false,
         backward: false,
@@ -79,7 +78,9 @@ export class Game extends EventEmitter {
     private readonly ROTATION_SPEED = 2;
     private readonly raycaster = new THREE.Raycaster();
     private readonly moveDirection = new THREE.Vector3();
-    private abilityCooldowns: Map<string, number> = new Map(); // Yeni: Yetenek soğuma süreleri
+    private abilityCooldowns: Map<string, number> = new Map();
+    private characterStats: CharacterData['stats'] | null = null;
+    private kitStats: KitData['stats'] | null = null;
 
     constructor(canvas: HTMLCanvasElement) {
         super();
@@ -107,9 +108,9 @@ export class Game extends EventEmitter {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xbfd1e5);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(5, 5, 5);
-        camera.lookAt(0, 0, 0);
+        const camera = new THIRD.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 5, 10); // Oyuncuyu takip için başlangıç pozisyonu
+        camera.lookAt(0, 1, 0);
 
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -129,7 +130,7 @@ export class Game extends EventEmitter {
 
         try {
             await this.modelsLoader.initialize();
-            await this.modelsLoader.loadCityModels(); // Yeni: Şehir modellerini yükle
+            await this.modelsLoader.loadCityModels(); // Şehir modellerini yükle
             this.menuManager = new MenuManager(this.modelsLoader);
             this.setupMenuListeners();
             if (this.ui.loadingScreen) {
@@ -142,7 +143,7 @@ export class Game extends EventEmitter {
             NotificationManager.getInstance().show('Oyun yüklendi!', 'success');
         } catch (error) {
             console.error('Oyun başlatılamadı:', error);
-            NotificationManager.getInstance().show('Oyun başlatılamadı! Lütfen sayfayı yenileyin.', 'error');
+            NotificationManager.getInstance().show('Oyun başlatılamadı!', 'error');
         }
     }
 
@@ -176,7 +177,7 @@ export class Game extends EventEmitter {
             lastPlayTime: this.gameState.lastPlayTime,
             selectedCharacter: this.gameState.selectedCharacter,
             selectedKit: this.gameState.selectedKit,
-            level: this.gameState.level // Yeni: Seviye kaydediliyor
+            level: this.gameState.level
         };
         localStorage.setItem('gameState', JSON.stringify(stateToSave));
         localStorage.setItem('highScore', this.gameState.highScore.toString());
@@ -248,7 +249,8 @@ export class Game extends EventEmitter {
         if (this.moveState.right) this.moveDirection.x += 1;
 
         if (this.moveDirection.length() > 0) {
-            this.moveDirection.normalize().multiplyScalar(this.MOVEMENT_SPEED * deltaTime);
+            const speed = this.characterStats ? this.characterStats.speed / 10 : this.MOVEMENT_SPEED;
+            this.moveDirection.normalize().multiplyScalar(speed * deltaTime);
             this.player.position.add(this.moveDirection);
             this.checkCollisions();
         }
@@ -284,6 +286,24 @@ export class Game extends EventEmitter {
                 this.player.position.y = intersects[0].point.y + 0.5;
             }
         }
+
+        // Sağlık kiti veya görev nesneleriyle çarpışma
+        this.resources.scene.children.forEach(obj => {
+            if (obj.userData.type === 'prop' && obj.userData.effect) {
+                const distance = this.player.position.distanceTo(obj.position);
+                if (distance < 1.5) {
+                    if (obj.userData.effect === 'health_kit') {
+                        this.gameState.health = Math.min(this.gameState.health + 20, this.characterStats?.health || 100);
+                        NotificationManager.getInstance().show('Sağlık kiti alındı! +20 HP', 'success');
+                        this.resources.scene.remove(obj);
+                    } else if (obj.userData.effect === 'quest') {
+                        this.aiManager.generateDynamicTask(this.gameState.level);
+                        NotificationManager.getInstance().show('Yeni görev alındı!', 'success');
+                        this.resources.scene.remove(obj);
+                    }
+                }
+            }
+        });
     }
 
     public cleanup(): void {
@@ -325,7 +345,9 @@ export class Game extends EventEmitter {
         this.gameState.level = 1;
         this.player = null;
         this.weapon = null;
-        this.blasters = [];
+        this.characterStats = null;
+        this.kitStats = null;
+        this.abilityCooldowns.clear();
         this.saveGameState();
     }
 
@@ -340,14 +362,14 @@ export class Game extends EventEmitter {
         dirLight.shadow.mapSize.height = 512;
         dirLight.shadow.camera.near = 0.5;
         dirLight.shadow.camera.far = 50;
-        dirLight.shadow.camera.left = -10;
-        dirLight.shadow.camera.right = 10;
-        dirLight.shadow.camera.top = 10;
-        dirLight.shadow.camera.bottom = -10;
+        dirLight.shadow.camera.left = -25;
+        dirLight.shadow.camera.right = 25;
+        dirLight.shadow.camera.top = 25;
+        dirLight.shadow.camera.bottom = -25;
         this.resources.scene.add(dirLight);
 
         const platform = new THREE.Mesh(
-            new THREE.BoxGeometry(50, 0.5, 50), // Platform boyutunu artırdık
+            new THREE.BoxGeometry(50, 0.5, 50),
             new THREE.MeshStandardMaterial({
                 color: 0x808080,
                 roughness: 0.7,
@@ -363,11 +385,31 @@ export class Game extends EventEmitter {
         cityData.buildings.forEach(data => {
             const model = this.modelsLoader.getModel(data.id)?.scene.clone();
             if (model) {
-                model.position.set(data.position.x, data.position.y, data.position.z);
-                model.scale.setScalar(data.scale || 1);
+                model.position.set(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
+                model.scale.setScalar(1);
                 model.userData = { type: 'building' };
                 this.resources.scene.add(model);
                 this.aiManager.getStructures().push(model);
+            }
+        });
+
+        cityData.roads.forEach(data => {
+            const model = this.modelsLoader.getModel(data.id)?.scene.clone();
+            if (model) {
+                model.position.set(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
+                model.scale.setScalar(1);
+                model.userData = { type: 'road' };
+                this.resources.scene.add(model);
+            }
+        });
+
+        cityData.props.forEach(data => {
+            const model = this.modelsLoader.getModel(data.id)?.scene.clone();
+            if (model) {
+                model.position.set(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
+                model.scale.setScalar(1);
+                model.userData = { type: 'prop', effect: data.effect, effectDescription: data.effectDescription };
+                this.resources.scene.add(model);
             }
         });
 
@@ -411,11 +453,10 @@ export class Game extends EventEmitter {
                 console.log("ESC tuşuna basıldı, pause toggling...");
                 this.togglePause();
                 break;
-            case 'KeyE': // Yeni: Görünmezlik yeteneği
-                this.activateAbility('invisibility');
-                break;
-            case 'KeyQ': // Yeni: Kılıç darbesi yeteneği
-                this.activateAbility('slash');
+            case 'KeyE':
+                if (this.characterStats) {
+                    this.activateAbility(this.characterStats.ability);
+                }
                 break;
         }
     }
@@ -469,7 +510,7 @@ export class Game extends EventEmitter {
             this.ui.finalScore.textContent = `Skor: ${this.gameState.score}`;
             this.ui.highScore.textContent = `En Yüksek Skor: ${this.gameState.highScore}`;
             this.ui.task.textContent = this.aiManager.getCurrentTask() 
-                ? `Görev: ${this.aiManager.getCurrentTask()!.description}` 
+                ? `Görev: ${this.aiManager.getCurrentTask()!.description} (${this.aiManager.getCurrentTask()!.progress}/${this.aiManager.getCurrentTask()!.target})`
                 : 'Görev yok';
 
             const userInfoDiv = document.createElement('div');
@@ -509,10 +550,9 @@ export class Game extends EventEmitter {
         this.updatePlayerMovement(deltaTime);
         this.updateEnemies(deltaTime);
         this.checkCollisions();
-        this.updateAbilities(deltaTime); // Yeni: Yetenekleri güncelle
+        this.updateAbilities(deltaTime);
         this.updateUI();
 
-        // AI ile düşman ve yapı ekleme
         const mapDensity = this.calculateMapDensity();
         if (Math.random() < 0.01) {
             this.aiManager.spawnEnemy(this.gameState.level, this.aiManager.getEnemies().length, mapDensity);
@@ -524,7 +564,6 @@ export class Game extends EventEmitter {
             this.aiManager.generateDynamicTask(this.gameState.level);
         }
 
-        // Seviye ilerlemesi
         this.updateLevel();
     }
 
@@ -539,6 +578,7 @@ export class Game extends EventEmitter {
             this.gameState.level = newLevel;
             NotificationManager.getInstance().show(`Seviye ${newLevel}!`, 'success');
             this.aiManager.generateDynamicTask(this.gameState.level);
+            this.aiManager.spawnEvent(this.gameState.level); // Seviye 3'te sağlık kiti
             this.saveGameState();
         }
     }
@@ -560,24 +600,175 @@ export class Game extends EventEmitter {
         const cooldown = this.abilityCooldowns.get(ability) || 0;
         if (now < cooldown) return;
 
+        if (!this.player || !this.characterStats) return;
+
+        let effectApplied = false;
+
         switch (ability) {
             case 'invisibility':
-                this.setOpacity(this.player!, 0.3);
-                setTimeout(() => this.setOpacity(this.player!, 1.0), 5000);
+                this.setOpacity(this.player, 0.2);
+                this.MOVEMENT_SPEED *= 1.2; // Hız +20%
+                setTimeout(() => {
+                    this.setOpacity(this.player!, 1.0);
+                    this.MOVEMENT_SPEED /= 1.2;
+                }, 3000);
                 this.abilityCooldowns.set(ability, now + 10000); // 10s cooldown
-                NotificationManager.getInstance().show('Görünmezlik aktif!', 'success');
+                effectApplied = true;
                 break;
-            case 'slash':
-                const slash = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.5, 16, 16),
-                    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            case 'sword_slash':
+                this.createAreaEffect(3, 1.5 * this.characterStats.power, 0xff0000);
+                this.abilityCooldowns.set(ability, now + 8000); // 8s cooldown
+                effectApplied = true;
+                break;
+            case 'dash_leap':
+                this.player.position.add(this.player.getWorldDirection(new THREE.Vector3()).multiplyScalar(5));
+                this.gameState.health += 1000; // Geçici hasar koruma
+                setTimeout(() => this.gameState.health -= 1000, 1000);
+                this.abilityCooldowns.set(ability, now + 6000); // 6s cooldown
+                effectApplied = true;
+                break;
+            case 'energy_burst':
+                this.createAreaEffect(2, this.characterStats.power, 0x00ff00);
+                this.aiManager.getEnemies().forEach(enemy => {
+                    if (enemy.model.position.distanceTo(this.player!.position) < 2) {
+                        enemy.speed *= 0.7; // %30 yavaşlatma
+                        setTimeout(() => enemy.speed /= 0.7, 1000);
+                    }
+                });
+                this.abilityCooldowns.set(ability, now + 7000); // 7s cooldown
+                effectApplied = true;
+                break;
+            case 'trap_setup':
+                const trap = new THREE.Mesh(
+                    new THREE.CircleGeometry(0.5, 16),
+                    new THREE.MeshBasicMaterial({ color: 0xffff00 })
                 );
-                slash.position.copy(this.player!.position);
-                this.resources.scene.add(slash);
-                setTimeout(() => this.resources.scene.remove(slash), 200);
-                this.abilityCooldowns.set(ability, now + 5000); // 5s cooldown
-                NotificationManager.getInstance().show('Kılıç darbesi!', 'success');
+                trap.position.copy(this.player.position);
+                trap.rotation.x = -Math.PI / 2;
+                this.resources.scene.add(trap);
+                const trapInterval = setInterval(() => {
+                    this.aiManager.getEnemies().forEach(enemy => {
+                        if (enemy.model.position.distanceTo(trap.position) < 0.5) {
+                            enemy.health -= 50;
+                            if (enemy.health <= 0) {
+                                this.resources.scene.remove(enemy.model);
+                                this.aiManager.getEnemies().splice(this.aiManager.getEnemies().indexOf(enemy), 1);
+                                this.gameState.score += 10;
+                                this.aiManager.updateTaskProgress(true);
+                            }
+                        }
+                    });
+                }, 100);
+                setTimeout(() => {
+                    clearInterval(trapInterval);
+                    this.resources.scene.remove(trap);
+                }, 5000);
+                this.abilityCooldowns.set(ability, now + 12000); // 12s cooldown
+                effectApplied = true;
                 break;
+            case 'power_shield':
+                this.gameState.health += 1000; // Geçici hasar azaltma
+                setTimeout(() => this.gameState.health -= 1000, 5000);
+                this.abilityCooldowns.set(ability, now + 10000); // 10s cooldown
+                effectApplied = true;
+                break;
+            case 'double_shot':
+                this.kitStats!.damage *= 0.75;
+                this.kitStats!.fireRate *= 2;
+                setTimeout(() => {
+                    this.kitStats!.damage /= 0.75;
+                    this.kitStats!.fireRate /= 2;
+                }, 1000);
+                this.abilityCooldowns.set(ability, now + 8000); // 8s cooldown
+                effectApplied = true;
+                break;
+            case 'seismic_strike':
+                this.createAreaEffect(3, 1.2 * this.characterStats.power, 0x0000ff);
+                this.aiManager.getEnemies().forEach(enemy => {
+                    if (enemy.model.position.distanceTo(this.player!.position) < 3) {
+                        enemy.speed = 0;
+                        setTimeout(() => enemy.speed = enemy.type === 'fast' ? 80 : 50, 1000);
+                    }
+                });
+                this.abilityCooldowns.set(ability, now + 9000); // 9s cooldown
+                effectApplied = true;
+                break;
+            case 'speed_surge':
+                this.MOVEMENT_SPEED *= 1.5;
+                this.characterStats.power *= 0.8;
+                setTimeout(() => {
+                    this.MOVEMENT_SPEED /= 1.5;
+                    this.characterStats!.power /= 0.8;
+                }, 5000);
+                this.abilityCooldowns.set(ability, now + 10000); // 10s cooldown
+                effectApplied = true;
+                break;
+            case 'heavy_strike':
+                const target = this.aiManager.getEnemies().find(enemy => 
+                    enemy.model.position.distanceTo(this.player!.position) < 2);
+                if (target) {
+                    target.health -= 2 * this.characterStats.power;
+                    if (target.health <= 0) {
+                        this.resources.scene.remove(target.model);
+                        this.aiManager.getEnemies().splice(this.aiManager.getEnemies().indexOf(target), 1);
+                        this.gameState.score += 10;
+                        this.aiManager.updateTaskProgress(true);
+                    }
+                    this.MOVEMENT_SPEED = 0;
+                    setTimeout(() => this.MOVEMENT_SPEED = this.characterStats!.speed / 10, 2000);
+                }
+                this.abilityCooldowns.set(ability, now + 10000); // 10s cooldown
+                effectApplied = true;
+                break;
+            case 'smoke_bomb':
+                this.createAreaEffect(3, 0, 3);
+                this.abilityCooldowns.set(ability, now + 10000); // 10s cooldown
+                effectApplied = true;
+                break;
+            case 'life_steal':
+                const lifeStealTarget = this.aiManager.getEnemies().find(enemy => 
+                    enemy.model.position.distanceTo(this.player!.position) < 2);
+                if (lifeStealTarget) {
+                    lifeStealTarget.health -= this.characterStats.power;
+                    this.gameState.health += this.characterStats.power / 2;
+                    if (lifeStealTarget.health <= 0) {
+                        this.resources.scene.remove(lifeStealTarget.model);
+                        this.aiManager.getEnemies().splice(this.aiManager.getEnemies().indexOf(lifeStealTarget), 1);
+                        this.gameState.score += 10;
+                        this.aiManager.updateTaskProgress(true);
+                    }
+                }
+                this.abilityCooldowns.set(ability, now + 8000); // 8s cooldown
+                effectApplied = true;
+                break;
+        }
+
+        if (effectApplied) {
+            NotificationManager.getInstance().show(`${this.characterStats!.abilityDescription}`, 'success');
+        }
+    }
+
+    private createAreaEffect(radius: number, damage: number, color: number): void {
+        const effect = new THREE.Mesh(
+            new THREE.SphereGeometry(radius, 16, 16),
+            new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.3 })
+        );
+        effect.position.copy(this.player!.position);
+        this.resources.scene.add(effect);
+        setTimeout(() => this.resources.scene.remove(effect), 200);
+
+        if (damage > 0) {
+            this.aiManager.getEnemies().forEach(enemy => {
+                if (enemy.model.position.distanceTo(this.player!.position) < radius) {
+                    enemy.health -= damage;
+                    if (enemy.health <= 0) {
+                        this.resources.scene.remove(enemy.model);
+                        this.aiManager.getEnemies().splice(this.aiManager.getEnemies().indexOf(enemy), 1);
+                        this.gameState.score += 10;
+                        this.aiManager.updateTaskProgress(true);
+                    }
+                }
+            });
         }
     }
 
@@ -593,33 +784,47 @@ export class Game extends EventEmitter {
 
     private updateAbilities(deltaTime: number): void {
         // Yeteneklerin süresini veya etkisini güncelleyebilir
+        this.aiManager.getEnemies().forEach(enemy => {
+            if (enemy.model.position.distanceTo(this.player!.position) < 1) {
+                const damage = enemy.damage * deltaTime;
+                this.gameState.health -= damage;
+                if (this.gameState.health <= 0) {
+                    this.endGame();
+                }
+            }
+        });
     }
 
     public startGame(): void {
-        const selectedCharacter = this.menuManager?.getSelectedCharacterId();
-        const selectedKit = this.menuManager?.getSelectedKit();
-        if (!selectedCharacter || !selectedKit) {
+        const selectedCharacterId = this.menuManager?.getSelectedCharacter();
+        const selectedKitId = this.menuManager?.getSelectedKit();
+        if (!selectedCharacterId || !selectedKitId) {
             NotificationManager.getInstance().show('Lütfen bir karakter ve silah seçin!', 'error');
             this.menuManager?.showMenu('character');
             return;
         }
 
-        this.gameState.selectedCharacter = selectedCharacter;
-        this.gameState.selectedKit = selectedKit;
+        this.gameState.selectedCharacter = selectedCharacterId;
+        this.gameState.selectedKit = selectedKitId;
 
         Promise.all([
-            this.modelsLoader.loadCharacterModels([selectedCharacter]),
-            this.modelsLoader.loadKitModels([selectedKit])
+            this.modelsLoader.loadCharacterModels([selectedCharacterId]),
+            this.modelsLoader.loadKitModels([selectedKitId])
         ]).then(() => {
-            const characterModel = this.modelsLoader.getModel(selectedCharacter);
-            const kitModel = this.modelsLoader.getModel(selectedKit);
+            const characterModel = this.modelsLoader.getModel(selectedCharacterId);
+            const kitModel = this.modelsLoader.getModel(selectedKitId);
             if (!characterModel || !kitModel) {
-                NotificationManager.getInstance().show(`Karakter veya silah modeli yüklenemedi: ${selectedCharacter}, ${selectedKit}`, 'error');
-                this.menuManager?.showMenu('character');
-                return;
+                throw new Error(`Model yüklenemedi: ${selectedCharacterId}, ${selectedKitId}`);
             }
 
-            NotificationManager.getInstance().show(`${this.gameState.currentUser} olarak ${selectedCharacter} ve ${selectedKit} ile oyuna başlandı!`, 'success');
+            this.characterStats = this.modelsLoader.getCharacterData(selectedCharacterId)?.stats || {};
+            this.kitStats = this.modelsLoader.getKitData(selectedKitId)?.stats || {};
+            this.gameState.health = this.characterStats?.health || 100;
+
+            NotificationManager.getInstance().show(
+                `${this.gameState.currentUser} olarak ${selectedCharacterId} ve ${selectedKitId} ile oyuna başlandı!`,
+                'success'
+            );
 
             if (this.player) {
                 this.resources.scene.remove(this.player);
@@ -633,7 +838,7 @@ export class Game extends EventEmitter {
                 NotificationManager.getInstance().show('Karakter modeli klonlanamadı!', 'error');
                 return;
             }
-            this.player.name = selectedCharacter;
+            this.player.name = selectedCharacterId;
             this.player.position.set(0, 1, 0);
             this.resources.scene.add(this.player);
 
@@ -642,14 +847,14 @@ export class Game extends EventEmitter {
                 NotificationManager.getInstance().show('Silah modeli klonlanamadı!', 'error');
                 return;
             }
-            this.weapon.name = selectedKit;
+            this.weapon.name = selectedKitId;
             this.resources.scene.add(this.weapon);
 
             this.gameState.isStarted = true;
             this.gameState.isPaused = false;
             this.gameState.score = 0;
-            this.gameState.health = 100;
-            this.gameState.ammo = 30;
+            this.gameState.health = this.characterStats?.health || 100;
+            this.gameState.ammo = 50; // Blaster'lar için daha fazla mermi
             this.gameState.level = 1;
             this.setCurrentDateTime();
 
@@ -675,22 +880,45 @@ export class Game extends EventEmitter {
             NotificationManager.getInstance().show('Mermi azalıyor!', 'warning');
         }
 
+        let damage = this.kitStats?.damage || 40;
+        let effect = this.kitStats?.effect || 'none';
+
+        // Blaster efekt (mermi görseli)
+        const bullet = new THREE.SphereGeometry(0.1, 8, 8);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const bulletMesh = new THREE.Mesh(bullet, material);
+        bulletMesh.position.copy(this.player!.position);
+        bulletMesh.position.y += 1;
+        this.resources.scene.add(bulletMesh);
+        setTimeout(() => this.resources.scene.remove(bulletMesh), 500);
+
         this.emit('weaponFired', this.gameState.ammo);
         this.updateUI();
 
         if (this.player && this.weapon) {
             const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(this.weapon.quaternion);
             this.raycaster.set(this.player.position, direction);
-            const intersects = this.raycaster.intersectObjects(this.aiManager.getEnemies().map(e => e.model));
-            
-            if (intersects.length > 0) {
+            const intersects = this.raycaster.intersectObjects(this.aiManager.getEnemies().map(e => e.model)));
+
+            if (this.intersects.length > 0) {
                 const hitEnemy = intersects[0].object;
                 const enemy = this.aiManager.getEnemies().find(e => e.model === hitEnemy);
                 if (enemy) {
-                    enemy.health -= 20; // Sabit hasar
+                    enemy.health -= damage;
+                    if (effect === 'slow') {
+                        enemy.speed *= 0.7;
+                        setTimeout(() => enemy.speed = enemy.type === 'fast' ? 80 : 50, 1000);
+                    } else if (effect === 'area') {
+                        this.createAreaEffect(1, damage / 2, 0);
+                    } else if (effect === 'rapid' && !this.abilityCooldowns.get('rapidFire')) {
+                        this.kitStats!.fireRate *= 1.5;
+                        setTimeout(() => this.kitStats!.fireRate /= 1.5, 3000);
+                        this.abilityCooldowns.set('rapidFire', now + 10000);
+                    }
+
                     if (enemy.health <= 0) {
                         this.gameState.score += 10;
-                        this.aiManager.updateTaskProgress(true); // Görev ilerlemesi
+                        this.aiManager.updateTaskProgress(true);
                         this.resources.scene.remove(hitEnemy);
                         this.aiManager.getEnemies().splice(this.aiManager.getEnemies().indexOf(enemy), 1);
                         if (this.aiManager.getCurrentTask()?.progress >= this.aiManager.getCurrentTask()!.target) {
