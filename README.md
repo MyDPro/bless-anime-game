@@ -16,11 +16,16 @@ bless-anime-game/
 │   └── style.css
 │   └── data/
 │       ├── characters.json
+│       ├── kits.json
+│       ├── citys.json
 │   └── models/
 │       ├── character/
 │               ├── Textures
 │               ├── photo  #character photos
 │      ├── city-kit/
+│               ├── Textures
+│               ├── cityv2/
+│                 └── Textures
 │      └── kit/
 │           ├── Textures
 │           ├── photo    #kit photos
