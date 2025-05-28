@@ -1,55 +1,67 @@
 // src/core/main.ts
-import { Game } from './Game';
-import { NotificationManager } from './NotificationManager';
-import { trainModels } from '../ai/trainModel'; // trainModel.ts'den import
+import { Game } from '@/core/Game';
+import { NotificationManager } from '@/core/NotificationManager';
+import { trainModels } from '@/ai/trainModel';
 import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-backend-wasm';
 
-// Global bildirim fonksiyonu
-(window as any).showNotification = (message: string, type: 'success' | 'error' | 'warning' = 'success', duration: number = 3000) => {
-    NotificationManager.getInstance().show(message, type, duration);
-};
-
-// Modellerin varlığını kontrol eden yardımcı fonksiyon
-async function checkModelsExist(): Promise<boolean> {
-    try {
-        // AIManager'da kullanılan model yollarını kontrol et
-        await tf.loadLayersModel('localstorage://enemy-selection-model');
-        await tf.loadLayersModel('localstorage://structure-placement-model');
-        return true;
-    } catch (error) {
-        console.warn('Modeller bulunamadı, eğitim başlatılacak:', error);
-        return false;
-    }
+// TensorFlow.js WASM backend'ini başlat
+async function initializeTfBackend() {
+  try {
+    await tf.setBackend('wasm');
+    console.log('TensorFlow.js WASM backend başlatıldı');
+  } catch (error) {
+    console.error('TensorFlow.js backend hatası:', error);
+    NotificationManager.getInstance().show('AI başlatılamadı!', 'error');
+    throw error;
+  }
 }
 
-// Oyun başlatma
+// Global bildirim fonksiyonu
+(window as any).showNotification = (
+  message: string,
+  type: 'success' | 'error' | 'warning' = 'success',
+  duration: number = 3000
+) => {
+  NotificationManager.getInstance().show(message, type, duration);
+};
+
+async function checkModelsExist(): Promise<boolean> {
+  try {
+    await tf.loadLayersModel('localstorage://enemy-selection-model');
+    await tf.loadLayersModel('localstorage://structure-placement-model');
+    return true;
+  } catch (error) {
+    console.warn('Modeller bulunamadı, eğitim başlatılacak:', error);
+    return false;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("Sayfa yüklendi");
-    const canvas = document.querySelector('#webgl-canvas') as HTMLCanvasElement;
+  console.log('Sayfa yüklendi');
+  const canvas = document.querySelector('#webgl-canvas') as HTMLCanvasElement;
 
-    if (!canvas) {
-        console.error('Canvas elementi bulunamadı!');
-        NotificationManager.getInstance().show('Oyun başlatılamadı!', 'error');
-        return;
+  if (!canvas) {
+    console.error('Canvas elementi bulunamadı!');
+    NotificationManager.getInstance().show('Oyun başlatılamadı!', 'error');
+    return;
+  }
+
+  try {
+    await initializeTfBackend();
+    const modelsExist = await checkModelsExist();
+    if (!modelsExist) {
+      NotificationManager.getInstance().show('AI modelleri eğitiliyor...', 'warning');
+      await trainModels();
+      NotificationManager.getInstance().show('AI modelleri hazır!', 'success');
+    } else {
+      console.log('AI modelleri zaten eğitilmiş, eğitim atlanıyor.');
     }
 
-    try {
-        // Modellerin varlığını kontrol et
-        const modelsExist = await checkModelsExist();
-        if (!modelsExist) {
-            // Modeller yoksa eğitimi başlat
-            NotificationManager.getInstance().show('AI modelleri eğitiliyor...', 'warning');
-            await trainModels();
-            NotificationManager.getInstance().show('AI modelleri hazır!', 'success');
-        } else {
-            console.log('AI modelleri zaten eğitilmiş, eğitim atlanıyor.');
-        }
-
-        // Oyun başlat
-        const game = new Game(canvas);
-        NotificationManager.getInstance().show('Hoş geldin!', 'success');
-    } catch (error) {
-        console.error('Oyun başlatma hatası:', error);
-        NotificationManager.getInstance().show('Oyun başlatılamadı!', 'error');
-    }
+    const game = new Game(canvas);
+    NotificationManager.getInstance().show('Hoş geldin!', 'success');
+  } catch (error) {
+    console.error('Oyun başlatma hatası:', error);
+    NotificationManager.getInstance().show('Oyun başlatılamadı!', 'error');
+  }
 });
