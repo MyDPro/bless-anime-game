@@ -272,38 +272,38 @@ export class Game extends EventEmitter {
 }
 
     private checkCollisions(): void {
-        if (!this.player) return;
+    if (!this.player) return;
 
-        this.raycaster.set(
-            this.player.position,
-            new THREE.Vector3(0, -1, 0)
-        );
+    this.raycaster.set(
+        this.player.position,
+        new THREE.Vector3(0, -1, 0)
+    );
 
-        const intersects = this.raycaster.intersectObjects([this.platform, ...this.aiManager.getStructures()]);
-        if (intersects.length > 0) {
-            const distance = intersects[0].distance;
-            if (distance < 0.5) {
-                this.player.position.y = intersects[0].point.y + 0.5;
-            }
+    const intersects = this.raycaster.intersectObjects([this.platform, ...this.aiManager.getStructures()]);
+    if (intersects.length > 0) {
+        const distance = intersects[0].distance;
+        if (distance < 0.5) {
+            this.player.position.y = intersects[0].point.y + 0.5;
         }
+    }
 
-        this.resources.scene.children.forEach(obj => {
-            if (obj.userData.type === 'prop' && obj.userData.effect) {
-                const distance = this.player.position.distanceTo(obj.position);
-                if (distance < 1.5) {
-                    if (obj.userData.effect === 'health_kit') {
-                        this.gameState.health = Math.min(this.gameState.health + 20, this.characterStats?.health || 100);
-                        NotificationManager.getInstance().show('Sağlık kiti alındı! +20 HP', 'success');
-                        this.resources.scene.remove(obj);
-                    } else if (obj.userData.effect === 'quest') {
-                        this.aiManager.generateDynamicTask(this.gameState.level);
-                        NotificationManager.getInstance().show('Yeni görev alındı!', 'success');
-                        this.resources.scene.remove(obj);
-                    }
+    this.resources.scene.children.forEach(obj => {
+        if (obj.userData.type === 'prop' && obj.userData.effect && this.player) { // Ek null kontrolü
+            const distance = this.player.position.distanceTo(obj.position);
+            if (distance < 1.5) {
+                if (obj.userData.effect === 'health_kit') {
+                    this.gameState.health = Math.min(this.gameState.health + 20, this.characterStats?.health || 100);
+                    NotificationManager.getInstance().show('Sağlık kiti alındı! +20 HP', 'success');
+                    this.resources.scene.remove(obj);
+                } else if (obj.userData.effect === 'quest') {
+                    this.aiManager.generateDynamicTask(this.gameState.level);
+                    NotificationManager.getInstance().show('Yeni görev alındı!', 'success');
+                    this.resources.scene.remove(obj);
                 }
             }
-        });
-    }
+        }
+    });
+}
 
     public cleanup(): void {
         if (this.animationFrameId !== null) {
