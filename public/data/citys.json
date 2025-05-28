@@ -10,7 +10,7 @@
     },
     {
       "id": "building-type-b",
-      "name": "house",
+      "name": "House",
       "modelPath": "/models/city-kit/building-type-b.glb",
       "type": "house",
       "size": { "width": 6, "height": 3, "depth": 6 },
@@ -20,7 +20,7 @@
       "id": "building-type-c",
       "name": "Modern Bina",
       "modelPath": "/models/city-kit/building-type-c.glb",
-      "type": "house",
+      "type": "building",
       "size": { "width": 8, "height": 10, "depth": 8 },
       "region": ["suburb"]
     },
@@ -28,7 +28,7 @@
       "id": "building-type-d",
       "name": "Ofis Binası",
       "modelPath": "/models/city-kit/building-type-d.glb",
-      "type": "house",
+      "type": "building",
       "size": { "width": 10, "height": 12, "depth": 10 },
       "region": ["city_center"]
     }
@@ -54,7 +54,7 @@
   "props": [
     {
       "id": "tree-small",
-      "name": "Ağaç",
+      "name": "Küçük Ağaç",
       "modelPath": "/models/city-kit/tree-small.glb",
       "type": "prop",
       "size": { "width": 2, "height": 4, "depth": 2 },
@@ -62,7 +62,7 @@
     },
     {
       "id": "tree-large",
-      "name": "Büyül Ağaç",
+      "name": "Büyük Ağaç",
       "modelPath": "/models/city-kit/tree-large.glb",
       "type": "prop",
       "size": { "width": 2, "height": 4, "depth": 2 },
