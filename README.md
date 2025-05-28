@@ -11,10 +11,14 @@ bless-anime-game/
 │   ├── utils/           # Utility functions
 │   │   ├── EventEmitter.ts
 │   │   └── loadModels.ts
+│   ├── ai/           # AI functions
+│       ├── AIManager.ts
 ├── public/              # Static assets
 │   └── index.html
 │   └── style.css
 │   └── data/
+│       ├── enemy_selection_data.json
+│       ├── structure_placement_data.json
 │       ├── characters.json
 │       ├── kits.json
 │       ├── citys.json
