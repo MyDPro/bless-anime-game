@@ -1,69 +1,150 @@
-import * as THREE from 'three';
-import { CharacterData } from '../utils/loadModels';
+import * as tf from '@tensorflow/tfjs';
+import { ModelsLoader } from '../utils/loadModels';
+import { Vector3 } from 'three';
 
-export interface BoardLayout {
-  platformPositions: { x: number; y: number; z: number }[];
-  platformSizes: { width: number; height: number; depth: number }[];
-  enemyPositions: { x: number; y: number; z: number; characterId: string }[];
+// Veri tipi tanımları (ModelsLoader.ts’den)
+interface CharacterData {
+  id: string;
+  name: string;
+  modelPath: string;
+  photoPath: string;
+  stats: {
+    speed: number;
+    power: number;
+    health: number;
+    ability: string;
+    abilityDescription: string;
+  };
+}
+
+interface CityData {
+  buildings: { id: string; name: string; modelPath: string; type: string; size: { width: number; height: number; depth: number }; region: string[] }[];
+  roads: { id: string; name: string; modelPath: string; type: string; size: { width: number; height: number; depth: number }; region: string[] }[];
+  props: { id: string; name: string; modelPath: string; type: string; size: { width: number; height: number; depth: number }; region: string[]; effect?: string; effectDescription?: string }[];
 }
 
 export class AIManager {
-  private characterData: CharacterData[];
+  private modelsLoader: ModelsLoader;
+  private scene: THREE.Scene;
+  private enemyModel: tf.LayersModel | null = null;
+  private structureModel: tf.LayersModel | null = null;
+  private enemies: { model: THREE.Object3D; health: number; speed: number; damage: number }[] = [];
 
-  constructor(characterData: CharacterData[]) {
-    this.characterData = characterData;
-    console.log('AIManager başlatıldı.');
+  constructor(modelsLoader: ModelsLoader, scene: THREE.Scene) {
+    this.modelsLoader = modelsLoader;
+    this.scene = scene;
+    this.loadModels();
   }
 
-  public async generateBoardLayout(inputData: number[]): Promise<BoardLayout> {
-    // inputData: [score, health, level] gibi oyun durumunu temsil eder
-    const [score = 0, health = 100, level = 1] = inputData;
-
-    // Platform sayısı ve düşman sayısı, oyun durumuna göre dinamik olarak belirlenir
-    const platformCount = Math.min(5 + Math.floor(score / 100), 10); // Skora bağlı platform sayısı
-    const enemyCount = Math.min(3 + Math.floor(level / 2), 8); // Seviyeye bağlı düşman sayısı
-
-    const platformPositions: { x: number; y: number; z: number }[] = [];
-    const platformSizes: { width: number; height: number; depth: number }[] = [];
-    const enemyPositions: { x: number; y: number; z: number; characterId: string }[] = [];
-
-    // Platformları oluştur
-    for (let i = 0; i < platformCount; i++) {
-      const width = 5 + Math.random() * 5; // 5-10 arası rastgele genişlik
-      const depth = 5 + Math.random() * 5; // 5-10 arası rastgele derinlik
-      const height = 0.5 + Math.random() * 0.5; // 0.5-1 arası yükseklik
-      const x = (Math.random() - 0.5) * 20; // -10 ile 10 arasında rastgele x
-      const z = (Math.random() - 0.5) * 20; // -10 ile 10 arasında rastgele z
-      const y = -0.25 + height / 2; // Platformun y konumu
-
-      platformPositions.push({ x, y, z });
-      platformSizes.push({ width, height, depth });
+  private async loadModels(): Promise<void> {
+    try {
+      this.enemyModel = await tf.loadLayersModel('localstorage://enemy-selection-model');
+      this.structureModel = await tf.loadLayersModel('localstorage://structure-placement-model');
+    } catch (error) {
+      console.error('Model yükleme hatası:', error);
     }
-
-    // Düşmanları platformlar üzerine yerleştir
-    for (let i = 0; i < enemyCount; i++) {
-      const platformIndex = Math.floor(Math.random() * platformCount);
-      const pos = platformPositions[platformIndex];
-      const size = platformSizes[platformIndex];
-      const character = this.characterData[Math.floor(Math.random() * this.characterData.length)];
-
-      // Düşmanı platformun üzerine yerleştir
-      const enemyX = pos.x + (Math.random() - 0.5) * size.width * 0.8;
-      const enemyZ = pos.z + (Math.random() - 0.5) * size.depth * 0.8;
-      const enemyY = pos.y + size.height / 2 + 1; // Platformun üstünde, karakter yüksekliği kadar yukarıda
-
-      enemyPositions.push({
-        x: enemyX,
-        y: enemyY,
-        z: enemyZ,
-        characterId: character.id,
-      });
-    }
-
-    return { platformPositions, platformSizes, enemyPositions };
   }
 
-  public cleanup(): void {
-    console.log('AIManager temizlendi.');
+  async spawnEnemy(level: number, enemyCount: number, mapDensity: number): Promise<void> {
+    if (!this.enemyModel) return;
+
+    const input = tf.tensor2d([[level, enemyCount, mapDensity]]);
+    const prediction = this.enemyModel.predict(input) as tf.Tensor;
+    const [enemyType, spawnCount] = await prediction.data();
+    input.dispose();
+    prediction.dispose();
+
+    const characterData: CharacterData[] = this.modelsLoader.getCharacterData();
+    const characterIds = characterData.map(c => c.id);
+    for (let i = 0; i < Math.round(spawnCount); i++) {
+      const id = characterIds[Math.floor(Math.random() * characterIds.length)];
+      const model = this.modelsLoader.getModel(id).scene.clone();
+      const position = new Vector3(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
+      model.position.copy(position);
+
+      const enemy = {
+        model,
+        health: 50,
+        speed: enemyType > 0.5 ? 80 : 50,
+        damage: enemyType > 0.5 ? 15 : 20,
+      };
+
+      // Zigzag hareket (AI özelliği)
+      if (enemyType > 0.5) {
+        this.applyZigzagMovement(enemy, level);
+      }
+
+      this.enemies.push(enemy);
+      this.scene.add(model);
+    }
+  }
+
+  private applyZigzagMovement(enemy: { model: THREE.Object3D; speed: number }, level: number): void {
+    let direction = 1;
+    setInterval(() => {
+      const offset = direction * 0.5; // Zigzag genişliği
+      enemy.model.position.x += offset * enemy.speed * 0.01;
+      direction *= -1; // Yön değiştir
+    }, 1000 / level); // Seviyeye bağlı hız
+  }
+
+  async addStructure(level: number, buildingCount: number, region: string): Promise<void> {
+    if (!this.structureModel) return;
+
+    const regionId = region === 'suburb' ? 0 : 1;
+    const input = tf.tensor2d([[level, buildingCount, regionId]]);
+    const prediction = this.structureModel.predict(input) as tf.Tensor;
+    const [buildingIdx, xNorm, zNorm] = await prediction.data();
+    input.dispose();
+    prediction.dispose();
+
+    const buildingIds = ['building-type-a', 'building-type-b', 'building-type-c', 'building-type-d'];
+    const id = buildingIds[Math.round(buildingIdx * (buildingIds.length - 1))];
+    const x = xNorm * 100 - 50; // Denormalize: -50 to 50
+    const z = zNorm * 100 - 50;
+
+    // Harita optimizasyonu: Çakışma kontrolü
+    const cityData: CityData = this.modelsLoader.getCityData();
+    const building = cityData.buildings.find(b => b.id === id);
+    if (!building) return;
+
+    const newPosition = new Vector3(x, 0, z);
+    const isValid = this.checkCollision(newPosition, building.size);
+    if (!isValid) return; // Çakışma varsa ekleme
+
+    const model = this.modelsLoader.getModel(id).scene.clone();
+    model.position.copy(newPosition);
+    this.scene.add(model);
+  }
+
+  private checkCollision(position: Vector3, size: { width: number; depth: number }): boolean {
+    // Basit çakışma kontrolü: Mevcut binalarla mesafe
+    const minDistance = 5; // Minimum mesafe
+    for (const building of this.scene.children.filter(obj => obj.userData.type === 'building')) {
+      const dist = position.distanceTo(building.position);
+      if (dist < minDistance + Math.max(size.width, size.depth)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  spawnEvent(level: number): void {
+    if (level === 3) {
+      const model = this.modelsLoader.getModel('detail-parasol').scene.clone();
+      const position = new Vector3(Math.random() * 20 - 10, 0, Math.random() * 20 - 10);
+      model.position.copy(position);
+      this.scene.add(model);
+    }
+  }
+
+  generateDynamicTask(level: number): { description: string; xp: number } {
+    // Dinamik görev (AI özelliği)
+    const tasks = [
+      { description: `Seviye ${level} için ${level * 2} düşman yen`, xp: level * 20 },
+      { description: `Bir sağlık kiti bul`, xp: level * 15 },
+      { description: `${level} bina keşfet`, xp: level * 25 },
+    ];
+    return tasks[Math.floor(Math.random() * tasks.length)];
   }
 }
