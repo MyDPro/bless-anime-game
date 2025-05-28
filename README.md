@@ -17,8 +17,8 @@ bless-anime-game/
 │   └── index.html
 │   └── style.css
 │   └── data/
-│       ├── enemy_selection_data.json
-│       ├── structure_placement_data.json
+│       ├── enemy_selection_data.json  #Düşman türü (temel/hızlı) ve spawn sayısı tahmini için
+│       ├── structure_placement_data.json #Yapı ID’si ve konumu (x, z) tahmini için
 │       ├── characters.json
 │       ├── kits.json
 │       ├── citys.json
