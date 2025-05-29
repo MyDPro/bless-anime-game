@@ -9,15 +9,11 @@ timestamp = "2025-05-17 23:15:00"
 dir = "build"
 command = "npm run build:debug"
 debug = "tsconfig.debug.json"
-wasm_opt = true # WASM optimizasyonu
-wasm_opt_level = "z" # En yüksek sıkıştırma
 
 [build_release]
 dir = "build"
 command = "npm run build:release"
 release = "tsconfig.release.json"
-wasm_opt = true
-wasm_opt_level = "z"
 
 [game]
 engineVersion = "1.0.0"
@@ -32,7 +28,6 @@ host = "localhost"
 public = "public"
 source = "src"
 assets = "public/models"
-data = "public/data" # Veri dosyaları için
 
 [deployment]
 permission = "public"
