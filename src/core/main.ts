@@ -1,7 +1,7 @@
 // src/core/main.ts
 import { Game } from './Game';
 import { NotificationManager } from './NotificationManager';
-import { trainModels } from './ai/trainModel';
+import { trainModels } from './../ai/trainModel';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-wasm';
 
