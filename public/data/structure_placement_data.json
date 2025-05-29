@@ -1,1602 +1,1602 @@
 [
-  {
-    "level":4,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-1.7479050357,
-    "z":-0.6974342228
-  },
-  {
-    "level":5,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-5.1554478022,
-    "z":-20.6789228302
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":5.3703052346,
-    "z":-28.7272104976
-  },
-  {
-    "level":5,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":29.1579043726,
-    "z":28.9618142795
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":43.0929105687,
-    "z":47.4248208534
-  },
-  {
-    "level":2,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":4.9528882324,
-    "z":-5.8469498627
-  },
-  {
-    "level":3,
-    "building_count":10,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":4.5915770165,
-    "z":20.5831483879
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-35.7008317947,
-    "z":26.1510631717
-  },
-  {
-    "level":3,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":36.6868705311,
-    "z":33.8480763764
-  },
-  {
-    "level":5,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":20.0969131459,
-    "z":-42.7236993636
-  },
-  {
-    "level":4,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":39.1896908777,
-    "z":-35.3395178308
-  },
-  {
-    "level":3,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-41.5162285915,
-    "z":48.6639578501
-  },
-  {
-    "level":5,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":36.3138521989,
-    "z":38.0359968638
-  },
-  {
-    "level":2,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":44.7248577384,
-    "z":48.6001063823
-  },
-  {
-    "level":4,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-14.97817533,
-    "z":20.8181195583
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":27.7146915927,
-    "z":5.8404249736
-  },
-  {
-    "level":4,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-25.127584557,
-    "z":-16.9747470981
-  },
-  {
-    "level":5,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-0.7374895709,
-    "z":-48.8646355233
-  },
-  {
-    "level":1,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":7.1473025205,
-    "z":24.0973860911
-  },
-  {
-    "level":4,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-38.2473753223,
-    "z":14.9210302116
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":18.1039427097,
-    "z":-26.2493528708
-  },
-  {
-    "level":5,
-    "building_count":7,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-12.5129420476,
-    "z":-21.4287913718
-  },
-  {
-    "level":4,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":2.8370121297,
-    "z":-6.3664168393
-  },
-  {
-    "level":1,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-48.784552531,
-    "z":46.9878826708
-  },
-  {
-    "level":1,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-17.7313611722,
-    "z":-45.6599216702
-  },
-  {
-    "level":3,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":49.2964796119,
-    "z":-42.6203435265
-  },
-  {
-    "level":3,
-    "building_count":10,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":19.5411123107,
-    "z":-42.456545291
-  },
-  {
-    "level":2,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":12.9398638135,
-    "z":19.5748688985
-  },
-  {
-    "level":4,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":49.5831375029,
-    "z":19.6925055864
-  },
-  {
-    "level":4,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":40.1158010491,
-    "z":-45.4553619659
-  },
-  {
-    "level":3,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":45.8702407408,
-    "z":-44.2136102242
-  },
-  {
-    "level":4,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-4.4343247214,
-    "z":12.0132597802
-  },
-  {
-    "level":4,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-33.0320096104,
-    "z":14.6848361669
-  },
-  {
-    "level":1,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-14.6647771974,
-    "z":8.3656111851
-  },
-  {
-    "level":3,
-    "building_count":9,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-13.9654904795,
-    "z":-24.0050137146
-  },
-  {
-    "level":5,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":19.816171402,
-    "z":3.6096366344
-  },
-  {
-    "level":3,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-8.8793279128,
-    "z":10.2781882023
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-33.7383060655,
-    "z":41.0927184494
-  },
-  {
-    "level":1,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":44.0531827135,
-    "z":-8.3360942262
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":11.3415195936,
-    "z":-8.1756963709
-  },
-  {
-    "level":4,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":37.6661485926,
-    "z":5.1587872544
-  },
-  {
-    "level":1,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-47.3633025503,
-    "z":-12.3536633122
-  },
-  {
-    "level":4,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-1.9629918134,
-    "z":48.5286050666
-  },
-  {
-    "level":2,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":9.4130715352,
-    "z":-11.9109143369
-  },
-  {
-    "level":2,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":32.9164220707,
-    "z":6.9081469166
-  },
-  {
-    "level":1,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-3.1306840205,
-    "z":-8.5180497662
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-48.6328035173,
-    "z":-42.4640939648
-  },
-  {
-    "level":5,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":31.290100913,
-    "z":49.9717673286
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":41.3165752258,
-    "z":8.5149532325
-  },
-  {
-    "level":4,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":44.4765729882,
-    "z":34.9647390677
-  },
-  {
-    "level":4,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-25.891516767,
-    "z":-29.4954671493
-  },
-  {
-    "level":4,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":45.4051027259,
-    "z":10.6174634451
-  },
-  {
-    "level":4,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":37.8220667479,
-    "z":25.6999132172
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-14.1837281967,
-    "z":-38.64424078
-  },
-  {
-    "level":3,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-0.1834813354,
-    "z":-2.3789303211
-  },
-  {
-    "level":1,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":2.0163501112,
-    "z":35.2181500319
-  },
-  {
-    "level":4,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":46.797376544,
-    "z":-41.1591776634
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-9.6517133788,
-    "z":-36.5984771549
-  },
-  {
-    "level":4,
-    "building_count":7,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-7.9464221335,
-    "z":28.4668263944
-  },
-  {
-    "level":2,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":20.4079768099,
-    "z":-28.7035838491
-  },
-  {
-    "level":2,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":11.7263712097,
-    "z":48.0462725092
-  },
-  {
-    "level":4,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":8.9917686855,
-    "z":-10.77559549
-  },
-  {
-    "level":5,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-40.8997908949,
-    "z":22.639703265
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":1.398948916,
-    "z":28.3653012741
-  },
-  {
-    "level":2,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-20.2040548458,
-    "z":2.3602276015
-  },
-  {
-    "level":4,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":44.9520623658,
-    "z":-35.2926519071
-  },
-  {
-    "level":2,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":34.2091415019,
-    "z":26.8917741315
-  },
-  {
-    "level":2,
-    "building_count":1,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-4.0864243762,
-    "z":48.0032575285
-  },
-  {
-    "level":4,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-15.2586591775,
-    "z":-29.0869208921
-  },
-  {
-    "level":4,
-    "building_count":1,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-25.9854381222,
-    "z":-42.4136671891
-  },
-  {
-    "level":1,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-3.9880841016,
-    "z":8.4766105949
-  },
-  {
-    "level":5,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-36.1172827351,
-    "z":14.0874744803
-  },
-  {
-    "level":5,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":19.6501466227,
-    "z":-8.8338785642
-  },
-  {
-    "level":2,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-2.6038359737,
-    "z":16.7557738521
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":10.1935395541,
-    "z":-27.6150934094
-  },
-  {
-    "level":2,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-33.1064936928,
-    "z":-22.1409660968
-  },
-  {
-    "level":1,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-46.8195318515,
-    "z":4.8715309207
-  },
-  {
-    "level":4,
-    "building_count":4,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-3.9221231967,
-    "z":-29.3666281594
-  },
-  {
-    "level":4,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-37.12516017,
-    "z":-16.990048669
-  },
-  {
-    "level":4,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-46.0687860159,
-    "z":29.9410398909
-  },
-  {
-    "level":5,
-    "building_count":7,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":18.7784717096,
-    "z":1.1657013547
-  },
-  {
-    "level":1,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":42.0872400532,
-    "z":-43.8922040145
-  },
-  {
-    "level":5,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":36.8301107036,
-    "z":-41.5482992319
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-31.5478980644,
-    "z":-29.0650676663
-  },
-  {
-    "level":1,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":42.4041759107,
-    "z":-26.3883466883
-  },
-  {
-    "level":1,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-13.108636043,
-    "z":-3.7465283867
-  },
-  {
-    "level":1,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-43.7658637489,
-    "z":-35.2260908094
-  },
-  {
-    "level":1,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":21.3349585885,
-    "z":39.5206837687
-  },
-  {
-    "level":4,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":24.9616232009,
-    "z":-46.9527847266
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-5.2587633177,
-    "z":3.2617266455
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-39.5130833468,
-    "z":23.7405206094
-  },
-  {
-    "level":1,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-47.9928802222,
-    "z":-17.7920834417
-  },
-  {
-    "level":3,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-41.0795671288,
-    "z":3.5335564016
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":39.052728074,
-    "z":9.3592453554
-  },
-  {
-    "level":1,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-14.4895696721,
-    "z":14.8822840292
-  },
-  {
-    "level":3,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-41.3079711913,
-    "z":3.7106541819
-  },
-  {
-    "level":5,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":5.774226595,
-    "z":8.6535434661
-  },
-  {
-    "level":2,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-37.2419697204,
-    "z":-21.6224094201
-  },
-  {
-    "level":2,
-    "building_count":4,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":39.9647397145,
-    "z":10.7555222294
-  },
-  {
-    "level":1,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-14.3903274102,
-    "z":48.6515248793
-  },
-  {
-    "level":4,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":43.369182376,
-    "z":-49.2465636866
-  },
-  {
-    "level":1,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-34.7140860816,
-    "z":-25.4042271615
-  },
-  {
-    "level":4,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":35.0817517836,
-    "z":-41.211237546
-  },
-  {
-    "level":2,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-32.6626404705,
-    "z":39.6765424626
-  },
-  {
-    "level":1,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-44.8364522125,
-    "z":-48.1757518572
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":48.2378616909,
-    "z":-38.7961097832
-  },
-  {
-    "level":3,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":7.5998417806,
-    "z":41.7395613086
-  },
-  {
-    "level":4,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":31.7072070949,
-    "z":-24.2097172955
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":22.2896096622,
-    "z":32.0861473153
-  },
-  {
-    "level":3,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":5.6762893014,
-    "z":7.161268947
-  },
-  {
-    "level":1,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":33.8582558703,
-    "z":-29.4922439851
-  },
-  {
-    "level":3,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-17.6320763596,
-    "z":-7.4563561384
-  },
-  {
-    "level":5,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":23.6247183698,
-    "z":2.9840023181
-  },
-  {
-    "level":3,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":11.0620042442,
-    "z":-21.136944676
-  },
-  {
-    "level":1,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":0.6103956359,
-    "z":43.2014342257
-  },
-  {
-    "level":5,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":3.2589432552,
-    "z":-44.8176463178
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-4.5732027781,
-    "z":4.8603117938
-  },
-  {
-    "level":3,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":48.996023239,
-    "z":-17.7646155025
-  },
-  {
-    "level":1,
-    "building_count":4,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-41.2131888757,
-    "z":-36.1175226558
-  },
-  {
-    "level":2,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":26.022785989,
-    "z":9.5638740608
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":10.6101881056,
-    "z":29.4289449966
-  },
-  {
-    "level":4,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":42.9529144248,
-    "z":33.0619407788
-  },
-  {
-    "level":5,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-9.1481707064,
-    "z":43.29380671
-  },
-  {
-    "level":3,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":43.8340456821,
-    "z":-31.8766933834
-  },
-  {
-    "level":1,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":42.644942359,
-    "z":22.1596550751
-  },
-  {
-    "level":4,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":34.1828776758,
-    "z":-36.0227623374
-  },
-  {
-    "level":5,
-    "building_count":9,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":25.0501924765,
-    "z":29.953713092
-  },
-  {
-    "level":4,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-33.5734202069,
-    "z":31.4574720231
-  },
-  {
-    "level":5,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":13.375856372,
-    "z":40.7866130463
-  },
-  {
-    "level":5,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":37.7200540813,
-    "z":-10.7554892577
-  },
-  {
-    "level":3,
-    "building_count":1,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-4.8051398701,
-    "z":21.3782454855
-  },
-  {
-    "level":5,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-3.732021433,
-    "z":-19.8622125836
-  },
-  {
-    "level":4,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-6.1255324612,
-    "z":7.7486270906
-  },
-  {
-    "level":5,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":39.9574573275,
-    "z":-11.6108778627
-  },
-  {
-    "level":3,
-    "building_count":10,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-43.3380887609,
-    "z":-27.0974609075
-  },
-  {
-    "level":3,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-38.3101959292,
-    "z":43.9832123613
-  },
-  {
-    "level":4,
-    "building_count":1,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":23.0549136809,
-    "z":19.3717607403
-  },
-  {
-    "level":2,
-    "building_count":9,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":29.402518927,
-    "z":12.0072755929
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":24.1460911139,
-    "z":7.3150849257
-  },
-  {
-    "level":5,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-34.8325120267,
-    "z":-18.8277932204
-  },
-  {
-    "level":1,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":27.8571939051,
-    "z":-35.6872014452
-  },
-  {
-    "level":5,
-    "building_count":8,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":6.9889684871,
-    "z":26.2458685741
-  },
-  {
-    "level":4,
-    "building_count":10,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":25.463529186,
-    "z":-39.7083969256
-  },
-  {
-    "level":4,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-38.9368263045,
-    "z":34.6452291735
-  },
-  {
-    "level":4,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":10.3957872073,
-    "z":0.2288347463
-  },
-  {
-    "level":4,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-35.0082572651,
-    "z":-27.0748604767
-  },
-  {
-    "level":4,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":27.1881980598,
-    "z":-48.7796927682
-  },
-  {
-    "level":3,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":19.3948444467,
-    "z":4.2724443348
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":9.9029364777,
-    "z":32.6798827809
-  },
-  {
-    "level":4,
-    "building_count":1,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":40.8450561334,
-    "z":8.3391794766
-  },
-  {
-    "level":1,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-7.640313758,
-    "z":-21.2070383524
-  },
-  {
-    "level":1,
-    "building_count":7,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-34.6648596884,
-    "z":8.6229832017
-  },
-  {
-    "level":1,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-39.9205396984,
-    "z":-24.3984468146
-  },
-  {
-    "level":1,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":37.2123908944,
-    "z":43.2118282484
-  },
-  {
-    "level":3,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":41.8750522261,
-    "z":29.0084637124
-  },
-  {
-    "level":1,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":20.7238634313,
-    "z":-34.7460957086
-  },
-  {
-    "level":4,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-12.556463028,
-    "z":-43.1078460633
-  },
-  {
-    "level":5,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":23.6444235625,
-    "z":43.4367014769
-  },
-  {
-    "level":1,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":41.0686198256,
-    "z":-37.7189218154
-  },
-  {
-    "level":3,
-    "building_count":2,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":48.4841198962,
-    "z":33.8898086446
-  },
-  {
-    "level":3,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":33.7490789002,
-    "z":-16.7853587345
-  },
-  {
-    "level":1,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":1.8838057126,
-    "z":9.1275435745
-  },
-  {
-    "level":5,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-12.0694301614,
-    "z":24.4249651843
-  },
-  {
-    "level":1,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":30.2853448598,
-    "z":-49.5367976995
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-38.5732699944,
-    "z":-8.5495415796
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":41.9855616413,
-    "z":-15.3654005634
-  },
-  {
-    "level":4,
-    "building_count":8,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-1.9163021911,
-    "z":41.8454724939
-  },
-  {
-    "level":3,
-    "building_count":9,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-27.539517706,
-    "z":-4.7560483867
-  },
-  {
-    "level":1,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-25.1773557243,
-    "z":7.7631954092
-  },
-  {
-    "level":4,
-    "building_count":9,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-8.1074550495,
-    "z":41.4845901068
-  },
-  {
-    "level":1,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":28.0495707546,
-    "z":-22.2412827371
-  },
-  {
-    "level":1,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-48.6905543412,
-    "z":16.3537372017
-  },
-  {
-    "level":2,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":47.5541315683,
-    "z":-4.1011011983
-  },
-  {
-    "level":4,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-8.5375876273,
-    "z":-41.4650331921
-  },
-  {
-    "level":4,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-31.5537128581,
-    "z":-20.0404088234
-  },
-  {
-    "level":2,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-43.2923522612,
-    "z":24.9960470399
-  },
-  {
-    "level":3,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":29.9782022074,
-    "z":-15.0613000951
-  },
-  {
-    "level":1,
-    "building_count":10,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-30.9312279336,
-    "z":-46.3450332152
-  },
-  {
-    "level":5,
-    "building_count":4,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":33.6564813292,
-    "z":8.7453604234
-  },
-  {
-    "level":1,
-    "building_count":0,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":27.5527616695,
-    "z":-4.6711165252
-  },
-  {
-    "level":1,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":3.4455891257,
-    "z":-1.8912051612
-  },
-  {
-    "level":3,
-    "building_count":4,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":5.9640331308,
-    "z":-34.4759754069
-  },
-  {
-    "level":1,
-    "building_count":4,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-16.563718869,
-    "z":-42.4496636196
-  },
-  {
-    "level":2,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-12.669068372,
-    "z":-22.9255326856
-  },
-  {
-    "level":2,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":2.6578466659,
-    "z":30.0749771486
-  },
-  {
-    "level":4,
-    "building_count":5,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-34.3847402634,
-    "z":21.5972228847
-  },
-  {
-    "level":5,
-    "building_count":3,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-9.2015504635,
-    "z":5.1722595259
-  },
-  {
-    "level":1,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-26.8925203412,
-    "z":17.1892743599
-  },
-  {
-    "level":1,
-    "building_count":6,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":9.50489797,
-    "z":-16.0728754104
-  },
-  {
-    "level":3,
-    "building_count":7,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":-32.1455337946,
-    "z":15.2746107852
-  },
-  {
-    "level":2,
-    "building_count":3,
-    "region":1,
-    "building_id":"building-type-c",
-    "x":22.0813096311,
-    "z":30.5314967358
-  },
-  {
-    "level":5,
-    "building_count":1,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":22.2266931856,
-    "z":35.5696468106
-  },
-  {
-    "level":4,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":46.2649318555,
-    "z":44.4409725577
-  },
-  {
-    "level":2,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-b",
-    "x":-29.5015704584,
-    "z":-20.6852269739
-  },
-  {
-    "level":4,
-    "building_count":0,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-41.307498505,
-    "z":13.3240774911
-  },
-  {
-    "level":3,
-    "building_count":7,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":-29.2113744854,
-    "z":-47.3467796126
-  },
-  {
-    "level":3,
-    "building_count":2,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":37.6444075875,
-    "z":14.2925563614
-  },
-  {
-    "level":1,
-    "building_count":9,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":39.2671711077,
-    "z":31.7443561738
-  },
-  {
-    "level":5,
-    "building_count":6,
-    "region":1,
-    "building_id":"building-type-d",
-    "x":-16.413414285,
-    "z":32.5107331423
-  },
-  {
-    "level":4,
-    "building_count":9,
-    "region":0,
-    "building_id":"building-type-a",
-    "x":9.0294942515,
-    "z":-23.1936359177
-  }
+    {
+        "level": 4,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -1.7479050357,
+        "z": -0.6974342228
+    },
+    {
+        "level": 5,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -5.1554478022,
+        "z": -20.6789228302
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 5.3703052346,
+        "z": -28.7272104976
+    },
+    {
+        "level": 5,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 29.1579043726,
+        "z": 28.9618142795
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 43.0929105687,
+        "z": 47.4248208534
+    },
+    {
+        "level": 2,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 4.9528882324,
+        "z": -5.8469498627
+    },
+    {
+        "level": 3,
+        "building_count": 10,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 4.5915770165,
+        "z": 20.5831483879
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -35.7008317947,
+        "z": 26.1510631717
+    },
+    {
+        "level": 3,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 36.6868705311,
+        "z": 33.8480763764
+    },
+    {
+        "level": 5,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 20.0969131459,
+        "z": -42.7236993636
+    },
+    {
+        "level": 4,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 39.1896908777,
+        "z": -35.3395178308
+    },
+    {
+        "level": 3,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -41.5162285915,
+        "z": 48.6639578501
+    },
+    {
+        "level": 5,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 36.3138521989,
+        "z": 38.0359968638
+    },
+    {
+        "level": 2,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 44.7248577384,
+        "z": 48.6001063823
+    },
+    {
+        "level": 4,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -14.97817533,
+        "z": 20.8181195583
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 27.7146915927,
+        "z": 5.8404249736
+    },
+    {
+        "level": 4,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -25.127584557,
+        "z": -16.9747470981
+    },
+    {
+        "level": 5,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -0.7374895709,
+        "z": -48.8646355233
+    },
+    {
+        "level": 1,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 7.1473025205,
+        "z": 24.0973860911
+    },
+    {
+        "level": 4,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -38.2473753223,
+        "z": 14.9210302116
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 18.1039427097,
+        "z": -26.2493528708
+    },
+    {
+        "level": 5,
+        "building_count": 7,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -12.5129420476,
+        "z": -21.4287913718
+    },
+    {
+        "level": 4,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 2.8370121297,
+        "z": -6.3664168393
+    },
+    {
+        "level": 1,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -48.784552531,
+        "z": 46.9878826708
+    },
+    {
+        "level": 1,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -17.7313611722,
+        "z": -45.6599216702
+    },
+    {
+        "level": 3,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 49.2964796119,
+        "z": -42.6203435265
+    },
+    {
+        "level": 3,
+        "building_count": 10,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 19.5411123107,
+        "z": -42.456545291
+    },
+    {
+        "level": 2,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 12.9398638135,
+        "z": 19.5748688985
+    },
+    {
+        "level": 4,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 49.5831375029,
+        "z": 19.6925055864
+    },
+    {
+        "level": 4,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 40.1158010491,
+        "z": -45.4553619659
+    },
+    {
+        "level": 3,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 45.8702407408,
+        "z": -44.2136102242
+    },
+    {
+        "level": 4,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -4.4343247214,
+        "z": 12.0132597802
+    },
+    {
+        "level": 4,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -33.0320096104,
+        "z": 14.6848361669
+    },
+    {
+        "level": 1,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -14.6647771974,
+        "z": 8.3656111851
+    },
+    {
+        "level": 3,
+        "building_count": 9,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -13.9654904795,
+        "z": -24.0050137146
+    },
+    {
+        "level": 5,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 19.816171402,
+        "z": 3.6096366344
+    },
+    {
+        "level": 3,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -8.8793279128,
+        "z": 10.2781882023
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -33.7383060655,
+        "z": 41.0927184494
+    },
+    {
+        "level": 1,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 44.0531827135,
+        "z": -8.3360942262
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 11.3415195936,
+        "z": -8.1756963709
+    },
+    {
+        "level": 4,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 37.6661485926,
+        "z": 5.1587872544
+    },
+    {
+        "level": 1,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -47.3633025503,
+        "z": -12.3536633122
+    },
+    {
+        "level": 4,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -1.9629918134,
+        "z": 48.5286050666
+    },
+    {
+        "level": 2,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 9.4130715352,
+        "z": -11.9109143369
+    },
+    {
+        "level": 2,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 32.9164220707,
+        "z": 6.9081469166
+    },
+    {
+        "level": 1,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -3.1306840205,
+        "z": -8.5180497662
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -48.6328035173,
+        "z": -42.4640939648
+    },
+    {
+        "level": 5,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 31.290100913,
+        "z": 49.9717673286
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 41.3165752258,
+        "z": 8.5149532325
+    },
+    {
+        "level": 4,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 44.4765729882,
+        "z": 34.9647390677
+    },
+    {
+        "level": 4,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -25.891516767,
+        "z": -29.4954671493
+    },
+    {
+        "level": 4,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 45.4051027259,
+        "z": 10.6174634451
+    },
+    {
+        "level": 4,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 37.8220667479,
+        "z": 25.6999132172
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -14.1837281967,
+        "z": -38.64424078
+    },
+    {
+        "level": 3,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -0.1834813354,
+        "z": -2.3789303211
+    },
+    {
+        "level": 1,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 2.0163501112,
+        "z": 35.2181500319
+    },
+    {
+        "level": 4,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 46.797376544,
+        "z": -41.1591776634
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -9.6517133788,
+        "z": -36.5984771549
+    },
+    {
+        "level": 4,
+        "building_count": 7,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -7.9464221335,
+        "z": 28.4668263944
+    },
+    {
+        "level": 2,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 20.4079768099,
+        "z": -28.7035838491
+    },
+    {
+        "level": 2,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 11.7263712097,
+        "z": 48.0462725092
+    },
+    {
+        "level": 4,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 8.9917686855,
+        "z": -10.77559549
+    },
+    {
+        "level": 5,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -40.8997908949,
+        "z": 22.639703265
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 1.398948916,
+        "z": 28.3653012741
+    },
+    {
+        "level": 2,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -20.2040548458,
+        "z": 2.3602276015
+    },
+    {
+        "level": 4,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 44.9520623658,
+        "z": -35.2926519071
+    },
+    {
+        "level": 2,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 34.2091415019,
+        "z": 26.8917741315
+    },
+    {
+        "level": 2,
+        "building_count": 1,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -4.0864243762,
+        "z": 48.0032575285
+    },
+    {
+        "level": 4,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -15.2586591775,
+        "z": -29.0869208921
+    },
+    {
+        "level": 4,
+        "building_count": 1,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -25.9854381222,
+        "z": -42.4136671891
+    },
+    {
+        "level": 1,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -3.9880841016,
+        "z": 8.4766105949
+    },
+    {
+        "level": 5,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -36.1172827351,
+        "z": 14.0874744803
+    },
+    {
+        "level": 5,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 19.6501466227,
+        "z": -8.8338785642
+    },
+    {
+        "level": 2,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -2.6038359737,
+        "z": 16.7557738521
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 10.1935395541,
+        "z": -27.6150934094
+    },
+    {
+        "level": 2,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -33.1064936928,
+        "z": -22.1409660968
+    },
+    {
+        "level": 1,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -46.8195318515,
+        "z": 4.8715309207
+    },
+    {
+        "level": 4,
+        "building_count": 4,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -3.9221231967,
+        "z": -29.3666281594
+    },
+    {
+        "level": 4,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -37.12516017,
+        "z": -16.990048669
+    },
+    {
+        "level": 4,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -46.0687860159,
+        "z": 29.9410398909
+    },
+    {
+        "level": 5,
+        "building_count": 7,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 18.7784717096,
+        "z": 1.1657013547
+    },
+    {
+        "level": 1,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 42.0872400532,
+        "z": -43.8922040145
+    },
+    {
+        "level": 5,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 36.8301107036,
+        "z": -41.5482992319
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -31.5478980644,
+        "z": -29.0650676663
+    },
+    {
+        "level": 1,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 42.4041759107,
+        "z": -26.3883466883
+    },
+    {
+        "level": 1,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -13.108636043,
+        "z": -3.7465283867
+    },
+    {
+        "level": 1,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -43.7658637489,
+        "z": -35.2260908094
+    },
+    {
+        "level": 1,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 21.3349585885,
+        "z": 39.5206837687
+    },
+    {
+        "level": 4,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 24.9616232009,
+        "z": -46.9527847266
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -5.2587633177,
+        "z": 3.2617266455
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -39.5130833468,
+        "z": 23.7405206094
+    },
+    {
+        "level": 1,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -47.9928802222,
+        "z": -17.7920834417
+    },
+    {
+        "level": 3,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -41.0795671288,
+        "z": 3.5335564016
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 39.052728074,
+        "z": 9.3592453554
+    },
+    {
+        "level": 1,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -14.4895696721,
+        "z": 14.8822840292
+    },
+    {
+        "level": 3,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -41.3079711913,
+        "z": 3.7106541819
+    },
+    {
+        "level": 5,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 5.774226595,
+        "z": 8.6535434661
+    },
+    {
+        "level": 2,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -37.2419697204,
+        "z": -21.6224094201
+    },
+    {
+        "level": 2,
+        "building_count": 4,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 39.9647397145,
+        "z": 10.7555222294
+    },
+    {
+        "level": 1,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -14.3903274102,
+        "z": 48.6515248793
+    },
+    {
+        "level": 4,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 43.369182376,
+        "z": -49.2465636866
+    },
+    {
+        "level": 1,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -34.7140860816,
+        "z": -25.4042271615
+    },
+    {
+        "level": 4,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 35.0817517836,
+        "z": -41.211237546
+    },
+    {
+        "level": 2,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -32.6626404705,
+        "z": 39.6765424626
+    },
+    {
+        "level": 1,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -44.8364522125,
+        "z": -48.1757518572
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 48.2378616909,
+        "z": -38.7961097832
+    },
+    {
+        "level": 3,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 7.5998417806,
+        "z": 41.7395613086
+    },
+    {
+        "level": 4,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 31.7072070949,
+        "z": -24.2097172955
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 22.2896096622,
+        "z": 32.0861473153
+    },
+    {
+        "level": 3,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 5.6762893014,
+        "z": 7.161268947
+    },
+    {
+        "level": 1,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 33.8582558703,
+        "z": -29.4922439851
+    },
+    {
+        "level": 3,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -17.6320763596,
+        "z": -7.4563561384
+    },
+    {
+        "level": 5,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 23.6247183698,
+        "z": 2.9840023181
+    },
+    {
+        "level": 3,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 11.0620042442,
+        "z": -21.136944676
+    },
+    {
+        "level": 1,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 0.6103956359,
+        "z": 43.2014342257
+    },
+    {
+        "level": 5,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 3.2589432552,
+        "z": -44.8176463178
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -4.5732027781,
+        "z": 4.8603117938
+    },
+    {
+        "level": 3,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 48.996023239,
+        "z": -17.7646155025
+    },
+    {
+        "level": 1,
+        "building_count": 4,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -41.2131888757,
+        "z": -36.1175226558
+    },
+    {
+        "level": 2,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 26.022785989,
+        "z": 9.5638740608
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 10.6101881056,
+        "z": 29.4289449966
+    },
+    {
+        "level": 4,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 42.9529144248,
+        "z": 33.0619407788
+    },
+    {
+        "level": 5,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -9.1481707064,
+        "z": 43.29380671
+    },
+    {
+        "level": 3,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 43.8340456821,
+        "z": -31.8766933834
+    },
+    {
+        "level": 1,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 42.644942359,
+        "z": 22.1596550751
+    },
+    {
+        "level": 4,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 34.1828776758,
+        "z": -36.0227623374
+    },
+    {
+        "level": 5,
+        "building_count": 9,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 25.0501924765,
+        "z": 29.953713092
+    },
+    {
+        "level": 4,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -33.5734202069,
+        "z": 31.4574720231
+    },
+    {
+        "level": 5,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 13.375856372,
+        "z": 40.7866130463
+    },
+    {
+        "level": 5,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 37.7200540813,
+        "z": -10.7554892577
+    },
+    {
+        "level": 3,
+        "building_count": 1,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -4.8051398701,
+        "z": 21.3782454855
+    },
+    {
+        "level": 5,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -3.732021433,
+        "z": -19.8622125836
+    },
+    {
+        "level": 4,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -6.1255324612,
+        "z": 7.7486270906
+    },
+    {
+        "level": 5,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 39.9574573275,
+        "z": -11.6108778627
+    },
+    {
+        "level": 3,
+        "building_count": 10,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -43.3380887609,
+        "z": -27.0974609075
+    },
+    {
+        "level": 3,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -38.3101959292,
+        "z": 43.9832123613
+    },
+    {
+        "level": 4,
+        "building_count": 1,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 23.0549136809,
+        "z": 19.3717607403
+    },
+    {
+        "level": 2,
+        "building_count": 9,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 29.402518927,
+        "z": 12.0072755929
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 24.1460911139,
+        "z": 7.3150849257
+    },
+    {
+        "level": 5,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -34.8325120267,
+        "z": -18.8277932204
+    },
+    {
+        "level": 1,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 27.8571939051,
+        "z": -35.6872014452
+    },
+    {
+        "level": 5,
+        "building_count": 8,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 6.9889684871,
+        "z": 26.2458685741
+    },
+    {
+        "level": 4,
+        "building_count": 10,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 25.463529186,
+        "z": -39.7083969256
+    },
+    {
+        "level": 4,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -38.9368263045,
+        "z": 34.6452291735
+    },
+    {
+        "level": 4,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 10.3957872073,
+        "z": 0.2288347463
+    },
+    {
+        "level": 4,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -35.0082572651,
+        "z": -27.0748604767
+    },
+    {
+        "level": 4,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 27.1881980598,
+        "z": -48.7796927682
+    },
+    {
+        "level": 3,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 19.3948444467,
+        "z": 4.2724443348
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 9.9029364777,
+        "z": 32.6798827809
+    },
+    {
+        "level": 4,
+        "building_count": 1,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 40.8450561334,
+        "z": 8.3391794766
+    },
+    {
+        "level": 1,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -7.640313758,
+        "z": -21.2070383524
+    },
+    {
+        "level": 1,
+        "building_count": 7,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -34.6648596884,
+        "z": 8.6229832017
+    },
+    {
+        "level": 1,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -39.9205396984,
+        "z": -24.3984468146
+    },
+    {
+        "level": 1,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 37.2123908944,
+        "z": 43.2118282484
+    },
+    {
+        "level": 3,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 41.8750522261,
+        "z": 29.0084637124
+    },
+    {
+        "level": 1,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 20.7238634313,
+        "z": -34.7460957086
+    },
+    {
+        "level": 4,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -12.556463028,
+        "z": -43.1078460633
+    },
+    {
+        "level": 5,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 23.6444235625,
+        "z": 43.4367014769
+    },
+    {
+        "level": 1,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 41.0686198256,
+        "z": -37.7189218154
+    },
+    {
+        "level": 3,
+        "building_count": 2,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 48.4841198962,
+        "z": 33.8898086446
+    },
+    {
+        "level": 3,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 33.7490789002,
+        "z": -16.7853587345
+    },
+    {
+        "level": 1,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 1.8838057126,
+        "z": 9.1275435745
+    },
+    {
+        "level": 5,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -12.0694301614,
+        "z": 24.4249651843
+    },
+    {
+        "level": 1,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 30.2853448598,
+        "z": -49.5367976995
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -38.5732699944,
+        "z": -8.5495415796
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 41.9855616413,
+        "z": -15.3654005634
+    },
+    {
+        "level": 4,
+        "building_count": 8,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -1.9163021911,
+        "z": 41.8454724939
+    },
+    {
+        "level": 3,
+        "building_count": 9,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -27.539517706,
+        "z": -4.7560483867
+    },
+    {
+        "level": 1,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -25.1773557243,
+        "z": 7.7631954092
+    },
+    {
+        "level": 4,
+        "building_count": 9,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -8.1074550495,
+        "z": 41.4845901068
+    },
+    {
+        "level": 1,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 28.0495707546,
+        "z": -22.2412827371
+    },
+    {
+        "level": 1,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -48.6905543412,
+        "z": 16.3537372017
+    },
+    {
+        "level": 2,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 47.5541315683,
+        "z": -4.1011011983
+    },
+    {
+        "level": 4,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -8.5375876273,
+        "z": -41.4650331921
+    },
+    {
+        "level": 4,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -31.5537128581,
+        "z": -20.0404088234
+    },
+    {
+        "level": 2,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -43.2923522612,
+        "z": 24.9960470399
+    },
+    {
+        "level": 3,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 29.9782022074,
+        "z": -15.0613000951
+    },
+    {
+        "level": 1,
+        "building_count": 10,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -30.9312279336,
+        "z": -46.3450332152
+    },
+    {
+        "level": 5,
+        "building_count": 4,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 33.6564813292,
+        "z": 8.7453604234
+    },
+    {
+        "level": 1,
+        "building_count": 0,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 27.5527616695,
+        "z": -4.6711165252
+    },
+    {
+        "level": 1,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 3.4455891257,
+        "z": -1.8912051612
+    },
+    {
+        "level": 3,
+        "building_count": 4,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 5.9640331308,
+        "z": -34.4759754069
+    },
+    {
+        "level": 1,
+        "building_count": 4,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -16.563718869,
+        "z": -42.4496636196
+    },
+    {
+        "level": 2,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -12.669068372,
+        "z": -22.9255326856
+    },
+    {
+        "level": 2,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 2.6578466659,
+        "z": 30.0749771486
+    },
+    {
+        "level": 4,
+        "building_count": 5,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -34.3847402634,
+        "z": 21.5972228847
+    },
+    {
+        "level": 5,
+        "building_count": 3,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -9.2015504635,
+        "z": 5.1722595259
+    },
+    {
+        "level": 1,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -26.8925203412,
+        "z": 17.1892743599
+    },
+    {
+        "level": 1,
+        "building_count": 6,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 9.50489797,
+        "z": -16.0728754104
+    },
+    {
+        "level": 3,
+        "building_count": 7,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": -32.1455337946,
+        "z": 15.2746107852
+    },
+    {
+        "level": 2,
+        "building_count": 3,
+        "region": 1,
+        "building_id": "building-type-c",
+        "x": 22.0813096311,
+        "z": 30.5314967358
+    },
+    {
+        "level": 5,
+        "building_count": 1,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": 22.2266931856,
+        "z": 35.5696468106
+    },
+    {
+        "level": 4,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 46.2649318555,
+        "z": 44.4409725577
+    },
+    {
+        "level": 2,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-b",
+        "x": -29.5015704584,
+        "z": -20.6852269739
+    },
+    {
+        "level": 4,
+        "building_count": 0,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -41.307498505,
+        "z": 13.3240774911
+    },
+    {
+        "level": 3,
+        "building_count": 7,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": -29.2113744854,
+        "z": -47.3467796126
+    },
+    {
+        "level": 3,
+        "building_count": 2,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 37.6444075875,
+        "z": 14.2925563614
+    },
+    {
+        "level": 1,
+        "building_count": 9,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": 39.2671711077,
+        "z": 31.7443561738
+    },
+    {
+        "level": 5,
+        "building_count": 6,
+        "region": 1,
+        "building_id": "building-type-d",
+        "x": -16.413414285,
+        "z": 32.5107331423
+    },
+    {
+        "level": 4,
+        "building_count": 9,
+        "region": 0,
+        "building_id": "building-type-a",
+        "x": 9.0294942515,
+        "z": -23.1936359177
+    }
 ]
