@@ -1,9 +1,13 @@
 // src/core/main.ts
+import * as tf from '@tensorflow/tfjs';
+import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
+import '@tensorflow/tfjs-backend-wasm';
 import { Game } from './Game';
 import { NotificationManager } from './NotificationManager';
-import { trainModels } from './../ai/trainModel';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-wasm';
+import { trainModels } from '../ai/trainModel';
+
+// WASM dosyalarının yolunu ayarla
+setWasmPaths('/');
 
 // TensorFlow.js WASM backend'ini başlat
 async function initializeTfBackend() {
