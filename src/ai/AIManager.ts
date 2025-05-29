@@ -1,4 +1,5 @@
 // src/ai/AIManager.ts
+import { trainModels } from './trainModel';
 import * as tf from '@tensorflow/tfjs';
 import * as THREE from 'three';
 import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
