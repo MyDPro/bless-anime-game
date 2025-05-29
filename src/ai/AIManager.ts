@@ -1,10 +1,6 @@
-// src/ai/AIManager.ts
 import { trainModels } from './trainModel';
 import * as tf from '@tensorflow/tfjs';
-import * as THREE from 'three';
-import { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { ModelsLoader, CharacterData, CityData } from '../utils/loadModels';
-import { ErrorManager } from '../core/ErrorManager';
+import { ModelsLoader } from '../utils/loadModels';
 import { NotificationManager } from '../core/NotificationManager';
 
 interface Task {
@@ -41,9 +37,9 @@ export class AIManager {
   private scene: THREE.Scene;
   private enemyModel: tf.LayersModel | null = null;
   private structureModel: tf.LayersModel | null = null;
-  private enemies: Enemy[] = [];
+  private enemies: Array<{ model: THREE.Object3D; speed: number; health: number; type: string; damage: number }> = [];
   private structures: THREE.Object3D[] = [];
-  private currentTask: Task | null = null;
+  private currentTask: { description: string; progress: number; target: number; reward: number } | null = null;
   private nextTaskId: number = 1;
   private modelCache = new Map<string, {
     prediction: tf.Tensor;
@@ -61,43 +57,22 @@ export class AIManager {
   private readonly MAX_ENEMIES = 50;
   private readonly PERFORMANCE_THRESHOLD = 30; // FPS
 
-  constructor(modelsLoader: ModelsLoader, scene: THREE.Scene) {
+   constructor(modelsLoader: ModelsLoader, scene: THREE.Scene) {
     this.modelsLoader = modelsLoader;
     this.scene = scene;
-    this.loadModels();
-    this.startPerformanceMonitoring();
   }
 
-  private async loadModels(): Promise<void> {
-  try {
-    await tf.ready();
-    const [enemyModel, structureModel] = await Promise.all([
-      tf.loadLayersModel('localstorage://enemy-selection-model').catch(() => null),
-      tf.loadLayersModel('localstorage://structure-placement-model').catch(() => null)
-    ]);
-
-    this.enemyModel = enemyModel;
-    this.structureModel = structureModel;
-
-    if (!enemyModel || !structureModel) {
-      console.warn('Modeller bulunamadı, eğitim başlatılıyor');
+  async loadModels(): Promise<void> {
+    try {
+      const enemyModel = await tf.loadLayersModel('localstorage://enemy-selection-model');
+      const structureModel = await tf.loadLayersModel('localstorage://structure-placement-model');
+      console.log('Modeller yüklendi');
+    } catch (error) {
+      console.warn('Modeller bulunamadı, eğitim başlatılacak:', error);
+      NotificationManager.getInstance().show('AI modelleri eğitiliyor...', 'info');
       await trainModels();
-      // Yeniden yükle
-      const [newEnemyModel, newStructureModel] = await Promise.all([
-        tf.loadLayersModel('localstorage://enemy-selection-model'),
-        tf.loadLayersModel('localstorage://structure-placement-model')
-      ]);
-      this.enemyModel = newEnemyModel;
-      this.structureModel = newStructureModel;
     }
-
-    console.log('AI modelleri yüklendi');
-    NotificationManager.getInstance().show('AI sistemleri hazır', 'success');
-  } catch (error) {
-    ErrorManager.getInstance().handleError(error as Error, 'AIManager.loadModels');
-    NotificationManager.getInstance().show('AI modelleri yüklenemedi!', 'error');
   }
-}
 
   async spawnEnemy(level: number, enemyCount: number, mapDensity: number): Promise<void> {
     if (!this.enemyModel || this.enemies.length >= this.MAX_ENEMIES) return;
