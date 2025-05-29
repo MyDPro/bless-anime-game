@@ -1,27 +1,21 @@
 // src/core/main.ts
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-wasm';
+import { Game } from './Game';
+import { NotificationManager } from './NotificationManager';
 
-async function initializeTfBackend() {
-  try {
-    await tf.ready(); // Backend hazır olana kadar bekle
-    if (await tf.setBackend('wasm')) {
-      console.log('TensorFlow.js WASM backend başlatıldı');
-      // WASM bellek yapılandırması
-      const wasmConfig = {
-        simd: true,
-        threads: true,
-        memoryInitialSizeMB: 50,
-        memoryMaximumSizeMB: 1000,
-      };
-      await tf.env().setFlags(wasmConfig);
+// Global bildirim fonksiyonu
+(window as any).showNotification = (message: string, type: 'success' | 'error' | 'warning' = 'success', duration: number = 3000) => {
+    NotificationManager.getInstance().show(message, type, duration);
+};
+
+// Oyun başlatma
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Sayfa yüklendi");
+    const canvas = document.querySelector('#webgl-canvas') as HTMLCanvasElement;
+    if (canvas) {
+        const game = new Game(canvas);
+        NotificationManager.getInstance().show('Hoş geldin!', 'success');
     } else {
-      throw new Error('WASM backend başlatılamadı');
+        console.error('Canvas elementi bulunamadı!');
+        NotificationManager.getInstance().show('Oyun başlatılamadı!', 'error');
     }
-  } catch (error) {
-    console.error('TensorFlow.js backend hatası:', error);
-    console.log('CPU backend\'e geçiliyor...');
-    await tf.setBackend('cpu');
-    NotificationManager.getInstance().show('AI yavaş modda çalışıyor', 'warning');
-  }
-}
+});
