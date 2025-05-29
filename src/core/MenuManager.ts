@@ -112,46 +112,73 @@ export class MenuManager extends EventEmitter {
     }
 
     private async initializeMenus(): Promise<void> {
-        console.log("Menüler başlatılıyor");
-        if (!this.modelsLoader.isLoaded()) {
-            console.log("Veri yüklenmedi, initialize çağrılıyor...");
-            await this.modelsLoader.initialize();
-        }
-
-        this.characters = this.modelsLoader.getAllCharacterData();
-        this.kits = this.modelsLoader.getAllKitData();
-        if (!this.characters.length || !this.kits.length) {
-            console.error("Karakter veya silah verileri yüklenemedi.");
-            NotificationManager.getInstance().show('Veriler yüklenemedi!', 'error');
-            this.showMenu('main');
-            return;
-        }
-
-        const menuIds = [
-            { key: 'main', id: 'main-menu' },
-            { key: 'character', id: 'character-select' },
-            { key: 'kit', id: 'kit-select' },
-            { key: 'scoreboard', id: 'scoreboard' },
-            { key: 'settings', id: 'settings' },
-            { key: 'pause', id: 'pause-menu' },
-            { key: 'gameOver', id: 'game-over' }
-        ];
-
-        menuIds.forEach(({ key, id }) => {
-            const element = document.getElementById(id);
-            if (element) {
-                this.menus.set(key, element);
-                console.log(`Menü kaydedildi: ${key} (ID: ${id})`);
-            } else {
-                console.error(`Menü bulunamadı: ${key} (ID: ${id})`);
-                NotificationManager.getInstance().show(`Menü bulunamadı: ${id}`, 'error');
-            }
-        });
-
-        this.setupMenuListeners();
-        this.createCharacterCarousel();
-        this.createKitCarousel();
+  console.log("Menüler başlatılıyor");
+  try {
+    if (!this.modelsLoader.isLoaded()) {
+      console.log("Veri yüklenmedi, initialize çağrılıyor...");
+      await this.modelsLoader.initialize();
     }
+
+    this.characters = this.modelsLoader.getAllCharacterData();
+    this.kits = this.modelsLoader.getAllKitData();
+    if (!this.characters.length || !this.kits.length) {
+      console.warn("Karakter veya silah verileri eksik, yedek veriler kullanılıyor");
+      NotificationManager.getInstance().show('Veriler eksik, yedek mod kullanılıyor!', 'warning');
+      if (!this.characters.length) {
+        this.characters = [
+          {
+            id: 'default-char',
+            name: 'Default Character',
+            modelPath: '/models/character/character-male-b.glb',
+            photoPath: '/models/character/photo/character-male-b.png',
+            stats: { speed: 50, power: 50, health: 100, ability: 'none', abilityDescription: 'Standard' }
+          }
+        ];
+      }
+      if (!this.kits.length) {
+        this.kits = [
+          {
+            id: 'default-kit',
+            name: 'Default Kit',
+            modelPath: '/models/kit/blaster-e.glb',
+            photoPath: '/models/kit/photo/blaster-e.png',
+            stats: { fireRate: 1, damage: 50, effect: 'none', effectDescription: 'Standard' }
+          }
+        ];
+      }
+    }
+
+    const menuIds = [
+      { key: 'main', id: 'main-menu' },
+      { key: 'character', id: 'character-select' },
+      { key: 'kit', id: 'kit-select' },
+      { key: 'scoreboard', id: 'scoreboard' },
+      { key: 'settings', id: 'settings' },
+      { key: 'pause', id: 'pause-menu' },
+      { key: 'gameOver', id: 'game-over' }
+    ];
+
+    menuIds.forEach(({ key, id }) => {
+      const element = document.getElementById(id);
+      if (element) {
+        this.menus.set(key, element);
+        console.log(`Menü kaydedildi: ${key} (ID: ${id})`);
+      } else {
+        console.error(`Menü bulunamadı: ${key} (ID: ${id})`);
+        NotificationManager.getInstance().show(`Menü bulunamadı: ${id}`, 'error');
+      }
+    });
+
+    this.setupMenuListeners();
+    this.createCharacterCarousel();
+    this.createKitCarousel();
+    this.showMenu('main');
+  } catch (error) {
+    console.error('Menü başlatma hatası:', error);
+    NotificationManager.getInstance().show(`Menü başlatılamadı: ${error.message}`, 'error');
+    this.showMenu('main');
+  }
+}
 
     private createCharacterCarousel(): void {
         console.log("Karakter karakteri oluşturuluyor");
