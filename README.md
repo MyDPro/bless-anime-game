@@ -1,5 +1,5 @@
 # Bless Anime Game
-
+DEMO LINK: https://yellow-stork-sunshine-v5sfg6k4.bls.dev/
 Modern bir 3D anime tarzı aksiyon oyunu. Three.js ve TypeScript kullanılarak geliştirilmiştir.
 
 ## 🎮 Özellikler
